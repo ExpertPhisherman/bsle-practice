@@ -1,16 +1,3 @@
-# Object files
-*.o
-
-# Static and shared libraries
-*.a
-*.so
-
-# Executables
-*
-*.out
-*.elf
-*.bin
-
-# Exemptions
-!*.*
-!Makefile
+# Build directories
+bin/
+build/
