@@ -24,6 +24,7 @@ class EchoClient(cmd.Cmd):
 
     def connect(self, host, port):
         """Connect to echo server"""
+        # TODO: Connect with specified source port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.sock.connect((host, port))

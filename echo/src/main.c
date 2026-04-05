@@ -14,6 +14,7 @@ handle_sigchld (int signo)
 
     while (0 < waitpid(-1, NULL, WNOHANG))
     {
+        // Reap all child processes that have terminated
     }
 
     errno = saved_errno;
@@ -41,27 +42,13 @@ main (int argc, char * argv[])
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
     {
         // Enforce command line integer sizes
-        uint64_t u64;
         int64_t i64;
+        uint64_t u64;
 
         switch (opt)
         {
             case 'v':
                 b_verbose = true;
-                break;
-
-            case 'p':
-                u64 = strtoul(optarg, NULL, 10);
-                if (MAX_PORT >= u64)
-                {
-                    server_port = (uint16_t)u64;
-                }
-                else
-                {
-                    fprintf(stderr, "Port must be [1-65535]\n");
-                    status = STATUS_FAILURE;
-                    goto cleanup;
-                }
                 break;
 
             case 'b':
@@ -78,8 +65,22 @@ main (int argc, char * argv[])
                 }
                 break;
 
+            case 'p':
+                u64 = strtoul(optarg, NULL, 10);
+                if (MAX_PORT >= u64)
+                {
+                    server_port = (uint16_t)u64;
+                }
+                else
+                {
+                    fprintf(stderr, "Port must be [1-65535]\n");
+                    status = STATUS_FAILURE;
+                    goto cleanup;
+                }
+                break;
+
             default:
-                fprintf(stderr, "Usage: %s [-v] -p port [-b backlog]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-v] [-b backlog] -p port\n", argv[0]);
                 status = STATUS_FAILURE;
                 goto cleanup;
         }
@@ -95,7 +96,7 @@ main (int argc, char * argv[])
     if (0u == server_port)
     {
         fprintf(stderr, "Argument -p port is required (positive integer)\n");
-        fprintf(stderr, "Usage: %s [-v] -p port [-b backlog]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-v] [-b backlog] -p port\n", argv[0]);
         status = STATUS_FAILURE;
         goto cleanup;
     }
