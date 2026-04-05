@@ -1,0 +1,3800 @@
+
+================ ISSUE 1 ================
+
+title:	(U) Describe the mission of the following Cyber Mission Force (CMF) Elements:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyberspace Operations Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the mission of the following Cyber Mission Force (CMF) Elements:
+- [ ] Cyber National Mission Force (CNMF)
+- [ ] Cyber Combat Mission Force (CCMF)
+- [ ] Cyber Protection Force (CPF)
+
+MAPPING: 1.1
+
+UID: B-CO-342033803
+
+<details> <summary>Training Links</summary>
+
+- [CYBER101 â€“ Cyber Mission Force](https://www.cybercom.mil/Media/News/Article/3206393/cyber101-cyber-mission-force/)
+
+- [(R2D2) - Cyberspace Operations Fundamentals](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/tree/main/lessons/01_Cyberspace_Operations_Fundamentals)
+
+- [(R2D2) CMF Elements and Missions](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/01_Cyberspace_Operations_Fundamentals/01_CMF_Elements_Missions.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+- (U) Knowledge of organizational and partner authorities, responsibilities, and contributions to achieving objectives. (Proficiency: A)
+
+- (U) Knowledge of cyber mission force equipment taxonomy (Platform-Access-Payloads/Toolset), capability development process and repository. (Proficiency: A)
+
+- (U) Identify and leverage the enterprise-wide version control system while designing and developing secure applications.
+
+</details>
+
+
+================ ISSUE 2 ================
+
+title:	(U) Describe the mission of the following CMF teams:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyberspace Operations Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the mission of the following CMF teams:
+- [ ] Combat Mission Team (CMT)
+- [ ] National Mission Team (NMT)
+- [ ] Combat Support Team (CST)
+- [ ] National Support Team (NST)
+- [ ] Cyber Protection Team (CPT)
+
+MAPPING: 1.2
+
+UID: B-CO-469324282
+
+<details> <summary>Training Links</summary>
+
+- [Cyber 101](https://www.cybercom.mil/Media/News/Article/3206393/cyber101-cyber-mission-force/)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+- (U) Knowledge of organizational and partner authorities, responsibilities, and contributions to achieving objectives. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 3 ================
+
+title:	(U) Read and understand the following cyberspace operations doctrine:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyberspace Operations Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Read and understand the following cyberspace operations doctrine:
+- [ ] JP 3-12 (Cyberspace Operations)
+- [ ] USCYBERCOM Operational Guidance 3-2 (DCO)
+- [ ] USCYBERCOM Cyber Warfare Publication (CWP 3-33.4)
+
+MAPPING: 1.3
+
+UID: B-CO-486374649
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of applicable laws (e.g., Electronic Communications Privacy Act, Foreign Intelligence Surveillance Act, Protect America Act, search and seizure laws, civil liberties and privacy laws), statutes (e.g., in Titles 10, 18, 32, 50 in U.S. Code), Presidential Directives, executive branch guidelines, and/or administrative/criminal legal guidelines and procedures relevant to work performed. (Proficiency: A)
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+- (U) Knowledge of organizational and partner authorities, responsibilities, and contributions to achieving objectives. (Proficiency: A)
+
+- (U) Knowledge of relevant mission processes including version control processes, release processes, documentation requirements, and testing requirements. (Proficiency: B)
+
+- (U) Identify and leverage the enterprise-wide version control system while designing and developing secure applications.
+
+</details>
+
+
+================ ISSUE 4 ================
+
+title:	(U) Describe the mission and responsibilities of key organizations:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyberspace Operations Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the mission and responsibilities of key organizations:
+- [ ] U.S. Cyber Command (USCC)
+- [ ] Director Operation Test and Evaluation (DOTE)
+- [ ] Federally Funded Research and Development Centers (FFRDC)
+- [ ] Central Intelligence Agency (CIA)
+- [ ] Federal Bureau of Investigation (FBI)
+- [ ] Department of Homeland Security (DHS)
+- [ ] Defense Threat Reduction Agency (DTRA)
+- [ ] Defense Digital Service (DDS)
+- [ ] National Security Agency (NSA)
+- [ ] National Air and Space Intelligence Center (NASIC)
+
+MAPPING: 1.4
+
+UID: B-CO-578627057
+
+<details> <summary>Training Links</summary>
+
+- [Central Intelligence Agency](https://www.cia.gov/)
+
+- [Federal Bureau of Investigation](https://www.fbi.gov/)
+
+- [USCYBERCOM](https://www.cybercom.mil/)
+
+- [Defense Threat Reduction Agency](https://www.dtra.mil/)
+
+- [Defense Digital Service](https://www.dds.mil/)
+
+- [Master Government List of Federally Funded R&D Centers](https://www.nsf.gov/statistics/ffrdclist/)
+
+- [The Office of the Director, Operational Test and Evaluation](https://www.dote.osd.mil/)
+
+- [Homeland Security](https://www.dhs.gov/)
+
+- [National Security Agency](https://www.nsa.gov/)
+
+- [Federal Acquisition Regulation](https://www.acquisition.gov/far/35.017)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+- (U) Knowledge of organizational and partner authorities, responsibilities, and contributions to achieving objectives. (Proficiency: A)
+
+- (U) Knowledge of external organizations and academic institutions with cyber focus (e.g., cyber curriculum/training and Research and Development). (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 5 ================
+
+title:	(U) Demonstrate knowledge of U.S. Code and its application to the Intelligence Community (IC) and Cyberspace Operations (Title 10, 18, and 50).
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyberspace Operations Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate knowledge of U.S. Code and its application to the Intelligence Community (IC) and Cyberspace Operations (Title 10, 18, and 50).
+
+MAPPING: 1.5
+
+UID: B-CO-726503168
+
+<details> <summary>Training Links</summary>
+
+- [Title 10](https://uscode.house.gov/view.xhtml?path=/prelim@title10/subtitleA/part1/chapter19&edition=prelim)
+
+- [Title 50](https://uscode.house.gov/view.xhtml?path=/prelim@title50/chapter36&edition=prelim)
+
+- [Title 18](https://uscode.house.gov/view.xhtml?req=(title:18%20section:1030%20edition:prelim))
+
+- [(R2D2) Laws and Authorities](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/01_Cyberspace_Operations_Fundamentals/_assets/slides/Laws_Authorities.pdf)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of applicable laws (e.g., Electronic Communications Privacy Act, Foreign Intelligence Surveillance Act, Protect America Act, search and seizure laws, civil liberties and privacy laws), statutes (e.g., in Titles 10, 18, 32, 50 in U.S. Code), Presidential Directives, executive branch guidelines, and/or administrative/criminal legal guidelines and procedures relevant to work performed. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 6 ================
+
+title:	(U) Describe the classification levels of the development networks and the associated handling requirements of source code and binaries for your organization.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyberspace Operations Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the classification levels of the development networks and the associated handling requirements of source code and binaries for your organization.
+
+MAPPING: 1.6
+
+UID: B-CO-476516775
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of sources and locations (public and classified) of capability development TTPs and tradecraft information/intelligence used by the US Gov and others. (Proficiency: A)
+
+- (U) Knowledge of operations security. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 7 ================
+
+title:	(U) Demonstrate knowledge of sources and locations (public and classified) of capability development TTPs and tradecraft information/intelligence used by the US Gov and others.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyberspace Operations Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate knowledge of sources and locations (public and classified) of capability development TTPs and tradecraft information/intelligence used by the US Gov and others.
+
+MAPPING: 1.7
+
+UID: B-CO-252234266
+
+<details> <summary>Training Links</summary>
+
+- [CYBER AND INFORMATION OPERATIONS MATTERS](https://uscode.house.gov/view.xhtml?path=/prelim@title10/subtitleA/part1/chapter19&edition=prelim)
+
+- [Fraud and related activity in connection with computers](https://uscode.house.gov/view.xhtml?req=(title:18%20section:1030%20edition:prelim))
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of sources and locations of cyber capability registries and repositories (e.g. Joint Cyber Tactics Manual (JCTM), Cyber Capability Registry (CCR), Agency and service repositories, etc.). (Proficiency: A)
+
+- (U) Knowledge of sources and locations (public and classified) of capability development TTPs and tradecraft information/intelligence used by the US Gov and others. (Proficiency: A)
+
+- (U) Knowledge of cyber threats and vulnerabilities. (Proficiency: B)
+
+- (U) Reference capability repositories and other sources to identify existing capabilities which fully/partially meet customer requirements (with or without modification).
+
+</details>
+
+
+================ ISSUE 8 ================
+
+title:	(U) Describe the overall mission of a Cyber Protection Team (CPT).
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) DCO Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the overall mission of a Cyber Protection Team (CPT).
+
+MAPPING: 2.1
+
+UID: B-CO-300081883
+
+<details> <summary>Training Links</summary>
+
+- [CYBER101 â€“ Cyber Mission Force](https://www.cybercom.mil/Media/News/Article/3206393/cyber101-cyber-mission-force/)
+
+- [R2D2 - DCO Fundamentals](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/02_DCO_Fundamentals/01_DCO_Fundamentals.md?ref_type=heads)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+- (U) Knowledge of organizational and partner authorities, responsibilities, and contributions to achieving objectives. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 9 ================
+
+title:	(U) Describe the CPT Support Element and Mission Element and their capabilities.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) DCO Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the CPT Support Element and Mission Element and their capabilities.
+
+MAPPING: 2.2
+
+UID: B-CO-173140539
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 10 ================
+
+title:	(U) Describe CPT mission types:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) DCO Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe CPT mission types:
+- [ ] National CPT
+- [ ] DoDIN CPT
+- [ ] Combatant Command CPT
+- [ ] Service CPT
+
+MAPPING: 2.3
+
+UID: B-CO-405181145
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 11 ================
+
+title:	(U) Describe the following DCO work roles:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) DCO Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the following DCO work roles:
+- [ ] Cyber Operations Planner
+- [ ] Network Analyst
+- [ ] Host Analyst
+- [ ] Analytic Support Officer
+- [ ] Data Engineer
+- [ ] Network Technician
+- [ ] All-Source Analyst
+
+MAPPING: 2.4
+
+UID: B-CO-477902918
+
+<details> <summary>Training Links</summary>
+
+- [Cyber Operations Planner](https://public.cyber.mil/dcwf-work-role/cyber-operations-planner/)
+
+- [All-Source Analyst](https://public.cyber.mil/dcwf-work-role/all-source-analyst/)
+
+- [(CUI) CTM 7-0.1 JCT_CS v4.0 ANNEX A CPT Workroles 20201022](https://intelshare.intelink.gov/sites/uscybercom/CWL/OperationalGuidance/CTM%207-0.1%20Joint%20Cyberspace%20Trng%20and%20Cert%20Standards%20(JCT_CS)%20v4.0%20ANNEX%20A%20CPT%20Workroles%2020201022.pdf)
+
+- [(CUI) CTM 7-0.1 JCT_CS v4.0 ANNEX B Roles (CMT, CST, NMT, NST)](https://intelshare.intelink.gov/sites/uscybercom/CWL/OperationalGuidance/CTM%207-0.1%20Joint%20Cyberspace%20Trng%20and%20Cert%20Standards%20(JCT_CS)%20v4.0%20ANNEX%20B%20Workroles%20(CMT,%20CST,%20NMT,%20NST)%2020200918.pdf)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 12 ================
+
+title:	(U) Read and understand the DNI threat assessments (e.g. National Intelligence Estimate (NIE), DIA/NSA Standard Cyber Threat Model, etc.).
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) DCO Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Read and understand the DNI threat assessments (e.g. National Intelligence Estimate (NIE), DIA/NSA Standard Cyber Threat Model, etc.).
+
+MAPPING: 2.5
+
+UID: B-CO-474337052
+
+<details> <summary>Training Links</summary>
+
+- [2023 ANNUAL THREAT ASSESSMENT OF THE U.S. INTELLIGENCE COMMUNITY](https://www.dni.gov/files/ODNI/documents/assessments/ATA-2023-Unclassified-Report.pdf)
+
+- [2024 ANNUAL THREAT ASSESSMENT OF THE U.S. INTELLIGENCE COMMUNITY](https://www.dni.gov/files/ODNI/documents/assessments/ATA-2024-Unclassified-Report.pdf)
+
+- [2022 ANNUAL THREAT ASSESSMENT OF THE U.S. INTELLIGENCE COMMUNITY](https://www.dni.gov/index.php/newsroom/reports-publications/reports-publications-2022/3597-2022-annual-threat-assessment-of-the-u-s-intelligence-community)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of cyber adversary threat tier taxonomy (2014 National Intelligence Estimate [NIE]), DIA/NSA Standard Cyber Threat Model, etc.). (Proficiency: A)
+
+- (U) Knowledge of supply chain risk management standards, processes, and practices. (Proficiency: A)
+
+- (U) Produce artifacts to inform risk analysis, acceptance testing, and legal review.
+
+</details>
+
+
+================ ISSUE 13 ================
+
+title:	(U) Describe the difference between conducting Cyberspace Intelligence, Surveillance, and Reconnaissance (C-ISR) and Cyberspace Surveillance and Reconnaissance (C-SR).
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) OCO Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the difference between conducting Cyberspace Intelligence, Surveillance, and Reconnaissance (C-ISR) and Cyberspace Surveillance and Reconnaissance (C-SR).
+
+MAPPING: 3.1
+
+UID: B-CO-674337992
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of applicable laws (e.g., Electronic Communications Privacy Act, Foreign Intelligence Surveillance Act, Protect America Act, search and seizure laws, civil liberties and privacy laws), statutes (e.g., in Titles 10, 18, 32, 50 in U.S. Code), Presidential Directives, executive branch guidelines, and/or administrative/criminal legal guidelines and procedures relevant to work performed. (Proficiency: A)
+
+- (U) Knowledge of organizational and partner authorities, responsibilities, and contributions to achieving objectives. (Proficiency: A)
+
+- (U) Knowledge of the supported organization's approval process for operational use of a capability. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 14 ================
+
+title:	(U) Describe the following OCO work roles:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) OCO Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the following OCO work roles:
+- [ ] Remote Operator (ION, RO)
+- [ ] Mission Commander (MC)
+- [ ] Exploitation Analyst (EA)
+- [ ] Digital Network Exploitation Analyst (DNEA) and Target Digital Network Analyst (TDNA)
+- [ ] Operational Target Development Analyst (OTDA), Targeteer, and Fire Support Planner
+- [ ] Cyber Operations Planner
+- [ ] Team Lead and Deputy Team Lead
+- [ ] Language Analyst (LA)
+- [ ] Target Analyst Reporter (TAR)
+
+MAPPING: 3.2
+
+UID: B-CO-372872344
+
+<details> <summary>Training Links</summary>
+
+- [Exploitation Analyst](https://public.cyber.mil/dcwf-work-role/exploitation-analyst/)
+
+- [Cyber Operations Planner](https://public.cyber.mil/dcwf-work-role/cyber-operations-planner/)
+
+- [Multi-Disciplined Language Analyst](https://public.cyber.mil/dcwf-work-role/multi-disciplined-language-analyst/)
+
+- [(CUI) Access Network Operator (NIPR required)](https://cyber.mil/dcwf-work-role/access-network-operator-fouo/)
+
+- [(CUI) Interactive Operator (NIPR required)](https://cyber.mil/dcwf-work-role/cyberspace-operator/)
+
+- [(CUI) CTM 7-0.1 JCT_CS v4.0 ANNEX B Roles (CMT, CST, NMT, NST)](https://intelshare.intelink.gov/sites/uscybercom/CWL/OperationalGuidance/CTM%207-0.1%20Joint%20Cyberspace%20Trng%20and%20Cert%20Standards%20(JCT_CS)%20v4.0%20ANNEX%20B%20Workroles%20(CMT,%20CST,%20NMT,%20NST)%2020200918.pdf)
+
+- [Digital Network Exploitation Analyst](https://public.cyber.mil/dcwf-work-role/digital-network-exploitation-analyst/)
+
+- [Network Analyst](https://public.cyber.mil/dcwf-work-role/network-analyst/)
+
+- [Host Analyst](https://public.cyber.mil/dcwf-work-role/host-analyst/)
+
+- [Target Analyst Reporter](https://cyber.mil/dcwf-work-role/target-analyst-reporter/)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 15 ================
+
+title:	(U) Describe the CCDO standard of interaction between a capability development organization and its higher requirements-generating headquarters, including pre-requirement planning, drafting requirements, and interacting with tool champions, product owners
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Mission Process, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the CCDO standard of interaction between a capability development organization and its higher requirements-generating headquarters, including pre-requirement planning, drafting requirements, and interacting with tool champions, product owners, or requirement-owning stakeholders.
+
+MAPPING: 4.1
+
+UID: B-CO-903051323
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of both internal and external customers and partner organizations, including information needs, objectives, structure, capabilities, etc. (Proficiency: A)
+
+- (U) Knowledge of organizational and partner authorities, responsibilities, and contributions to achieving objectives. (Proficiency: A)
+
+- (U) Knowledge of cyber mission force equipment taxonomy (Platform-Access-Payloads/Toolset), capability development process and repository. (Proficiency: A)
+
+- (U) Knowledge of the supported organization's approval process for operational use of a capability. (Proficiency: A)
+
+- (U) Knowledge of your organization's project management, timeline estimation, and software engineering philosophy (e.g. CI/CD, TDD, etc.). (Proficiency: B)
+
+- (U) Knowledge of organization's evaluation and validation requirements. (Proficiency: A)
+
+- (U) Ability to interpret customer requirements and evaluate resource and system constraints to create solution design specifications. (Proficiency: 2)
+
+- (U) Analyze user needs and software requirements to determine feasibility of design within time and cost constraints.
+
+- (U) Develop software system testing and validation procedures, programming, and documentation.
+
+- (U) Reference capability repositories and other sources to identify existing capabilities which fully/partially meet customer requirements (with or without modification).
+
+- (U) Produce artifacts to inform risk analysis, acceptance testing, and legal review.
+
+</details>
+
+
+================ ISSUE 16 ================
+
+title:	(U) Describe the U.S. Cyber Command testing and evaluation process, including Developmental Test and Evaluation, Developmental Acceptance, Evaluated Level of Assurance, and Operational Test and Evaluation.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Mission Process, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the U.S. Cyber Command testing and evaluation process, including Developmental Test and Evaluation, Developmental Acceptance, Evaluated Level of Assurance, and Operational Test and Evaluation.
+
+MAPPING: 4.2
+
+UID: B-CO-360043016
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of organization's evaluation and validation requirements. (Proficiency: A)
+
+- (U) Knowledge of cybersecurity principles and organizational requirements (relevant to confidentiality, integrity, availability, authentication, nonrepudiation). (Proficiency: B)
+
+- (U) Knowledge of the supported organization's approval process for operational use of a capability. (Proficiency: A)
+
+- (U) Knowledge of relevant mission processes including version control processes, release processes, documentation requirements, and testing requirements. (Proficiency: B)
+
+- (U) Develop software system testing and validation procedures, programming, and documentation.
+
+- (U) Apply cryptography primitives to protect the confidentiality and integrity of sensitive data.
+
+</details>
+
+
+================ ISSUE 17 ================
+
+title:	(U) Describe an example of software development/documentation best practices.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Mission Process, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe an example of software development/documentation best practices.
+
+MAPPING: 4.3
+
+UID: B-CO-636753145
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of software development models (e.g., Waterfall Model, Spiral Model). (Proficiency: A)
+
+- (U) Knowledge of software debugging principles. (Proficiency: C)
+
+- (U) Knowledge of secure coding techniques. (Proficiency: B)
+
+- (U) Knowledge of software engineering. (Proficiency: B)
+
+- (U) Knowledge of cybersecurity principles and methods that apply to software development. (Proficiency: B)
+
+- (U) Knowledge of principles, methodologies, and tools used to improve quality of software (e.g. regression testing, test coverage, code review, pair programming, etc.). (Proficiency: A)
+
+- (U) Knowledge of task and project management tools used for software development (e.g. Jira, Confluence, Trac, MediaWiki, etc.). (Proficiency: B)
+
+- (U) Develop secure code and error handling.
+
+- (U) Develop software system testing and validation procedures, programming, and documentation.
+
+- (U) Develop, modify, and utilize automation technologies to enable employment of capabilities as efficiently as possible (e.g. TDD, CI/CD, etc.)
+
+- (U) Perform static and dynamic analysis in order to find errors and flaws.
+
+- (U) Utilize secure coding techniques during development of software and applications.
+
+- (U) Perform secure programming and identify potential flaws in codes to mitigate vulnerabilities.
+
+- (U) Prepare detailed workflow charts and diagrams that describe input, output, and logical operation, and convert them into a series of instructions coded in a computer language.
+
+- (U) Identify and leverage the enterprise-wide version control system while designing and developing secure applications.
+
+- (U) Perform integrated quality assurance testing for security functionality and resiliency attack.
+
+- (U) Enter work into task and project management tools used for software development (e.g. Jira, Confluence, Trac, MediaWiki, etc.).
+
+</details>
+
+
+================ ISSUE 18 ================
+
+title:	(U) With references, resources, and a provided unit-level coding standard or style guide, identify coding standard violations in Python source code.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Style Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) With references, resources, and a provided unit-level coding standard or style guide, identify coding standard violations in Python source code.
+
+MAPPING: 5.1
+
+UID: B-CO-41411048
+
+<details> <summary>Training Links</summary>
+
+- [PEP 8 â€“ Style Guide for Python Code](https://peps.python.org/pep-0008/)
+
+- [(R2D2)  Identify Standard Violations in Python ](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/05_Style_Fundamentals/01_Identify_Standard_violations_Python.md)
+
+- [(R2D2)  Identify Standard Violations in C](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/05_Style_Fundamentals/02_Identify_Standard_violations_C.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in Python programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 19 ================
+
+title:	(U) With references, resources, and a provided unit-level coding standard or style guide, identify coding standard violations in C source code.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Style Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) With references, resources, and a provided unit-level coding standard or style guide, identify coding standard violations in C source code.
+
+MAPPING: 5.2
+
+UID: B-CO-116957866
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 20 ================
+
+title:	(U) Describe the purpose and use of C programming fundamentals:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the purpose and use of C programming fundamentals:
+- [ ] The main() function
+- [ ] The return statement
+- [ ] Macro guards
+- [ ] Data types
+- [ ] Functions and procedures
+- [ ] Parameters
+- [ ] Scope
+- [ ] Return values (return type and reference)
+- [ ] Header files
+- [ ] Keywords (static and extern)
+- [ ] Pointers
+- [ ] An array
+- [ ] C preprocessor
+- [ ] Casting
+- [ ] Control flow
+- [ ] Endianness
+- [ ] Multi-byte vs. Unicode character sets
+- [ ] Multi-threading
+- [ ] Hashing
+
+MAPPING: 6.1
+
+UID: B-CO-201606677
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Pointers and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.04+1T2020/home)
+
+- [C Programming: Getting Started](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.01+1T2020/home)
+
+- [C Programming: Language Foundations](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.02+1T2020/home)
+
+- [C Programming: Modular Programming and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.03+1T2020/home)
+
+- [(R2D2) Introduction to C - operators](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/01_operators.md)
+
+- [(R2D2) Introduction to C - c_types](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/04_c_types.md)
+
+- [(R2D2) Introduction to C - control flow](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/06_control_flow.md)
+
+- [(R2D2) Introduction to C - building](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/00_building.md)
+
+- [(R2D2) Introduction to C - preprocessor](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/02_preprocessor.md)
+
+- [(R2D2) Introduction to C - functions](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/08_functions.md)
+
+- [(R2D2) Introduction to C - pointer intro](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/05_pointer_intro.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Knowledge of interpreted and compiled computer languages. (Proficiency: B)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+- (U) Ability to use reference documentation for C, Python, assembly, and other international technical standards and specifications (IEEE, ISO, IETF, etc.). (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 21 ================
+
+title:	(U) Describe C programming concepts in regards to memory:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe C programming concepts in regards to memory:
+- [ ] Memory map of a Linux process
+- [ ] Automatically allocated memory
+- [ ] Dynamically allocated memory
+- [ ] Statically allocated memory
+- [ ] In the context of automatic vs dynamic allocation, explain how those concepts are related to the implementation of a stack and heap in a C program
+
+MAPPING: 6.2
+
+UID: B-CO-690313540
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Pointers and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.04+1T2020/home)
+
+- [(R2D2) Heap](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/02_Intermediate_C/03_heap.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+</details>
+
+
+================ ISSUE 22 ================
+
+title:	(U) Demonstrate the proper declaration, understanding, and use of C data types and underlying structures:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the proper declaration, understanding, and use of C data types and underlying structures:
+- [ ] char
+- [ ] short
+- [ ] int
+- [ ] long
+- [ ] long long
+- [ ] float
+- [ ] double
+- [ ] long double
+
+MAPPING: 6.3
+
+UID: B-CO-123054076
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Getting Started](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.01+1T2020/home)
+
+- [(R2D2) Introduction to C - c_types](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/04_c_types.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 23 ================
+
+title:	(U) Demonstrate proper declaration, understanding, and use of fixed-width C data types defined in stdint.h:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate proper declaration, understanding, and use of fixed-width C data types defined in stdint.h:
+- [ ] int8_t
+- [ ] uint8_t
+- [ ] int16_t
+- [ ] uint16_t
+- [ ] int32_t
+- [ ] uin32_t
+- [ ] int64_t
+- [ ] uint64_t
+
+MAPPING: 6.4
+
+UID: B-CO-733618155
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 24 ================
+
+title:	(U) Demonstrate the ability to create and implement a function that uses different arrays:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to create and implement a function that uses different arrays:
+- [ ] An array
+- [ ] A multi-dimensional array
+
+MAPPING: 6.5
+
+UID: B-CO-721171540
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Pointers and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.04+1T2020/home)
+
+- [C Programming: Language Foundations](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.02+1T2020/home)
+
+- [(R2D2) Pointers](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/05_pointer_intro.md)
+
+- [(R2D2) Strings](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/01_Basic_C/00_strings.md)
+
+- [(R2D2) Functions](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/08_functions.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 25 ================
+
+title:	(U) Demonstrate the ability to perform basic arithmetic operations using appropriate C operators while ensuring proper order of operations (PEMDAS):
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to perform basic arithmetic operations using appropriate C operators while ensuring proper order of operations (PEMDAS):
+- [ ] Addition
+- [ ] Subtraction
+- [ ] Multiplication
+- [ ] Division
+- [ ] Modulus (%)
+- [ ] Pre-Increment (++i)
+- [ ] Post-Increment (i++)
+- [ ] Pre-Decrement (--i)
+- [ ] Post-Decrement (i--)
+
+MAPPING: 6.6
+
+UID: B-CO-96474136
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Getting Started](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.01+1T2020/home)
+
+- [(R2D2) Introduction to C - operators](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/01_operators.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 26 ================
+
+title:	(U) Demonstrate the ability to properly use the standard main() entry arguments:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to properly use the standard main() entry arguments:
+- [ ] int argc
+- [ ] char *argv[]
+
+MAPPING: 6.7
+
+UID: B-CO-470452228
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 27 ================
+
+title:	(U) Demonstrate the ability to perform file management operations in C:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to perform file management operations in C:
+- [ ] Open an existing file
+- [ ] Read data from a file
+- [ ] Write data to a file
+- [ ] Modify data in a file
+- [ ] Close an open file
+- [ ] Print file information to the console
+- [ ] Create a new file
+- [ ] Append data to an existing file
+- [ ] Delete a file
+- [ ] Determine the size of a file (in a UNIX-based operating system)
+- [ ] Determine location within a file
+- [ ] Insert data into an existing file
+
+MAPPING: 6.8
+
+UID: B-CO-33703890
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+- (U) Utilize different programming languages to write code, open files, read files, and write output to different files.
+
+</details>
+
+
+================ ISSUE 28 ================
+
+title:	(U) Demonstrate the ability to create and implement functions to meet a requirement:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to create and implement functions to meet a requirement:
+- [ ] Proper declaration for created functions
+- [ ] A function that does not return a value (i.e., is declared void)
+- [ ] A function that is passed an argument by value
+- [ ] A function that takes a pointer argument
+- [ ] A function that returns a value using a return statement
+- [ ] A function that modifies an output parameter through a pointer
+- [ ] A function that receives input from a user
+- [ ] A function pointer
+- [ ] A recursive function
+
+MAPPING: 6.9
+
+UID: B-CO-341143750
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Pointers and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.04+1T2020/home)
+
+- [C Programming: Modular Programming and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.03+1T2020/home)
+
+- [(R2D2) Functions](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/08_functions.md)
+
+- [(R2D2) Functions - Intermediate](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/02_Intermediate_C/01_pointers.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 29 ================
+
+title:	(U) Demonstrate the ability to perform data validation:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to perform data validation:
+- [ ] Validating input received matches input expected
+
+MAPPING: 6.10
+
+UID: B-CO-219239817
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 30 ================
+
+title:	(U) Demonstrate skill in using pointers:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in using pointers:
+- [ ] Declaring an integer pointer
+- [ ] Dereferencing a variable to get its value
+- [ ] Printing the address of the variable
+- [ ] Assigning a value to a pointer
+- [ ] Make use of a function pointer to call another function
+- [ ] Make effective use of pointer arithmetic to traverse an array
+
+MAPPING: 6.11
+
+UID: B-CO-57717441
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Pointers and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.04+1T2020/home)
+
+- [C Programming: Modular Programming and Memory Management](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.03+1T2020/home)
+
+- [(R2D2) Introduction to C - pointer intro](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/05_pointer_intro.md)
+
+- [(R2D2) C - Intermediate - pointers](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/02_Intermediate_C/01_pointers.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 31 ================
+
+title:	(U) Demonstrate skill in creating and implementing conditional statements, expressions, and constructs:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in creating and implementing conditional statements, expressions, and constructs:
+- [ ] for loop
+- [ ] while loop
+- [ ] do while loop
+- [ ] if statement
+- [ ] if/else statement
+- [ ] if/else if/else statement
+- [ ] switch statement
+- [ ] effective use of goto labels to construct a single exit point within a function
+
+MAPPING: 6.12
+
+UID: B-CO-837298744
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Language Foundations](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.02+1T2020/home)
+
+- [When to use Goto in C](https://www.cprogramming.com/tutorial/goto.html)
+
+- [(R2D2) Introduction to C - control flow](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/06_control_flow.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 32 ================
+
+title:	(U) Demonstrate skill in creating and implementing a sort routine.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in creating and implementing a sort routine.
+
+MAPPING: 6.13
+
+UID: B-CO-309421086
+
+<details> <summary>Training Links</summary>
+
+- [C Programming: Language Foundations](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.02+1T2020/home)
+
+- [(R2D2) Sorting](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/09_Algorithms/02_sorting.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 33 ================
+
+title:	(U) Given a specification for a stateful application or protocol, describe and/or draw a diagram of the possible states it can have.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Given a specification for a stateful application or protocol, describe and/or draw a diagram of the possible states it can have.
+- [ ] Show or describe criteria necessary to change between each possible state
+- [ ] Show or describe the input/output generated (if any) during the change between each possible state
+- [ ] Show or describe the conditions necessary to be in the initial state
+- [ ] Show or describe the conditions necessary to get to the final state
+- [ ] Show or describe the relationship (if any) between each state in the program
+- [ ] Account for any possible error conditions that may occur during state transitions
+
+MAPPING: 6.14
+
+UID: B-CO-336648797
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications utilizing standard, nonstandard, specialized, serialization and/or unique network communication protocols. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 34 ================
+
+title:	(U) Describe terms associated with compiling, linking, debugging, and executables:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe terms associated with compiling, linking, debugging, and executables:
+- [ ] Portable Executable (PE)
+- [ ] Executable and Linkable Format (ELF)
+- [ ] Difference between PE and ELF
+- [ ] Difference between a library (shared object / DLL) and a regular executable program
+- [ ] Calling convention/Application Binary Interface (ABI)
+
+MAPPING: 6.15
+
+UID: B-CO-431675298
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Skill in conducting software debugging. (Proficiency: 2)
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 35 ================
+
+title:	(U) Demonstrate skill in compiling, linking, and debugging:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in compiling, linking, and debugging:
+- [ ] Execute a program in a debugger to perform general debugging actions
+- [ ] Create a program using the compilation and linking process
+- [ ] Compile position-independent code using a cross-compiler
+
+MAPPING: 6.16
+
+UID: B-CO-617373871
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of software debugging principles. (Proficiency: C)
+
+- (U) Skill in conducting software debugging. (Proficiency: 2)
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+- (U) Modify and maintain existing software to correct errors, to adapt it to new hardware, or to upgrade interfaces and improve performance.
+
+- (U) Identify and direct the remediation of technical problems encountered during testing and implementation of new systems (e.g., identify and find work-around for communication protocols that are not interoperable).
+
+</details>
+
+
+================ ISSUE 36 ================
+
+title:	(U) Demonstrate the ability to build a binary from multiple C source files and headers by writing a Makefile using explicit rules.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to build a binary from multiple C source files and headers by writing a Makefile using explicit rules.
+
+MAPPING: 6.17
+
+UID: B-CO-922939913
+
+<details> <summary>Training Links</summary>
+
+- [Makefile Tutorial ](https://makefiletutorial.com/)
+
+- [(R2D2) Building](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/00_Introduction_to_C/00_building.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 37 ================
+
+title:	(U) Describe how and when bitwise operators are used:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe how and when bitwise operators are used:
+- [ ] and (&)
+- [ ] or (|)
+- [ ] xor (^)
+- [ ] bitwise complement (~)
+- [ ] shift left (<<)
+- [ ] shift right (>>)
+- [ ] Add, removing, and testing for single-bit flags
+- [ ] Extracting arbitrary bytes from multi-byte data types
+
+MAPPING: 6.18
+
+UID: B-CO-323939462
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 38 ================
+
+title:	(U) Demonstrate skill in using the C preprocessor.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in using the C preprocessor.
+
+MAPPING: 6.19
+
+UID: B-CO-187752760
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 39 ================
+
+title:	(U) Demonstrate skill in accessing environment variables.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in accessing environment variables.
+
+MAPPING: 6.20
+
+UID: B-CO-680796010
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 40 ================
+
+title:	(U) Demonstrate skill in controlling memory:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) C Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in controlling memory:
+- [ ] With attention given to implementation defined behavior, compare and contrast standard memory allocation functions (e.g., malloc(), calloc(), realloc(), and free())
+- [ ] Demonstrate appropriate error checking when managing memory allocations
+- [ ] Describe programming techniques that reduce the occurrence of memory leaks (e.g., behaviors that reinforce a clear ownership model)
+- [ ] Demonstrate effective use of Valgrind with --leak-check=full to identify memory leaks
+- [ ] Given code samples, identify and remove memory leaks
+
+MAPPING: 6.21
+
+UID: B-CO-991570421
+
+<details> <summary>Training Links</summary>
+
+- [Stanford's Guide to Valgrind](https://web.stanford.edu/class/archive/cs/cs107/cs107.1174/guide_valgrind.html)
+
+- [(R2D2) Heap](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/06_C_Programming/02_Intermediate_C/03_heap.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Skill in using code analysis tools. (Proficiency: 1)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 41 ================
+
+title:	(U) Describe purpose and use of foundational Python mechanics:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe purpose and use of foundational Python mechanics:
+- [ ] The return statement
+- [ ] Data types
+- [ ] A function
+- [ ] Parameters
+- [ ] Scope
+- [ ] Return values (return type and reference)
+- [ ] Import files
+- [ ] Dictionaries
+- [ ] List
+- [ ] Tuple
+- [ ] Singleton
+- [ ] The term mutable
+- [ ] The term immutable
+
+MAPPING: 7.1
+
+UID: B-CO-512997712
+
+<details> <summary>Training Links</summary>
+
+- [CS50's Introduction to Programming with Python](https://www.edx.org/course/cs50s-introduction-to-programming-with-python)
+
+- [CS 50 - Intro to Computer Science](https://pll.harvard.edu/course/cs50-introduction-computer-science)
+
+- [(R2D2) Python Fundamentals](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/tree/main/lessons/07_Python_Programming/01_Python_Fundamentals)
+
+- [(R2D2) Intermediate Python](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/tree/main/lessons/07_Python_Programming/02_Intermediate_Python)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to use reference documentation for C, Python, assembly, and other international technical standards and specifications (IEEE, ISO, IETF, etc.). (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 42 ================
+
+title:	(U) Demonstrate the proper declaration and use of Python data types and object-oriented constructs:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the proper declaration and use of Python data types and object-oriented constructs:
+- [ ] Integer (int)
+- [ ] Float (float)
+- [ ] String (str)
+- [ ] List (list)
+- [ ] Multi-dimensional list
+- [ ] Dictionary (dict)
+- [ ] Tuple (tuple)
+- [ ] Singleton
+
+MAPPING: 7.2
+
+UID: B-CO-569580700
+
+
+================ ISSUE 43 ================
+
+title:	(U) Demonstrate the ability to perform basic arithmetic operations using Python operators while ensuring proper order of operations (PEMDAS):
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to perform basic arithmetic operations using Python operators while ensuring proper order of operations (PEMDAS):
+- [ ] Addition
+- [ ] Subtraction
+- [ ] Multiplication
+- [ ] Division
+- [ ] Modulus
+
+MAPPING: 7.3
+
+UID: B-CO-96048492
+
+
+================ ISSUE 44 ================
+
+title:	(U) Demonstrate the ability to perform file management operations in Python:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to perform file management operations in Python:
+- [ ] Open an existing file
+- [ ] Read data from a file
+- [ ] Parse data from a file
+- [ ] Write data to a file
+- [ ] Modify data in a file
+- [ ] Close an open file
+- [ ] Print file information to the console
+- [ ] Create a new file
+- [ ] Append data to an existing file
+- [ ] Delete a file
+- [ ] Determine the size of a file
+- [ ] Determine location within a file
+- [ ] Insert data into an existing file
+
+MAPPING: 7.4
+
+UID: B-CO-935554486
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Utilize different programming languages to write code, open files, read files, and write output to different files.
+
+</details>
+
+
+================ ISSUE 45 ================
+
+title:	(U) Demonstrate the ability to create and implement functions to meet a requirement:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to create and implement functions to meet a requirement:
+- [ ] A function that returns multiple values
+- [ ] A function that receives input from a user
+- [ ] A recursive function
+
+MAPPING: 7.5
+
+UID: B-CO-868580984
+
+
+================ ISSUE 46 ================
+
+title:	(U) Demonstrate the ability to perform data validation:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to perform data validation:
+- [ ] Validating received input matches expected input
+- [ ] Designing and implementing a scheme for exception handling
+
+MAPPING: 7.6
+
+UID: B-CO-857922629
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Skill in developing applications that can log and handle errors, exceptions, and application faults and logging. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 47 ================
+
+title:	(U) Demonstrate skill in creating and implementing conditional statements, expressions, and constructs:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in creating and implementing conditional statements, expressions, and constructs:
+- [ ] for loop
+- [ ] while loop
+- [ ] with statement
+- [ ] if statement
+- [ ] if/else statement
+- [ ] if/elif/else statement
+- [ ] try/except/finally
+
+MAPPING: 7.7
+
+UID: B-CO-774139059
+
+<details> <summary>Training Links</summary>
+
+- [With Statement](https://realpython.com/python-with-statement/)
+
+- [(R2D2) Control Flow](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/07_Python_Programming/01_Python_Fundamentals/06_Control_Flow.md)
+
+- [(R2D2) Exception Handling](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/07_Python_Programming/02_Intermediate_Python/03_Exception_Handling.md)
+
+- [(R2D2) Loops](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/07_Python_Programming/01_Python_Fundamentals/06a_Loops.md)
+
+</details>
+
+
+================ ISSUE 48 ================
+
+title:	(U) Describe the terms and fundamentals associated with object oriented programming using Python:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the terms and fundamentals associated with object oriented programming using Python:
+- [ ] Class
+- [ ] Object
+- [ ] Difference between an object when discussing a class
+- [ ] Advantages to object-oriented programming
+- [ ] Inheritance
+- [ ] The keyword "super"
+- [ ] Initialization function of a constructor
+- [ ] The keyword "self"
+- [ ] The getter and setter functions
+- [ ] Attributes of a class
+- [ ] Factory design pattern
+- [ ] Singleton design pattern
+- [ ] Adapter design pattern
+- [ ] Bridge design pattern
+
+MAPPING: 7.8
+
+UID: B-CO-330553582
+
+<details> <summary>Training Links</summary>
+
+- [Python 3 Documentation](https://docs.python.org/3.10/)
+
+- [(R2D2) Classes](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/07_Python_Programming/02_Intermediate_Python/02_Classes.md)
+
+- [(R2D2) Object Oriented Classes](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/07_Python_Programming/03_Object_Oriented_Python/02_Classes.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of computer programming principles such as object-oriented design. (Proficiency: B)
+
+- (U) Knowledge of software engineering. (Proficiency: B)
+
+- (U) Utilize different programming languages to write code, open files, read files, and write output to different files.
+
+</details>
+
+
+================ ISSUE 49 ================
+
+title:	(U) Demonstrate the ability to parse command line arguments using built-in functionality.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Python Programming, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to parse command line arguments using built-in functionality.
+
+MAPPING: 7.9
+
+UID: B-CO-97046102
+
+<details> <summary>Training Links</summary>
+
+- [Getopt manpages](https://man7.org/linux/man-pages/man3/getopt.3.html)
+
+- [Python argparse](https://docs.python.org/3/library/argparse.html)
+
+</details>
+
+
+================ ISSUE 50 ================
+
+title:	(U) Describe the concepts and terms associated with key data structures:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Data Structures, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the concepts and terms associated with key data structures:
+- [ ] Hash table
+- [ ] Stack
+- [ ] Tree vs Binary search tree
+- [ ] Linked list
+- [ ] Double linked list
+- [ ] Queue vs Priority Queue
+- [ ] Circularly linked list
+- [ ] Weighted graph
+- [ ] Common pitfalls when using linked lists, trees, and graphs
+- [ ] The effect of First In First Out (FIFO) and Last In First Out (LIFO)
+
+MAPPING: 8.1
+
+UID: B-CO-712376497
+
+<details> <summary>Training Links</summary>
+
+- [Circularly Linked List](https://www.geeksforgeeks.org/circular-linked-list/)
+
+- [Weighted Graph](https://www.geeksforgeeks.org/graph-implementation-using-stl-for-competitive-programming-set-2-weighted-graph/)
+
+- [Stack](https://www.geeksforgeeks.org/introduction-to-stack-data-structure-and-algorithm-tutorials/)
+
+- [Linked List](https://www.geeksforgeeks.org/what-is-linked-list/)
+
+- [Priority Queue](https://www.geeksforgeeks.org/priority-queue-set-1-introduction/)
+
+- [Doubly Linked List](https://www.geeksforgeeks.org/doubly-linked-list/)
+
+- [Tree vs Binary Search Tree](https://www.geeksforgeeks.org/difference-between-binary-tree-and-binary-search-tree/)
+
+- [C Programming: Advanced Data Types](https://learning.edx.org/course/course-v1:Dartmouth_IMTx+DART.IMT.C.05+1T2020/home)
+
+- [(R2D2) Data Structures - Linked List](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/02_linked_list.md)
+
+- [(R2D2) Sets and Hashes](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/10_sets_and_hashes.md)
+
+- [(R2D2) Graphs](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/19_graphs.md)
+
+- [(R2D2) Priority Queue](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/15_pqueue.md)
+
+- [(R2D2) Data Structures - Stack](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/03_stack_queue.md)
+
+- [(R2D2) Tree](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/04_trees.md)
+
+</details>
+
+
+================ ISSUE 51 ================
+
+title:	(U) Demonstrate skill in creating and using a circularly linked list that accepts any data type:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Data Structures, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in creating and using a circularly linked list that accepts any data type:
+- [ ] Creating a circularly linked list with n number of items
+- [ ] Navigating through a circularly linked list
+- [ ] Finding the first occurrence of an item in a circularly linked list
+- [ ] Sorting the circularly linked list alphanumerically using a function pointer
+- [ ] Removing selected items from the circularly linked list
+- [ ] Inserting an item into a specific location in a circularly linked list
+- [ ] Removing all items from the circularly linked list
+- [ ] Destroying a circularly linked list
+
+MAPPING: 8.2
+
+UID: B-CO-514609705
+
+<details> <summary>Training Links</summary>
+
+- [Python Circularly Link List](https://www.askpython.com/python/examples/circular-linked-lists)
+
+</details>
+
+
+================ ISSUE 52 ================
+
+title:	(U) Demonstrate skill in creating and using a binary search tree that accepts any data type:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Data Structures, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in creating and using a binary search tree that accepts any data type:
+- [ ] Creating a binary search tree with n number of items
+- [ ] Navigating through a binary search tree
+- [ ] Locating an item in a binary search tree
+- [ ] Removing selected items from the binary search tree
+- [ ] Removing all items from the binary search tree
+- [ ] Describe implementation strategies for a balanced binary search tree
+- [ ] Destroying a binary search tree
+
+MAPPING: 8.3
+
+UID: B-CO-748359770
+
+<details> <summary>Training Links</summary>
+
+- [Binary Search Tree](https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/)
+
+- [(R2D2) Tree Traversal](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/05_tree_traversal.md)
+
+- [(R2D2) Balanced Binary Search Tree](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/06_tree_balancing.md)
+
+- [(R2D2) Trees](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/04_trees.md)
+
+</details>
+
+
+================ ISSUE 53 ================
+
+title:	(U) Demonstrate skill in creating and using a hash table that accepts any data type:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Data Structures, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in creating and using a hash table that accepts any data type:
+- [ ] Creating a hash table with n number of items
+- [ ] Navigating through a hash table to find the nth item
+- [ ] Finding an item in a hash table
+- [ ] Removing selected items from a hash table
+- [ ] Inserting an item into a hash table
+- [ ] Implement functionality to mitigate hash collisions within the hash table
+- [ ] Removing all items from the hash table
+
+MAPPING: 8.4
+
+UID: B-CO-209730386
+
+<details> <summary>Training Links</summary>
+
+- [Python Hash Table](https://realpython.com/python-hash-table/)
+
+- [(R2D2) Sets and Hashes](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/10_sets_and_hashes.md)
+
+</details>
+
+
+================ ISSUE 54 ================
+
+title:	(U) Demonstrate skill in creating and using a stack that accepts any data type:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Data Structures, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in creating and using a stack that accepts any data type:
+- [ ] Create a stack (cannot be fixed sized)
+- [ ] Adding an item in a stack (enforce FILO)
+- [ ] Removing n items from a stack
+- [ ] Removing all items from the stack
+- [ ] Destroying a stack
+- [ ] Preventing a stack overrun
+
+MAPPING: 8.5
+
+UID: B-CO-755503429
+
+<details> <summary>Training Links</summary>
+
+- [Stack Data Structure](https://www.geeksforgeeks.org/introduction-to-stack-data-structure-and-algorithm-tutorials/)
+
+</details>
+
+
+================ ISSUE 55 ================
+
+title:	(U) Demonstrate skill in implementing a priority queue that accepts any data type:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Data Structures, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in implementing a priority queue that accepts any data type:
+- [ ] Defining the underlying structures required for priority queues (cannot be fixed sized)
+- [ ] Assigning a priority to each element
+- [ ] Inserting an element into the priority queue
+- [ ] Removing the element with the highest priority from the priority queue
+- [ ] Destroying a priority queue
+- [ ] Define possible applications of a priority queue
+
+MAPPING: 8.6
+
+UID: B-CO-218544721
+
+<details> <summary>Training Links</summary>
+
+- [Priority Queue](https://www.geeksforgeeks.org/priority-queue-set-1-introduction/)
+
+</details>
+
+
+================ ISSUE 56 ================
+
+title:	(U) Describe concepts associated with traversal techniques:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Algorithms, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe concepts associated with traversal techniques:
+- [ ] Depth first traversal
+- [ ] Breadth first traversal
+- [ ] The technique of determining the weight of a given path when traversing a graph
+- [ ] How the most efficient path for traversing a graph is determined
+
+MAPPING: 9.1
+
+UID: B-CO-638320602
+
+<details> <summary>Training Links</summary>
+
+- [Shortest Path Problem](https://en.wikipedia.org/wiki/Shortest_path_problem)
+
+- [Breadth and Depth First Search](https://www.geeksforgeeks.org/difference-between-bfs-and-dfs/)
+
+- [(R2D2) Tree Traversal](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/05_tree_traversal.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of programming language structures and logic. (Proficiency: C)
+
+- (U) Knowledge of software engineering. (Proficiency: B)
+
+- (U) Knowledge of the concepts and terminology of data structures and associated algorithms (e.g., search, sort, traverse, insert, delete). (Proficiency: C)
+
+- (U) Design and develop data storage requirements, database structure, process flow, systematic procedures, algorithms, data analysis, and file structures.
+
+</details>
+
+
+================ ISSUE 57 ================
+
+title:	(U) Describe concepts associated with hashing:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Algorithms, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe concepts associated with hashing:
+- [ ] Data distribution as it relates to hashing
+- [ ] Hash function efficiency
+- [ ] Hash collisions
+
+MAPPING: 9.2
+
+UID: B-CO-45550169
+
+<details> <summary>Training Links</summary>
+
+- [Hash Function](https://en.wikipedia.org/wiki/Hash_function)
+
+- [Hash Table](https://en.wikipedia.org/wiki/Hash_table)
+
+- [Distributed Hash Table](https://en.wikipedia.org/wiki/Distributed_hash_table)
+
+- [Hash Collision](https://en.wikipedia.org/wiki/Hash_collision)
+
+- [(R2D2) Sets and Hashes](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/08_Data_Structures/10_sets_and_hashes.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of programming language structures and logic. (Proficiency: C)
+
+- (U) Knowledge of software engineering. (Proficiency: B)
+
+- (U) Design and develop data storage requirements, database structure, process flow, systematic procedures, algorithms, data analysis, and file structures.
+
+</details>
+
+
+================ ISSUE 58 ================
+
+title:	(U) Demonstrate the ability to analyze sorting routines to determine the most efficient one to use, using an approximation of Big-O notation.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Algorithms, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to analyze sorting routines to determine the most efficient one to use, using an approximation of Big-O notation.
+- [ ] Insertion sort
+- [ ] Selection sort
+- [ ] Merge sort
+- [ ] Heap sort
+- [ ] Quick sort
+- [ ] Hashing
+
+MAPPING: 9.3
+
+UID: B-CO-34525256
+
+<details> <summary>Training Links</summary>
+
+- [Quick Sort](https://www.geeksforgeeks.org/quick-sort/)
+
+- [Time Complexity (Big-O Notation)](https://en.wikipedia.org/wiki/Time_complexity)
+
+- [Selection Sort](https://www.geeksforgeeks.org/selection-sort/)
+
+- [Merge Sort](https://www.geeksforgeeks.org/merge-sort/)
+
+- [Hashing](https://www.geeksforgeeks.org/what-is-hashing/)
+
+- [Insertion Sort](https://www.geeksforgeeks.org/insertion-sort/)
+
+- [Heap Sort](https://www.geeksforgeeks.org/heap-sort/)
+
+- [(R2D2) Sorting](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/09_Algorithms/02_sorting.md)
+
+- [(R2D2) Sorting 2](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/09_Algorithms/03_sorting_2.md)
+
+- [(R2D2) Big O Notation](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/09_Algorithms/00_big-O-notation.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of programming language structures and logic. (Proficiency: C)
+
+- (U) Knowledge of software engineering. (Proficiency: B)
+
+- (U) Knowledge of the concepts and terminology of data structures and associated algorithms (e.g., search, sort, traverse, insert, delete). (Proficiency: C)
+
+- (U) Ability to use data structures. (Proficiency: 2)
+
+- (U) Design and develop data storage requirements, database structure, process flow, systematic procedures, algorithms, data analysis, and file structures.
+
+- (U) Utilize data structures to organize, sort, and manipulate elements of information.
+
+</details>
+
+
+================ ISSUE 59 ================
+
+title:	(U) Describe terms and concepts associated with Operating System (OS) virtualization:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operating System Concepts, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe terms and concepts associated with Operating System (OS) virtualization:
+- [ ] Processes
+- [ ] CPU scheduling
+- [ ] Paging tables
+- [ ] Caching
+- [ ] Kernel and user-mode memory
+
+MAPPING: 10.1
+
+UID: B-CO-992193420
+
+
+================ ISSUE 60 ================
+
+title:	(U) Describe the following terms and concepts:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operating System Concepts, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the following terms and concepts:
+- [ ] File systems
+- [ ] The boot process
+
+MAPPING: 10.2
+
+UID: B-CO-620744845
+
+<details> <summary>Training Links</summary>
+
+- [Medium - Linux Boot Process](https://medium.com/the-devops-journey/linux-booting-process-a43554dc72cd)
+
+- [(R2D2) Operating System Concepts - File IO](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/10_Operating_Systems_Concepts/02_file_io.md)
+
+- [(R2D2) Operating System Concepts - File Attributes](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/10_Operating_Systems_Concepts/01_file_attributes.md)
+
+- [(R2D2) Operating System Concepts - File Buffering](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/10_Operating_Systems_Concepts/03_file_buffering.md)
+
+</details>
+
+
+================ ISSUE 61 ================
+
+title:	(U) Demonstrate the ability to use the following constructs:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operating System Concepts, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to use the following constructs:
+- [ ] Interrupts
+- [ ] Signal handling
+
+MAPPING: 10.3
+
+UID: B-CO-827274700
+
+
+================ ISSUE 62 ================
+
+title:	(U) Describe terms and concepts associated with concurrency:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operating System Concepts, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe terms and concepts associated with concurrency:
+- [ ] Threading (thread vs pthread)
+- [ ] fork
+- [ ] join
+- [ ] create
+- [ ] exit
+- [ ] detach
+- [ ] self
+- [ ] Locking (mutex, semaphore, etc)
+- [ ] Race conditions
+- [ ] Deadlocks
+- [ ] thread safe
+- [ ] thread id
+- [ ] conditional variables
+- [ ] atomics
+- [ ] Scheduling algorithms, i.e., round robin, shortest job first, priority scheduling, etc.
+
+MAPPING: 10.4
+
+UID: B-CO-121442529
+
+<details> <summary>Training Links</summary>
+
+- [Linux Tutorial: POSIX Threads](https://www.cs.cmu.edu/afs/cs/academic/class/15492-f07/www/pthreads.html)
+
+</details>
+
+
+================ ISSUE 63 ================
+
+title:	(U) Demonstrate the ability to use the following constructs associated with concurrency:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operating System Concepts, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to use the following constructs associated with concurrency:
+- [ ] Threads
+- [ ] Locks
+- [ ] Condition variables
+- [ ] Atomics
+- [ ] Thread Pool (with graceful shutdown without memory leaks)
+
+MAPPING: 10.5
+
+UID: B-CO-232705938
+
+<details> <summary>Training Links</summary>
+
+- [Geeksforgeek - Producer Consumer Problem in C](https://www.geeksforgeeks.org/producer-consumer-problem-in-c/)
+
+- [(R2D2) Operating System Concepts - Threads](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/10_Operating_Systems_Concepts/10_threads.md)
+
+</details>
+
+
+================ ISSUE 64 ================
+
+title:	(U) Describe terms and concepts associated with secure coding practices:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Secure Coding, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe terms and concepts associated with secure coding practices:
+- [ ] Common string-handling functions
+- [ ] Which functions guarantee null terminated strings
+- [ ] An off-by-one error
+- [ ] An integer overflow
+- [ ] A buffer overflow
+- [ ] The concept of use-after-free
+- [ ] Resource acquisition is initialization (RAII)
+- [ ] The difference between input validation vs. input sanitization
+- [ ] The meaning of a pure function and if a function has a side-effect
+- [ ] General low-level crypto basics (e.g. different encryption schemes and how you might implement them system wide, what crypto is better for different use cases)
+- [ ] Penetration testing principles, tools, and techniques
+- [ ] Obfuscation techniques
+
+MAPPING: 11.1
+
+UID: B-CO-306646313
+
+<details> <summary>Training Links</summary>
+
+- [WGU: What is Penetration Testing?](https://www.wgu.edu/blog/what-is-penetration-testing2112.html#close)
+
+- [man7: strcmp(3) man pages](https://man7.org/linux/man-pages/man3/strcmp.3.html)
+
+- [man7: strcpy(3) man pages](https://man7.org/linux/man-pages/man3/strcpy.3.html)
+
+- [man7: memmove(3) man pages](https://man7.org/linux/man-pages/man3/memmove.3.html)
+
+- [man7: memcpy(3) man pages](https://man7.org/linux/man-pages/man3/memcpy.3.html)
+
+- [man7: strcat(3) man pages](https://man7.org/linux/man-pages/man3/strcat.3.html)
+
+- [Wikipedia - Integer Overflow](https://en.wikipedia.org/wiki/Integer_overflow)
+
+- [Wikipedia - Off-by-one Error](https://en.wikipedia.org/wiki/Off-by-one_error)
+
+- [Wikipedia - Resource acquisition is initialization](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization)
+
+- [Wikipedia - Buffer Overflow](https://en.wikipedia.org/wiki/Buffer_overflow)
+
+- [Wikipedia - Dangling Pointer](https://en.wikipedia.org/wiki/Dangling_pointer)
+
+- [Goodcore: 6 types of encryption](https://www.goodcore.co.uk/blog/types-of-encryption/)
+
+- [DEV Community - Cryptography for programmers 4 pt series](https://dev.to/shierve/cryptography-for-programmers-1-basics-block-cryptography-1iei)
+
+- [Geekforgeek - What is Obfuscation?](https://www.geeksforgeeks.org/what-is-obfuscation/)
+
+- [Medium: What are pure functions, side-causes, and side-effects](https://medium.com/go-for-marty/what-are-pure-functions-side-causes-and-side-effects-5a2a01f7cbcd)
+
+- [CISA: Free Cybersecurity Services and Tools](https://www.cisa.gov/resources-tools/resources/free-cybersecurity-services-and-tools)
+
+- [Imperva: Data Obfuscation](https://www.imperva.com/learn/data-security/data-obfuscation/)
+
+- [(R2D2) Secure Coding - String Handling](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1a_String_Handling.md)
+
+- [(R2D2) Secure Coding - Use After Free (UAF)](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1c_UAF.md)
+
+- [(R2D2) Secure Coding - Pure Functions](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1f_Pure_Functions.md)
+
+- [(R2D2) Secure Coding - Penetration Testing Basics](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1h_Penetration_Testing_Basics.md)
+
+- [(R2D2) Resource Acquisition Is Initialization (RAII)](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1d_RAII.md?ref_type=heads)
+
+- [(R2D2) Secure Coding - Overflows](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1b_Overflows.md)
+
+- [(R2D2) Secure Coding - Cryptography Basics](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1g_Cryptography_Basics.md)
+
+- [(R2D2) Secure Coding - Input Validation and Sanitization](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1e_Validation_Sanitization.md)
+
+- [(R2D2) Secure Coding - Obfuscation Techniques](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/11_Secure_Coding/11.1_Terms_and_Concepts/11.1i_Obfuscation_Techniques.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of cryptography and cryptographic management concepts. (Proficiency: B)
+
+- (U) Knowledge of cybersecurity principles and methods that apply to software development. (Proficiency: B)
+
+- (U) Knowledge of penetration testing principles, tools, and techniques. (Proficiency: A)
+
+- (U) Knowledge of techniques to harden capabilities to prevent attacks and forensics. (Proficiency: A)
+
+- (U) Apply cryptography primitives to protect the confidentiality and integrity of sensitive data.
+
+- (U) Analyze countermeasures and mitigations against potential exploitations of programming language weaknesses and vulnerabilities in system and elements.
+
+</details>
+
+
+================ ISSUE 65 ================
+
+title:	(U) Demonstrate skill in using secure coding techniques:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Secure Coding, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in using secure coding techniques:
+- [ ] Formatting string vulnerabilities
+- [ ] Safe buffer size allocation
+- [ ] Input sanitization
+- [ ] Input validation
+- [ ] Establish a secure communications channel using an SSL library
+- [ ] Securely zeroing-out memory (compiler optimizations)
+
+MAPPING: 11.2
+
+UID: B-CO-437587014
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Skill in using Public-Key Infrastructure (PKI) encryption and digital signature capabilities into applications (e.g., S/MIME email, SSL traffic). (Proficiency: 2)
+
+- (U) Enable applications with public keying by leveraging existing public key infrastructure (PKI) libraries and incorporating certificate management and encryption functionalities when appropriate.
+
+- (U) Apply cryptography primitives to protect the confidentiality and integrity of sensitive data.
+
+- (U) Perform secure programming and identify potential flaws in codes to mitigate vulnerabilities.
+
+- (U) Develop secure code and error handling.
+
+- (U) Utilize secure coding techniques during development of software and applications.
+
+</details>
+
+
+================ ISSUE 66 ================
+
+title:	(U) Describe the concepts and terms associated with networking fundamentals:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the concepts and terms associated with networking fundamentals:
+- [ ] Transmission Control Protocol (TCP) / User Datagram Protocol (UDP)
+- [ ] Open Systems Interconnect (OSI) model
+- [ ] POSIX API/BSD sockets
+- [ ] Purpose and use of sockets
+- [ ] Request For Comments (RFCs)
+- [ ] Purpose of subnetting
+
+MAPPING: 12.1
+
+UID: B-CO-102785945
+
+<details> <summary>Training Links</summary>
+
+- [TCP vs UDP Overview](https://www.spiceworks.com/tech/networking/articles/tcp-vs-udp/)
+
+- [OSI Model Overview](https://www.networkworld.com/article/3239677/the-osi-model-explained-and-how-to-easily-remember-its-7-layers.html)
+
+- [POSIX/BSD Sockets in Linux](https://en.wikibooks.org/wiki/C_Programming/Networking_in_UNIX)
+
+- [POSIX & BSD Sockets Lab](https://csperkins.org/teaching/2009-2010/networked-systems/lab04.pdf)
+
+- [Why Sockets](https://docs.oracle.com/cd/E23824_01/html/821-1602/svipc-13.html)
+
+- [RFC Basics and Whys](https://www.ietf.org/standards/rfcs/)
+
+- [Subnetting Basics](https://www.networkworld.com/article/3614929/subnetting-brushing-up-on-the-fundamentals.html)
+
+- [What is a subnet](https://www.cloudflare.com/learning/network-layer/what-is-a-subnet/)
+
+- [(R2D2) Network Standards](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/12_Networking_Fundamentals/00_Network_Theory/01_net_standards.md)
+
+- [(R2D2) TCP and UDP](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/12_Networking_Fundamentals/00_Network_Theory/08_layer_4.md)
+
+- [(R2D2) Subnetting](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/12_Networking_Fundamentals/00_Network_Theory/07_subnetting.md)
+
+</details>
+
+
+================ ISSUE 67 ================
+
+title:	(U) Describe the concepts and terms associated with common protocols and their associated ports, if applicable:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the concepts and terms associated with common protocols and their associated ports, if applicable:
+- [ ] Address Resolution Protocol (ARP)
+- [ ] Hypertext Transfer Protocol/Secure (HTTP/HTTPS)
+- [ ] Domain Name System (DNS)
+- [ ] Simple Mail Transfer Protocol (SMTP)
+- [ ] Internet Control Message Protocol (ICMP)
+- [ ] Dynamic Host Configuration Protocol (DHCP)
+- [ ] Internet Protocol version 4 (IPv4)
+- [ ] Internet Protocol version 6 (IPv6)
+
+MAPPING: 12.2
+
+UID: B-CO-315855728
+
+<details> <summary>Training Links</summary>
+
+- [IPv4 in technical Detail](https://www.uptrends.com/what-is/ipv4)
+
+- [IPv6](https://www.techtarget.com/searchnetworking/definition/IPv6-Internet-Protocol-Version-6)
+
+- [SMTP Explained in Technical Detail](https://www.geeksforgeeks.org/simple-mail-transfer-protocol-smtp/)
+
+- [ICMP (and some attacks using it)](https://www.cloudflare.com/learning/ddos/glossary/internet-control-message-protocol-icmp/)
+
+- [DHCP Deep Dive](https://www.networkworld.com/article/3299438/dhcp-defined-and-how-it-works.html)
+
+- [ARP: How it works](https://www.okta.com/identity-101/address-resolution-protocol-arp/)
+
+- [ARP Visually](https://erg.abdn.ac.uk/users/gorry/course/inet-pages/arp.html)
+
+- [HTTP/HTTPS](https://www.guru99.com/difference-http-vs-https.html)
+
+- [HTTP/HTTPS - Cloudflare's Explanation](https://www.cloudflare.com/learning/ssl/why-is-http-not-secure/)
+
+- [DNS Overview](https://www.cloudflare.com/learning/dns/what-is-dns/)
+
+- [DNS (with a visual)](https://aws.amazon.com/route53/what-is-dns/)
+
+- [(R2D2) Common Protocols](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/12_Networking_Fundamentals/00_Network_Theory/11_common_protocols.md)
+
+</details>
+
+
+================ ISSUE 68 ================
+
+title:	(U) Describe the addressing associated with key networking protocols:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the addressing associated with key networking protocols:
+- [ ] IPv4
+- [ ] IPv6
+- [ ] Ethernet
+
+MAPPING: 12.3
+
+UID: B-CO-733957574
+
+<details> <summary>Training Links</summary>
+
+- [IPv6 Addressing](https://docs.oracle.com/cd/E18752_01/html/816-4554/ipv6-overview-10.html)
+
+- [IPv4 Addressing (same as 12.2 IPv4)](https://www.uptrends.com/what-is/ipv4)
+
+- [Ethernet Addressing Video](https://www.youtube.com/watch?v=uOEYlJrN5Ng)
+
+- [Ethernet Addressing - Technical Detail](https://www.ciscopress.com/articles/article.asp?p=3089352&seqNum=5)
+
+- [(R2D2) IP](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/12_Networking_Fundamentals/00_Network_Theory/06_ip.md)
+
+- [(R2D2) Ethernet LANs](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/12_Networking_Fundamentals/00_Network_Theory/03_ethernet_lan.md)
+
+</details>
+
+
+================ ISSUE 69 ================
+
+title:	(U) Describe the concepts and terms associated with physical and logical network infrastructure:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the concepts and terms associated with physical and logical network infrastructure:
+- [ ] Hubs
+- [ ] Switches
+- [ ] Routers
+- [ ] Firewalls
+
+MAPPING: 12.4
+
+UID: B-CO-120945034
+
+<details> <summary>Training Links</summary>
+
+- [Network Switch detailed](https://www.networkworld.com/article/3584876/what-is-a-network-switch-and-how-does-it-work.html)
+
+- [Network Router](https://www.cloudflare.com/learning/network-layer/what-is-a-router/)
+
+- [Network Firewall](https://www.barracuda.com/glossary/network-firewall)
+
+- [Network Hub](https://www.lifewire.com/ethernet-and-network-hubs-816358)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of physical and logical network infrastructure, to include hubs, switches, routers, firewalls, etc. (Proficiency: B)
+
+</details>
+
+
+================ ISSUE 70 ================
+
+title:	(U) Describe different types of network communications:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe different types of network communications:
+- [ ] LAN
+- [ ] WAN
+- [ ] MAN
+- [ ] WLAN
+- [ ] WWAN
+
+MAPPING: 12.5
+
+UID: B-CO-7656756
+
+<details> <summary>Training Links</summary>
+
+- [Metropolitan Area Network](https://www.cloudflare.com/learning/network-layer/what-is-a-metropolitan-area-network/)
+
+- [Wireless LAN](https://www.techopedia.com/definition/5107/wireless-local-area-network-wlan)
+
+- [Wide Area Network](https://www.comptia.org/content/guides/what-is-a-wide-area-network)
+
+- [Local Area Networks](https://www.cloudflare.com/learning/network-layer/what-is-a-lan/)
+
+- [Wireless WAN](https://www.geeksforgeeks.org/overview-of-wireless-wide-area-network-wwan/)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of different types of network communication (e.g., LAN, WAN, MAN, WLAN, WWAN). (Proficiency: B)
+
+</details>
+
+
+================ ISSUE 71 ================
+
+title:	(U) In Python, demonstrate skill in using networking commands accounting for endianness:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) In Python, demonstrate skill in using networking commands accounting for endianness:
+- [ ] socket()
+- [ ] send()
+- [ ] recv()
+- [ ] sendto()
+- [ ] recvfrom()
+- [ ] bind()
+- [ ] listen()
+- [ ] connect()
+- [ ] accept()
+- [ ] close()
+- [ ] gethostname()
+
+MAPPING: 12.6
+
+UID: B-CO-202863291
+
+<details> <summary>Training Links</summary>
+
+- [Python Socket module](https://docs.python.org/3/library/socket.html)
+
+- [Python Socket HOWTO](https://docs.python.org/3/howto/sockets.html)
+
+- [Real Python's socket tutorial](https://realpython.com/python-sockets/)
+
+- [Python Socket Programming Walkthrough](https://www.youtube.com/watch?v=3QiPPX-KeSc)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to use common networking protocols. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 72 ================
+
+title:	(U) In C, demonstrate skill in using networking commands accounting for endianness:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) In C, demonstrate skill in using networking commands accounting for endianness:
+- [ ] socket()
+- [ ] send()
+- [ ] recv()
+- [ ] sendto()
+- [ ] recvfrom()
+- [ ] bind()
+- [ ] connect()
+- [ ] accept()
+- [ ] getsockopt()
+- [ ] setsockopt()
+- [ ] getaddrinfo()
+- [ ] gethostname()
+- [ ] struct sockaddr
+- [ ] struct sockaddr_in
+- [ ] struct sockaddr_un
+- [ ] struct sockaddr_storage
+
+MAPPING: 12.7
+
+UID: B-CO-58273107
+
+<details> <summary>Training Links</summary>
+
+- [Oracle Socket Tutorial (in C)](https://docs.oracle.com/cd/E19504-01/802-5886/6i9k5sgsl/index.html)
+
+- [Socket Programming (big picture)](https://www.csd.uoc.gr/~hy556/material/tutorials/cs556-3rd-tutorial.pdf)
+
+- [Socket Keepalive](https://tldp.org/HOWTO/TCP-Keepalive-HOWTO/programming.html)
+
+- [Socket Programming in C/C++](https://www.geeksforgeeks.org/socket-programming-cc/)
+
+</details>
+
+
+================ ISSUE 73 ================
+
+title:	(U) Demonstrate skill in handling partial send()/recv().
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in handling partial send()/recv().
+
+MAPPING: 12.8
+
+UID: B-CO-259535816
+
+
+================ ISSUE 74 ================
+
+title:	(U) Demonstrate skill in implementing functions that can properly handle any IP address (IPv4/IPv6).
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in implementing functions that can properly handle any IP address (IPv4/IPv6).
+
+MAPPING: 12.9
+
+UID: B-CO-243214221
+
+<details> <summary>Training Links</summary>
+
+- [C: Init_ntop function example](https://linuxhint.com/c-init-ntop-function/)
+
+- [inet_ntop - convert IPv4 and IPv6 addresses between bin and text](https://pubs.opengroup.org/onlinepubs/000095399/functions/inet_ntop.html)
+
+</details>
+
+
+================ ISSUE 75 ================
+
+title:	(U) Demonstrate skill in IO Multiplexing.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Networking Fundamentals, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate skill in IO Multiplexing.
+- [ ] select
+- [ ] poll
+
+MAPPING: 12.10
+
+UID: B-CO-472802055
+
+<details> <summary>Training Links</summary>
+
+- [Poll and Select functions](https://networkprogrammingnotes.blogspot.com/p/6.html)
+
+- [I/O Multiplexing: The select and poll Functions](https://notes.shichao.io/unp/ch6/)
+
+- [Socket Programming with Select and Poll](https://www.youtube.com/watch?v=dEHZb9JsmOU)
+
+- [I/O multiplexing: select, poll and epoll in Linux](https://www.softprayog.in/programming/io-multiplexing-select-poll-epoll-in-linux)
+
+- [(R2D2) C Networking - Multiplexing](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/12_Networking_Fundamentals/02_C_Networking/04_multiplexing.md?ref_type=heads)
+
+</details>
+
+
+================ ISSUE 76 ================
+
+title:	(U) Describe data serialization and deserialization.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Serialization, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe data serialization and deserialization.
+
+MAPPING: 13.1
+
+UID: B-CO-144855289
+
+<details> <summary>Training Links</summary>
+
+- [Microsoft Docs - Serialization (C#)](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/serialization/)
+
+- [(R2D2) Serialization - Describe Serialization](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/13_Serialization/01_Describe_Serialization.md)
+
+</details>
+
+
+================ ISSUE 77 ================
+
+title:	(U) Demonstrate the ability to handle partial reads and writes during serialization and deserialization.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Serialization, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to handle partial reads and writes during serialization and deserialization.
+
+MAPPING: 13.2
+
+UID: B-CO-146242389
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications utilizing standard, nonstandard, specialized, serialization and/or unique network communication protocols. (Proficiency: 2)
+
+- (U) Prepare detailed workflow charts and diagrams that describe input, output, and logical operation, and convert them into a series of instructions coded in a computer language.
+
+- (U) Analyze, modify, develop, debug, and document software and applications utilizing standard, non-standard, specialized, and/or unique communication protocols.
+
+</details>
+
+
+================ ISSUE 78 ================
+
+title:	(U) Demonstrate the ability to serialize fixed size multi-byte types between systems of differing endianness.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Serialization, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to serialize fixed size multi-byte types between systems of differing endianness.
+
+MAPPING: 13.3
+
+UID: B-CO-609695271
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications utilizing standard, nonstandard, specialized, serialization and/or unique network communication protocols. (Proficiency: 2)
+
+- (U) Prepare detailed workflow charts and diagrams that describe input, output, and logical operation, and convert them into a series of instructions coded in a computer language.
+
+- (U) Analyze, modify, develop, debug, and document software and applications utilizing standard, non-standard, specialized, and/or unique communication protocols.
+
+</details>
+
+
+================ ISSUE 79 ================
+
+title:	(U) Demonstrate the ability to serialize and deserialize variable sized data structures between systems of differing endianness.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Serialization, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to serialize and deserialize variable sized data structures between systems of differing endianness.
+
+MAPPING: 13.4
+
+UID: B-CO-468042969
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications utilizing standard, nonstandard, specialized, serialization and/or unique network communication protocols. (Proficiency: 2)
+
+- (U) Prepare detailed workflow charts and diagrams that describe input, output, and logical operation, and convert them into a series of instructions coded in a computer language.
+
+- (U) Analyze, modify, develop, debug, and document software and applications utilizing standard, non-standard, specialized, and/or unique communication protocols.
+
+</details>
+
+
+================ ISSUE 80 ================
+
+title:	(U) Describe libraries commonly used to aid in serialization.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Serialization, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe libraries commonly used to aid in serialization.
+
+MAPPING: 13.5
+
+UID: B-CO-247231085
+
+
+================ ISSUE 81 ================
+
+title:	(U) Describe the following concepts related to regular expressions:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Regular Expressions, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the following concepts related to regular expressions:
+- [ ] Basic Regular Expressions (BRE)
+- [ ] Extended Regular Expressions (ERE)
+- [ ] Perl Compatible Regular Expressions
+
+MAPPING: 14.1
+
+UID: B-CO-826929431
+
+<details> <summary>Training Links</summary>
+
+- [GNU - Basic (BRE) and extended (ERE) regular expression](https://www.gnu.org/software/sed/manual/html_node/BRE-vs-ERE.html)
+
+- [Stack Overflow - diff between GNU grep's basic/extended and PCRE](https://stackoverflow.com/questions/67943781/what-are-the-differences-between-gnu-greps-basic-extended-and-pcre-p-regul)
+
+- [(R2D2) Regular Expressions - Regex Concepts](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/14_Regular_Expressions/00_Regex_Concepts.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+</details>
+
+
+================ ISSUE 82 ================
+
+title:	(U) In C, demonstrate the ability to incorporate regular expression processing into a program
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Regular Expressions, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) In C, demonstrate the ability to incorporate regular expression processing into a program
+- [ ] Matching
+- [ ] Use of capture groups
+
+MAPPING: 14.2
+
+UID: B-CO-433775168
+
+<details> <summary>Training Links</summary>
+
+- [Geekforgeek - Regular Expression in C](https://www.geeksforgeeks.org/regular-expressions-in-c/)
+
+- [DEV Community - Using RegEx Capture Groups](https://dev.to/swarnaliroy94/using-regex-capturing-groups-je2)
+
+- [Regex101](https://regex101.com/)
+
+- [(R2D2) Regular Expressions - Regular Expressions in C](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/14_Regular_Expressions/02_C_Regex.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 83 ================
+
+title:	(U) In Python, demonstrate the ability to incorporate regular expression processing into a program
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Regular Expressions, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) In Python, demonstrate the ability to incorporate regular expression processing into a program
+- [ ] Matching
+- [ ] Use of capture groups
+
+MAPPING: 14.3
+
+UID: B-CO-681443894
+
+<details> <summary>Training Links</summary>
+
+- [Regex101](https://regex101.com/)
+
+- [Python Docs - Regular Expression HOWTO](https://docs.python.org/3/howto/regex.html)
+
+- [(R2D2) Regular Expressions - Regex](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/14_Regular_Expressions/01_Python_Regex.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in Python programming language. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 84 ================
+
+title:	(U) Describe the purpose of the following registers:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the purpose of the following registers:
+- [ ] General Purpose Registers
+- [ ] EIP
+- [ ] EFLAGS
+
+MAPPING: 15.1
+
+UID: B-CO-800289484
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of low-level computer languages (e.g., assembly languages). (Proficiency: B)
+
+- (U) Analyze and document applications using assembly languages.
+
+</details>
+
+
+================ ISSUE 85 ================
+
+title:	(U) Describe the difference in registers between x86 and x64.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the difference in registers between x86 and x64.
+
+MAPPING: 15.2
+
+UID: B-CO-268107261
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of low-level computer languages (e.g., assembly languages). (Proficiency: B)
+
+- (U) Analyze and document applications using assembly languages.
+
+</details>
+
+
+================ ISSUE 86 ================
+
+title:	(U) Describe the ways in which data can move between registers and memory:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the ways in which data can move between registers and memory:
+- [ ] Immediate to register
+- [ ] Register to register
+- [ ] Immediate to memory
+- [ ] Register to memory and vice versa
+- [ ] Memory to memory
+
+MAPPING: 15.3
+
+UID: B-CO-952601434
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of low-level computer languages (e.g., assembly languages). (Proficiency: B)
+
+- (U) Analyze and document applications using assembly languages.
+
+</details>
+
+
+================ ISSUE 87 ================
+
+title:	(U) Describe the purpose of the stack and how data is added/removed from it.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the purpose of the stack and how data is added/removed from it.
+
+MAPPING: 15.4
+
+UID: B-CO-129950984
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of low-level computer languages (e.g., assembly languages). (Proficiency: B)
+
+- (U) Analyze and document applications using assembly languages.
+
+</details>
+
+
+================ ISSUE 88 ================
+
+title:	(U) Describe the following calling conventions:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the following calling conventions:
+- [ ] cdecl
+- [ ] stdcall
+- [ ] fastcall
+
+MAPPING: 15.5
+
+UID: B-CO-929965174
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of low-level computer languages (e.g., assembly languages). (Proficiency: B)
+
+- (U) Analyze and document applications using assembly languages.
+
+</details>
+
+
+================ ISSUE 89 ================
+
+title:	(U) Describe purpose and use of foundational RE mechanics:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe purpose and use of foundational RE mechanics:
+- [ ] Disassembler
+- [ ] Decompiler
+- [ ] Debugger
+
+MAPPING: 15.6
+
+UID: B-CO-762810980
+
+<details> <summary>Training Links</summary>
+
+- [Wikipedia - Decompiler](https://en.wikipedia.org/wiki/Decompiler)
+
+- [Wikipedia - Debugger](https://en.wikipedia.org/wiki/Debugger)
+
+- [Wikipedia - Disassembler](https://en.wikipedia.org/wiki/Disassembler#Examples_of_disassemblers)
+
+- [(R2D2) Static Analysis](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/15_Reverse_Engineering/01_Reverse_Engineering/02_tools_static.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of software reverse engineering techniques (Proficiency: B)
+
+- (U) Knowledge of the use and application of static and dynamic program analysis. (Proficiency: B)
+
+- (U) Utilize tools to decompile, disassemble, analyze, and reverse engineer compiled binaries.
+
+</details>
+
+
+================ ISSUE 90 ================
+
+title:	(U) Describe the difference between static and dynamic analysis.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the difference between static and dynamic analysis.
+
+MAPPING: 15.7
+
+UID: B-CO-844148402
+
+<details> <summary>Training Links</summary>
+
+- [IDA Free/Pro](https://hex-rays.com/ida-pro/)
+
+- [Ghidra](https://ghidra-sre.org/)
+
+- [GDB](https://sourceware.org/gdb/)
+
+- [(R2D2) Static Analysis](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/15_Reverse_Engineering/01_Reverse_Engineering/02_tools_static.md)
+
+- [(R2D2) Dynamic Analysis - Windows](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/15_Reverse_Engineering/01_Reverse_Engineering/06_dynamic_windows.md)
+
+- [(R2D2) Dynamic Analysis - Linux](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/15_Reverse_Engineering/01_Reverse_Engineering/04_dynamic_linux.md)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of software reverse engineering techniques (Proficiency: B)
+
+- (U) Knowledge of the use and application of static and dynamic program analysis. (Proficiency: B)
+
+- (U) Utilize tools to decompile, disassemble, analyze, and reverse engineer compiled binaries.
+
+</details>
+
+
+================ ISSUE 91 ================
+
+title:	(U) Describe how to identify data structures in static analysis.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe how to identify data structures in static analysis.
+
+MAPPING: 15.8
+
+UID: B-CO-590259941
+
+<details> <summary>Training Links</summary>
+
+- [PC Security Channel - Introduction to Reverse Engineering](https://youtu.be/D6mVIos-S2M)
+
+- [Reversing Data Structures with Ghidra: Structures](https://youtu.be/ntTV8V7KVco)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of software reverse engineering techniques (Proficiency: B)
+
+- (U) Utilize tools to decompile, disassemble, analyze, and reverse engineer compiled binaries.
+
+</details>
+
+
+================ ISSUE 92 ================
+
+title:	(U) Demonstrate the ability to reverse engineer a binary and identify key facts about it.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Reverse Engineering, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to reverse engineer a binary and identify key facts about it.
+
+MAPPING: 15.9
+
+UID: B-CO-257255920
+
+<details> <summary>Training Links</summary>
+
+- [Ghidra Installation Guide](https://htmlpreview.github.io/?https://github.com/NationalSecurityAgency/ghidra/blob/stable/GhidraDocs/InstallationGuide.html)
+
+- [Crackmes.one](https://crackmes.one/lasts/1)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of low-level computer languages (e.g., assembly languages). (Proficiency: B)
+
+- (U) Knowledge of software reverse engineering techniques (Proficiency: B)
+
+- (U) Knowledge of the use and application of static and dynamic program analysis. (Proficiency: B)
+
+- (U) Utilize tools to decompile, disassemble, analyze, and reverse engineer compiled binaries.
+
+</details>
+
+
+================ ISSUE 93 ================
+
+title:	(U) Describe your organization's testing philosophy (e.g. CI/CD, TDD, etc.).
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Testing, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe your organization's testing philosophy (e.g. CI/CD, TDD, etc.).
+
+MAPPING: 16.1
+
+UID: B-CO-946106209
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of your organization's project management, timeline estimation, and software engineering philosophy (e.g. CI/CD, TDD, etc.). (Proficiency: B)
+
+- (U) Develop, modify, and utilize automation technologies to enable employment of capabilities as efficiently as possible (e.g. TDD, CI/CD, etc.)
+
+</details>
+
+
+================ ISSUE 94 ================
+
+title:	(U) Describe the difference between unit testing and functional/integration testing.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Testing, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the difference between unit testing and functional/integration testing.
+
+MAPPING: 16.2
+
+UID: B-CO-670714297
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of modern software development methodologies (e.g. Continuous Integration (CI), Continuous Delivery (CD), Test Driven Development (TDD), etc.). (Proficiency: B)
+
+</details>
+
+
+================ ISSUE 95 ================
+
+title:	(U) Describe the difference between modular and monolithic design and its impact on testing.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Testing, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the difference between modular and monolithic design and its impact on testing.
+
+MAPPING: 16.3
+
+UID: B-CO-943012331
+
+
+================ ISSUE 96 ================
+
+title:	(U) Demonstrate the ability to implement a unit test using Python.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Testing, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to implement a unit test using Python.
+
+MAPPING: 16.4
+
+UID: B-CO-601853511
+
+<details> <summary>Training Links</summary>
+
+- [PyTest getting started](https://docs.pytest.org/en/7.2.x/getting-started.html)
+
+- [(R2D2) Implement Unit Tests in Python](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/16_Testing/04a_Implement_testing_Python.md?ref_type=heads)
+
+</details>
+
+
+================ ISSUE 97 ================
+
+title:	(U) Describe the concept of Continuous Integration (CI) and how it relates to testing and overall product quality.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Testing, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe the concept of Continuous Integration (CI) and how it relates to testing and overall product quality.
+
+MAPPING: 16.5
+
+UID: B-CO-29941390
+
+<details> <summary>Training Links</summary>
+
+- [GitLab Docs CI/CD Concepts](https://docs.gitlab.com/ee/ci/introduction/)
+
+- [(R2D2) CI/CD Pipelines in GitLab](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/00_Miscellaneous/01_Development_Introduction/03_git/06_CI_CD.md)
+
+- [(R2D2) Describe CI](https://code.levelup.cce.af.mil/ccds/training/basic/curriculum/-/blob/main/lessons/16_Testing/05_Describe_CI.md?ref_type=heads)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of modern software development methodologies (e.g. Continuous Integration (CI), Continuous Delivery (CD), Test Driven Development (TDD), etc.). (Proficiency: B)
+
+- (U) Skill in secure test plan design (e.g. unit, integration, system, and acceptance). (Proficiency: 1)
+
+- (U) Perform integrated quality assurance testing for security functionality and resiliency attack.
+
+</details>
+
+
+================ ISSUE 98 ================
+
+title:	(U) Describe your organization's OPSEC policy.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operations Security (OPSEC), Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe your organization's OPSEC policy.
+
+MAPPING: 17.1
+
+UID: B-CO-413423864
+
+<details> <summary>Training Links</summary>
+
+- [OPSEC Awareness for Military Members, DOD Employees ](https://securityawareness.usalearning.gov/opsec/index.htm)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of operations security. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 99 ================
+
+title:	(U) Describe how to safely use a search engine while maintaining OPSEC.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operations Security (OPSEC), Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe how to safely use a search engine while maintaining OPSEC.
+
+MAPPING: 17.2
+
+UID: B-CO-335330449
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of operations security. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 100 ================
+
+title:	(U) Demonstrate how to use a search engine without leaking intelligence information.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Operations Security (OPSEC), Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate how to use a search engine without leaking intelligence information.
+
+MAPPING: 17.3
+
+UID: B-CO-659724602
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Skill in conducting "open source" research. (Proficiency: 2)
+
+</details>
+
+
+================ ISSUE 101 ================
+
+title:	(U) Describe how an embedded system differs from a desktop computer and server.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Embedded Systems, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe how an embedded system differs from a desktop computer and server.
+
+MAPPING: 18.1
+
+UID: B-CO-860656997
+
+<details> <summary>Training Links</summary>
+
+- [Tech Target - Embedded Systems](https://www.techtarget.com/iotagenda/definition/embedded-system)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of embedded systems. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 102 ================
+
+title:	(U) Describe how the limitations of an embedded system impact development.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Embedded Systems, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe how the limitations of an embedded system impact development.
+
+MAPPING: 18.2
+
+UID: B-CO-644508337
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of embedded systems. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 103 ================
+
+title:	(U) Demonstrate knowledge of alternative C libraries to glibc.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Embedded Systems, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate knowledge of alternative C libraries to glibc.
+
+MAPPING: 18.3
+
+UID: B-CO-985733974
+
+<details> <summary>Training Links</summary>
+
+- [musl libc](https://musl.libc.org/)
+
+- [PDClib](https://github.com/DevSolar/pdclib)
+
+- [Newlib](https://sourceware.org/newlib/)
+
+</details>
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of embedded systems. (Proficiency: A)
+
+</details>
+
+
+================ ISSUE 104 ================
+
+title:	(U) Demonstrate the ability to cross-compile an application for multiple architectures.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Embedded Systems, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Demonstrate the ability to cross-compile an application for multiple architectures.
+
+MAPPING: 18.4
+
+UID: B-CO-813168617
+
+<details> <summary>Training Links</summary>
+
+- [GeeksForGeeks - What is a cross compiler?](https://www.geeksforgeeks.org/what-is-cross-compiler/)
+
+- [Cross-compilation using Clang](https://clang.llvm.org/docs/CrossCompilation.html)
+
+- [OSDev.org - Cross Compile with GCC](https://wiki.osdev.org/GCC_Cross-Compiler)
+
+- [Wikipedia - Cross Compiler](https://en.wikipedia.org/wiki/Cross_compiler)
+
+</details>
+
+
+================ ISSUE 105 ================
+
+title:	(U) Develop a capability:
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyber Capability, Basic::core
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Develop a capability:
+- [ ] Provide user interface (GUI or CLI)
+- [ ] Apply software engineering best practices (CI/CD, virtualization, containerization)
+- [ ] Provide documentation for capability
+
+MAPPING: 19.1
+
+UID: B-CO-179842937
+
+<details> <summary>Linked KSATs</summary>
+
+- (U) Knowledge of basic programming concepts (e.g., levels, structures, compiled vs. interpreted languages). (Proficiency: C)
+
+- (U) Knowledge of data serialization formats (e.g. XML, JSON, etc.). (Proficiency: B)
+
+- (U) Knowledge of programming language structures and logic. (Proficiency: C)
+
+- (U) Knowledge of secure coding techniques. (Proficiency: B)
+
+- (U) Knowledge of terms and concepts of operating system fundamentals (e.g. virtualization, paging, file systems, I/O, memory management, process abstraction, etc.). (Proficiency: B)
+
+- (U) Knowledge of the concepts and terminology of data structures and associated algorithms (e.g., search, sort, traverse, insert, delete). (Proficiency: C)
+
+- (U) Skill in conducting software debugging. (Proficiency: 2)
+
+- (U) Skill in using code analysis tools. (Proficiency: 1)
+
+- (U) Skill in using Public-Key Infrastructure (PKI) encryption and digital signature capabilities into applications (e.g., S/MIME email, SSL traffic). (Proficiency: 2)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in C programming language. (Proficiency: 2)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications in Python programming language. (Proficiency: 2)
+
+- (U) Ability to analyze, modify, develop, debug, and document software and applications utilizing standard, nonstandard, specialized, serialization and/or unique network communication protocols. (Proficiency: 2)
+
+- (U) Ability to interpret customer requirements and evaluate resource and system constraints to create solution design specifications. (Proficiency: 2)
+
+- (U) Ability to use common networking protocols. (Proficiency: 2)
+
+- (U) Ability to use data structures. (Proficiency: 2)
+
+- (U) Knowledge of computer programming principles such as object-oriented design. (Proficiency: B)
+
+- (U) Knowledge of modern software development methodologies (e.g. Continuous Integration (CI), Continuous Delivery (CD), Test Driven Development (TDD), etc.). (Proficiency: B)
+
+- (U) Knowledge of principles, methodologies, and tools used to improve quality of software (e.g. regression testing, test coverage, code review, pair programming, etc.). (Proficiency: A)
+
+- (U) Knowledge of software engineering. (Proficiency: B)
+
+- (U) Skill in developing applications that can log and handle errors, exceptions, and application faults and logging. (Proficiency: 2)
+
+- (U) Ability to develop secure software according to secure software deployment methodologies, tools, and practices. (Proficiency: 2)
+
+- (U) Knowledge of relevant mission processes including version control processes, release processes, documentation requirements, and testing requirements. (Proficiency: B)
+
+- (U) Skill in secure test plan design (e.g. unit, integration, system, and acceptance). (Proficiency: 1)
+
+- (U) Ability to communicate complex information, concepts, or ideas in a confident and well-organized manner through verbal, written, and/or visual means. (Proficiency: 1)
+
+- (U) Develop content for cyber capabilities.
+
+- (U) Create or enhance cyberspace capabilities to compromise, deny, degrade, disrupt, destroy, or manipulate automated information systems.
+
+- (U) Create or enhance cyberspace solutions to enable surveillance and reconnaissance of automated information systems.
+
+- (U) Analyze, modify, develop, debug, and document software and applications which run in user space.
+
+- (U) Design and develop user interfaces (e.g. web pages, GUIs, CLIs, Console Interfaces).
+
+- (U) Apply software engineering best practices to enable sustainability and extensibility (Agile, TDD, CI/CD, etc.) to include containerization and virtualization technologies.
+
+- (U) Generate proper supporting documentation of cyber capability.
+
+</details>
+
+
+================ ISSUE 106 ================
+
+title:	(U) Describe Expeditionary Cyberspace Team (ECT) Concepts.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyber Warfare Battalion Fundamentals, Basic::army (core)
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe Expeditionary Cyberspace Team (ECT) Concepts.
+- [ ] ECT mission
+- [ ] ECT task organization
+- [ ] Inherent capabilities and equipment
+- [ ] Deployment model
+- [ ] Combatant Command alignment
+
+MAPPING: 1.1
+
+UID: B-AR-72714966-core
+
+
+================ ISSUE 107 ================
+
+title:	(U) Describe RF and EW development concepts, capabilities, and considerations.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Cyber Warfare Battalion Fundamentals, Basic::army (core)
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Describe RF and EW development concepts, capabilities, and considerations.
+- [ ] Purpose
+- [ ] Common reachback process
+- [ ] Inherent capabilities and equipment
+- [ ] Supporting and supported organizations
+- [ ] Basic considerations for RF and EW development
+
+MAPPING: 1.2
+
+UID: B-AR-666824652-core
+
+
+================ ISSUE 108 ================
+
+title:	(U) Achieve a passing score on the respective Basic Skill Level Exam.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Basic Skill Level Evaluation, Basic::army (core)
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Achieve a passing score on the respective Basic Skill Level Exam.
+
+MAPPING: 2.1
+
+UID: B-AR-366051403-core
+
+
+================ ISSUE 109 ================
+
+title:	(U) Achieve a passing recommendation from the respective Basic Skill Level Validation Panel.
+state:	open
+author:	group_5385_bot_3ea688325c25bdcbaafca852ead4e54d
+labels:	(U) Basic Skill Level Evaluation, Basic::army (core)
+comments:	0
+assignees:
+milestone:	Basic (core)
+--
+(U) Achieve a passing recommendation from the respective Basic Skill Level Validation Panel.
+
+MAPPING: 2.2
+
+UID: B-AR-954191496-core
+

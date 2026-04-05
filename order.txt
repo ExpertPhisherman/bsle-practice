@@ -1,0 +1,6 @@
+so your source file will be structured something like this
+>#includes
+>global variables (if any)
+>static function declarations
+>static function definitions
+>rest of the function definitions
