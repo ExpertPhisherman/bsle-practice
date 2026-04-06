@@ -1,3 +1,6 @@
 # Build directories
 bin/
 build/
+
+# VSCode configurations
+.vscode/
