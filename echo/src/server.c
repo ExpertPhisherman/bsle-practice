@@ -152,26 +152,16 @@ recv_request (session_t * p_session, request_t * p_request, response_t * p_respo
         goto cleanup;
     }
 
-    // TODO: Receive opcode and payload size in one recvall
-    // status = recvall(p_session->client_sockfd, p_request, 5u);
-    // if (STATUS_SUCCESS != status)
-    // {
-    //     goto cleanup;
-    // }
-
-    // Receive opcode
-    status = recvall(p_session->client_sockfd, &(p_request->opcode), sizeof(p_request->opcode));
+    // Receive opcode and payload size in one recvall
+    uint8_t p_header_buf[5];
+    status = recvall(p_session->client_sockfd, p_header_buf, 5u);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
     }
 
-    // Receive payload size
-    status = recvall(p_session->client_sockfd, &(p_request->size), sizeof(p_request->size));
-    if (STATUS_SUCCESS != status)
-    {
-        goto cleanup;
-    }
+    p_request->opcode = p_header_buf[0];
+    p_request->size = *(uint32_t*)(p_header_buf + 1);
 
     uint32_t host_request_size = ntohl(p_request->size);
 
@@ -227,21 +217,19 @@ send_response (session_t * p_session, response_t * p_response)
         goto cleanup;
     }
 
-    // TODO: Send opcode and payload size in one sendall
+    // Send opcode and payload size in one sendall
+    uint8_t p_header_buf[5];
+
+    p_header_buf[0] = p_response->status;
+    *(uint32_t*)(p_header_buf + 1) = p_response->size;
+
+    status = sendall(p_session->client_sockfd, p_header_buf, 5u);
+    if (STATUS_SUCCESS != status)
+    {
+        goto cleanup;
+    }
 
     uint32_t host_response_size = ntohl(p_response->size);
-
-    status = sendall(p_session->client_sockfd, &(p_response->status), sizeof(p_response->status));
-    if (STATUS_SUCCESS != status)
-    {
-        goto cleanup;
-    }
-
-    status = sendall(p_session->client_sockfd, &(p_response->size), sizeof(p_response->size));
-    if (STATUS_SUCCESS != status)
-    {
-        goto cleanup;
-    }
 
     status = sendall(p_session->client_sockfd, p_response->p_payload, host_response_size);
     if (STATUS_SUCCESS != status)
