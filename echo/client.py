@@ -23,11 +23,18 @@ class EchoClient(cmd.Cmd):
     def connect(self, rhost, rport, lhost=None, lport=None):
         """Connect to echo server"""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         if lport is not None:
             if lhost is None:
                 lhost = "0.0.0.0"
-            # Use specified source port
-            self.sock.bind((lhost, lport))
+            try:
+                # Use specified source port
+                self.sock.bind((lhost, lport))
+            except OSError as e:
+                print(f"Error binding to client: {e}")
+                self.init_vars()
+                exit(1)
+
         try:
             self.sock.connect((rhost, rport))
         except ConnectionRefusedError as e:
