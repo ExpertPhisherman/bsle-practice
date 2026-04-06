@@ -3,10 +3,9 @@
 
 ## Server
 
-- Epoll for client socket events instead of fork
+- Multithread client socket events instead of fork
 - Generalize packet fields using SLL
 
 ## Client
 
-- Receive opcode and payload size in one recvall
-- Connect with specified source port
+- Read command line options and arguments

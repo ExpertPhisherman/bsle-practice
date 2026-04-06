@@ -229,9 +229,7 @@ send_response (session_t * p_session, response_t * p_response)
         goto cleanup;
     }
 
-    uint32_t host_response_size = ntohl(p_response->size);
-
-    status = sendall(p_session->client_sockfd, p_response->p_payload, host_response_size);
+    status = sendall(p_session->client_sockfd, p_response->p_payload, ntohl(p_response->size));
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -361,7 +359,7 @@ client_socket (session_t * p_session)
             printf("Accepted connection from %s:%hu (client_sockfd %d)\n", p_ipstr, client_port, client_sockfd);
         }
 
-        // TODO: Epoll for client socket events instead of fork
+        // TODO: Multithread client socket events instead of fork
 
         pid_t pid = fork();
 
@@ -587,18 +585,20 @@ recvall (int sockfd, void * const p_buf, size_t const size)
         ssize_t recvd = recv(sockfd, (uint8_t*)p_buf + total, size - total, 0);
         if (-1 == recvd)
         {
-            if (EINTR == errno)
+            switch (errno)
             {
-                if (!g_keep_running)
-                {
-                    status = STATUS_SERVER_DISCONNECT;
-                    goto cleanup;
-                }
-                continue;
-            }
+                case EINTR:
+                    if (!g_keep_running)
+                    {
+                        status = STATUS_SERVER_DISCONNECT;
+                        goto cleanup;
+                    }
+                    continue;
 
-            status = STATUS_RECV_FAILURE;
-            goto cleanup;
+                default:
+                    status = STATUS_RECV_FAILURE;
+                    goto cleanup;
+            }
         }
         else if (0 == recvd)
         {

@@ -19,36 +19,38 @@ class EchoClient(cmd.Cmd):
         self.opcode = None
         self.length = None
         self.payload = None
-        self.request = None
-        self.response = None
 
-    def connect(self, host, port):
+    def connect(self, rhost, rport, lhost=None, lport=None):
         """Connect to echo server"""
-        # TODO: Connect with specified source port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if lport is not None:
+            if lhost is None:
+                lhost = "0.0.0.0"
+            # Use specified source port
+            self.sock.bind((lhost, lport))
         try:
-            self.sock.connect((host, port))
+            self.sock.connect((rhost, rport))
         except ConnectionRefusedError as e:
             print(f"Error connecting to server: {e}")
             self.init_vars()
             exit(1)
-        print(f"Connected to {host}:{port}")
+        print(f"Connected to {rhost}:{rport}")
 
     def send(self):
         """Send request to server"""
         if self.sock is None:
             return
         try:
-            self.request = struct.pack("!BI", self.opcode, self.length)
-            self.request += self.payload
-            #print(f"Request bytes: {self.request}")
-            self.sock.sendall(self.request)
+            request = struct.pack("!BI", self.opcode, self.length)
+            request += self.payload
+            self.sock.sendall(request)
         except ConnectionError as e:
             print(f"Error sending data: {e}")
             self.init_vars()
             exit(1)
 
     def recvall(self, size):
+        """Receive all data from server"""
         packet = b''
         while len(packet) < size:
             data = self.sock.recv(size - len(packet))
@@ -62,19 +64,17 @@ class EchoClient(cmd.Cmd):
         if self.sock is None:
             return
         try:
-            # TODO: Receive opcode and payload size in one recvall
-            self.response = self.recvall(1)
-            status = self.response[0]
-            if status == 0x00 or status == 0x01:
-                self.response += self.recvall(4)
-                size = struct.unpack('!I', self.response[1:5])[0]
-                self.response += self.recvall(size)
-                payload = self.response[5:size+5]
-                if len(payload) != size:
-                    raise ConnectionError("Incomplete payload received")
-                print(payload.decode('utf-8'))
-            else:
+            # Receive opcode and payload size in one recvall
+            response = self.recvall(5)
+            status = response[0]
+            if (status != 0x00) and (status != 0x01):
                 raise ConnectionError("Unknown status received from server")
+            size = struct.unpack('!I', response[1:5])[0]
+            response += self.recvall(size)
+            payload = response[5:size+5]
+            if len(payload) != size:
+                raise ConnectionError("Incomplete payload received")
+            print(payload.decode('utf-8'))
 
         except ConnectionError as e:
             print(f"Error receiving data: {e}")
@@ -114,7 +114,13 @@ class EchoClient(cmd.Cmd):
 
 def main():
     client = EchoClient()
-    client.connect(sys.argv[1], int(sys.argv[2]))
+
+    # TODO: Read command line options and arguments
+    if len(sys.argv) > 3:
+        client.connect(sys.argv[1], int(sys.argv[2]), sys.argv[3], int(sys.argv[4]))
+    else:
+        client.connect(sys.argv[1], int(sys.argv[2]))
+
     client.cmdloop()
 
     return 0
