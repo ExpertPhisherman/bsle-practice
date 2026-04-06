@@ -4,3 +4,6 @@ build/
 
 # VSCode configurations
 .vscode/
+
+# Token
+token.txt
