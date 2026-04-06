@@ -50,7 +50,9 @@ main (int argc, char * argv[])
     }
 
     free(p_vals);
+    p_vals = NULL;
     tpool_destroy(p_tm);
+    p_tm = NULL;
 
     (void)argc;
     (void)argv;

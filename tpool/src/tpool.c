@@ -151,6 +151,7 @@ tpool_worker (void * p_arg)
         {
             p_work->p_func(p_work->p_arg);
             tpool_work_destroy(p_work);
+            p_work = NULL;
         }
 
         /*
