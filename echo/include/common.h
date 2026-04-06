@@ -1,6 +1,6 @@
 /** @file common.h
  *
- * @brief Common definitions
+ * @brief Common definitions header
  *
  */
 

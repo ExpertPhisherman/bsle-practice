@@ -1,6 +1,6 @@
-/** @file main.c
+/** @file tpool.c
  *
- * @brief Main source
+ * @brief Thread pool source
  *
  */
 
