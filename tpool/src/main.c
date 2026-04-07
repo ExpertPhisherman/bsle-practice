@@ -19,7 +19,9 @@ worker (void * p_arg)
     printf("tid=%p, old=%d, val=%d\n", (void*)pthread_self(), old, *p_val);
 
     if (*p_val % 2)
+    {
         usleep(100000u);
+    }
 
     return;
 }
