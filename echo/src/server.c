@@ -239,6 +239,44 @@ cleanup:
     return status;
 }
 
+/*!
+ * @brief Wrapper for handle_client
+ *
+ * @param[in] p_arg Pointer to argument
+ *
+ * @return void
+ */
+static void
+handle_client_wrapper (void * p_arg)
+{
+    session_t * p_session = p_arg;
+
+    handle_client(p_session);
+
+    // Unregister client file descriptor
+    pthread_mutex_lock(&(p_session->p_registry->lock));
+    for (size_t index = 0u; index < MAX_CLIENTS; index++)
+    {
+        if ((p_session->p_registry->fds)[index] == p_session->client_sockfd)
+        {
+            (p_session->p_registry->fds)[index] = -1;
+            (p_session->p_registry->count)--;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&(p_session->p_registry->lock));
+
+    if (-1 == close(p_session->client_sockfd))
+    {
+        perror("close");
+    }
+
+    free(p_session);
+    p_session = NULL;
+
+    return;
+}
+
 status_t
 server_socket (session_t * p_session)
 {
@@ -359,46 +397,45 @@ client_socket (session_t * p_session)
             printf("Accepted connection from %s:%hu (client_sockfd %d)\n", p_ipstr, client_port, client_sockfd);
         }
 
-        // TODO: Multithread client socket events instead of fork
-
-        pid_t pid = fork();
-
-        switch (pid)
+        // Multithread client socket connections instead of fork
+        session_t * p_client_session = malloc(sizeof(*p_client_session));
+        if (NULL == p_client_session)
         {
-            case -1:
-                // Error, no fork
-                perror("fork");
-                if (-1 == close(client_sockfd))
-                {
-                    perror("close");
-                    status = STATUS_SOCKET_FAILURE;
-                    goto cleanup;
-                }
-                status = STATUS_FAILURE;
-                goto cleanup;
+            fprintf(stderr, "malloc failed for client session\n");
+            if (-1 == close(client_sockfd))
+            {
+                perror("close");
+            }
+            continue;
+        }
 
-            case 0:
-                // Child process
-                if (-1 == close(p_session->server_sockfd))
-                {
-                    perror("close");
-                }
-                p_session->client_port = client_port;
-                p_session->client_sockfd = client_sockfd;
-                status = handle_client(p_session);
-                if (-1 == close(client_sockfd))
-                {
-                    perror("close");
-                }
-                _Exit(status);
+        *p_client_session = *p_session;
+        p_client_session->client_port = client_port;
+        p_client_session->client_sockfd = client_sockfd;
 
-            default:
-                // Parent process
-                if (-1 == close(client_sockfd))
-                {
-                    perror("close");
-                }
-                continue;
+        // Register client file descriptor
+        pthread_mutex_lock(&(p_session->p_registry->lock));
+        for (size_t index = 0u; index < MAX_CLIENTS; index++)
+        {
+            if (-1 == (p_session->p_registry->fds)[index])
+            {
+                (p_session->p_registry->fds)[index] = client_sockfd;
+                (p_session->p_registry->count)++;
+                break;
+            }
+        }
+        pthread_mutex_unlock(&(p_session->p_registry->lock));
+
+        if (!tpool_add_work(p_session->p_tm, handle_client_wrapper, p_client_session))
+        {
+            fprintf(stderr, "tpool_add_work failed\n");
+            if (-1 == close(client_sockfd))
+            {
+                perror("close");
+            }
+            free(p_client_session);
+            p_client_session = NULL;
+            continue;
         }
     }
 
@@ -602,7 +639,7 @@ recvall (int sockfd, void * const p_buf, size_t const size)
         }
         else if (0 == recvd)
         {
-            status = STATUS_CLIENT_DISCONNECT;
+            status = g_keep_running ? STATUS_CLIENT_DISCONNECT : STATUS_SERVER_DISCONNECT;
             goto cleanup;
         }
         else

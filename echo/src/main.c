@@ -7,22 +7,6 @@
 #include "main.h"
 
 void
-handle_sigchld (int signo)
-{
-    int saved_errno = errno;
-    (void)signo;
-
-    while (0 < waitpid(-1, NULL, WNOHANG))
-    {
-        // Reap all child processes that have terminated
-    }
-
-    errno = saved_errno;
-
-    return;
-}
-
-void
 handle_sigint (int signo)
 {
     (void)signo;
@@ -35,9 +19,20 @@ main (int argc, char * argv[])
     status_t status;
 
     int opt;
-    bool b_verbose = false;
     uint16_t server_port = 0u;
     int backlog = DEFAULT_BACKLOG;
+    bool b_verbose = false;
+    tpool_t * p_tm = NULL;
+
+    session_t session =
+    {
+        .server_port = server_port,
+        .client_port = 0u,
+        .server_sockfd = -1,
+        .client_sockfd = -1,
+        .backlog = backlog,
+        .b_verbose = b_verbose
+    };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
     {
@@ -101,19 +96,6 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    struct sigaction sa_chld;
-    memset(&sa_chld, 0, sizeof(sa_chld));
-    sa_chld.sa_handler = handle_sigchld;
-    sa_chld.sa_flags = SA_RESTART;
-    sigemptyset(&sa_chld.sa_mask);
-
-    if (-1 == sigaction(SIGCHLD, &sa_chld, NULL))
-    {
-        perror("sigaction SIGCHLD");
-        status = STATUS_SIGNAL_FAILURE;
-        goto cleanup;
-    }
-
     struct sigaction sa_int;
     memset(&sa_int, 0, sizeof(sa_int));
     sa_int.sa_handler = handle_sigint;
@@ -127,15 +109,9 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    session_t session =
-    {
-        .server_port = server_port,
-        .client_port = 0u,
-        .server_sockfd = -1,
-        .client_sockfd = -1,
-        .backlog = backlog,
-        .b_verbose = b_verbose
-    };
+    session.server_port = server_port;
+    session.backlog = backlog;
+    session.b_verbose = b_verbose;
 
     status = server_socket(&session);
     if (STATUS_SUCCESS != status)
@@ -153,18 +129,60 @@ main (int argc, char * argv[])
     sll_display(&sll);
     sll_destroy(&sll);
 
+    registry_t registry;
+    memset(registry.fds, -1, sizeof(registry.fds));
+    registry.count = 0u;
+    pthread_mutex_init(&registry.lock, NULL);
+    session.p_registry = &registry;
+
+    p_tm = tpool_create(WORKER_THREADS);
+    if (NULL == p_tm)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    session.p_tm = p_tm;
+
     status = client_socket(&session);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
     }
 
-    close(session.server_sockfd);
     status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
-    if (STATUS_SUCCESS != status)
+    // Unblock all workers blocked in recv()
+    pthread_mutex_lock(&(registry.lock));
+    for (size_t index = 0u; index < MAX_CLIENTS; index++)
+    {
+        if (-1 != registry.fds[index])
+        {
+            if (-1 == shutdown(registry.fds[index], SHUT_RDWR))
+            {
+                perror("shutdown");
+                status = STATUS_SOCKET_FAILURE;
+            }
+        }
+    }
+    pthread_mutex_unlock(&(registry.lock));
+
+    tpool_wait(p_tm);
+
+    tpool_destroy(p_tm);
+    p_tm = NULL;
+
+    if (-1 != session.server_sockfd)
+    {
+        if (-1 == close(session.server_sockfd))
+        {
+            perror("close");
+            status = STATUS_SOCKET_FAILURE;
+        }
+    }
+
+    if ((STATUS_SUCCESS != status) && (0 != errno))
     {
         fprintf(stderr, "errno: %d\n", errno);
     }

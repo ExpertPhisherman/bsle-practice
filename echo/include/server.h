@@ -13,9 +13,12 @@
 #define DRAIN_CHUNK_SIZE 512
 #define DEFAULT_BACKLOG 10
 #define MAX_PAYLOAD_SIZE 4096
+#define WORKER_THREADS 8
+#define MAX_CLIENTS 2
 
 #include "sll.h"
 #include "common.h"
+#include "tpool.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -59,14 +62,24 @@ typedef struct response
     char * p_payload;
 } response_t;
 
+// Client registry
+typedef struct registry
+{
+    int             fds[MAX_CLIENTS];
+    size_t          count;
+    pthread_mutex_t lock;
+} registry_t;
+
 typedef struct session
 {
     uint16_t server_port;
     uint16_t client_port;
-    int server_sockfd;    // Server listening socket file descriptor
-    int client_sockfd;    // Client connected socket file descriptor
+    int server_sockfd;       // Server listening socket file descriptor
+    int client_sockfd;       // Client connected socket file descriptor
     int backlog;
     bool b_verbose;
+    tpool_t * p_tm;          // Pointer to thread pool
+    registry_t * p_registry; // Pointer to client registry
 } session_t;
 
 /*!

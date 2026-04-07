@@ -3,7 +3,6 @@
 
 ## Server
 
-- Multithread client socket events instead of fork
 - Generalize packet fields using SLL
 
 ## Client
