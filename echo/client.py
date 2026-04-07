@@ -104,7 +104,7 @@ class EchoClient(cmd.Cmd):
             response += self.recvall(size)
             payload = response[5:size+5]
             if len(payload) != size:
-                raise ConnectionError("Incomplete payload received")
+                raise ConnectionError("Unexpected response length")
             print(payload.decode('utf-8'))
             return False
 
