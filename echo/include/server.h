@@ -1,6 +1,6 @@
-/** @file server.c
+/** @file server.h
  *
- * @brief Echo server
+ * @brief Echo header
  *
  * @par
  * Basic TCP server
@@ -14,17 +14,14 @@
 #define DEFAULT_BACKLOG 10
 #define MAX_PAYLOAD_SIZE 4096
 #define WORKER_THREADS 8
-#define MAX_CLIENTS 2
+#define MAX_CLIENTS 10
 
 #include "sll.h"
 #include "common.h"
 #include "tpool.h"
 #include <arpa/inet.h>
-#include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <limits.h>
-#include <netdb.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
@@ -33,7 +30,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -65,19 +61,20 @@ typedef struct response
 // Client registry
 typedef struct registry
 {
-    int             fds[MAX_CLIENTS];
-    size_t          count;
-    pthread_mutex_t lock;
+    int             sockfds[MAX_CLIENTS]; // Array of registered socket file descriptors
+    size_t          count;                // Current population of array
+    pthread_mutex_t lock;                 // Mutex lock for read/write control
 } registry_t;
 
+// Session
 typedef struct session
 {
-    uint16_t server_port;
-    uint16_t client_port;
+    uint16_t server_port;    // Server port
+    uint16_t client_port;    // Client port
     int server_sockfd;       // Server listening socket file descriptor
     int client_sockfd;       // Client connected socket file descriptor
-    int backlog;
-    bool b_verbose;
+    int backlog;             // Number of connection requests to queue
+    bool b_verbose;          // Verbosity
     tpool_t * p_tm;          // Pointer to thread pool
     registry_t * p_registry; // Pointer to client registry
 } session_t;

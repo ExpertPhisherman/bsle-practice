@@ -130,9 +130,9 @@ main (int argc, char * argv[])
     sll_destroy(&sll);
 
     registry_t registry;
-    memset(registry.fds, -1, sizeof(registry.fds));
+    memset(registry.sockfds, -1, sizeof(registry.sockfds));
     registry.count = 0u;
-    pthread_mutex_init(&registry.lock, NULL);
+    pthread_mutex_init(&(registry.lock), NULL);
     session.p_registry = &registry;
 
     p_tm = tpool_create(WORKER_THREADS);
@@ -157,9 +157,9 @@ cleanup:
     pthread_mutex_lock(&(registry.lock));
     for (size_t index = 0u; index < MAX_CLIENTS; index++)
     {
-        if (-1 != registry.fds[index])
+        if (-1 != (registry.sockfds)[index])
         {
-            if (-1 == shutdown(registry.fds[index], SHUT_RDWR))
+            if (-1 == shutdown((registry.sockfds)[index], SHUT_RDWR))
             {
                 perror("shutdown");
                 status = STATUS_SOCKET_FAILURE;

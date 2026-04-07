@@ -136,17 +136,17 @@ cleanup:
 /*!
  * @brief Receive request from client
  *
- * @param[in] p_session Pointer to session
+ * @param[in] sockfd    Socket file descriptor
  * @param[in] p_request Pointer to request
  *
  * @return Status of operation
  */
 static status_t
-recv_request (session_t * p_session, request_t * p_request, response_t * p_response)
+recv_request (int sockfd, request_t * p_request, response_t * p_response)
 {
     status_t status;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if ((NULL == p_request) || (NULL == p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -154,7 +154,7 @@ recv_request (session_t * p_session, request_t * p_request, response_t * p_respo
 
     // Receive opcode and payload size in one recvall
     uint8_t p_header_buf[5];
-    status = recvall(p_session->client_sockfd, p_header_buf, 5u);
+    status = recvall(sockfd, p_header_buf, 5u);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -176,7 +176,7 @@ recv_request (session_t * p_session, request_t * p_request, response_t * p_respo
         ));
         fprintf(stderr, "%s\n", p_response->p_payload);
 
-        status = drain(p_session->client_sockfd, host_request_size);
+        status = drain(sockfd, host_request_size);
         if (STATUS_SUCCESS != status)
         {
             goto cleanup;
@@ -188,7 +188,7 @@ recv_request (session_t * p_session, request_t * p_request, response_t * p_respo
 
     // Receive payload
     // NOTE: Enforces payload is exactly host_request_size bytes
-    status = recvall(p_session->client_sockfd, p_request->p_payload, host_request_size);
+    status = recvall(sockfd, p_request->p_payload, host_request_size);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -201,17 +201,17 @@ cleanup:
 /*!
  * @brief Send response to client
  *
- * @param[in] p_session Pointer to session
+ * @param[in] sockfd     Socket file descriptor
  * @param[in] p_response Pointer to response
  *
  * @return Status of operation
  */
 static status_t
-send_response (session_t * p_session, response_t * p_response)
+send_response (int sockfd, response_t * p_response)
 {
     status_t status;
 
-    if ((NULL == p_session) || (NULL == p_response))
+    if (NULL == p_response)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -223,13 +223,13 @@ send_response (session_t * p_session, response_t * p_response)
     p_header_buf[0] = p_response->status;
     *(uint32_t*)(p_header_buf + 1) = p_response->size;
 
-    status = sendall(p_session->client_sockfd, p_header_buf, 5u);
+    status = sendall(sockfd, p_header_buf, 5u);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
     }
 
-    status = sendall(p_session->client_sockfd, p_response->p_payload, ntohl(p_response->size));
+    status = sendall(sockfd, p_response->p_payload, ntohl(p_response->size));
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -237,6 +237,64 @@ send_response (session_t * p_session, response_t * p_response)
 
 cleanup:
     return status;
+}
+
+/*!
+ * @brief Add file descriptor to registry
+ *
+ * @param[in] p_registry Pointer to registry
+ * @param[in] sockfd     Socket file descriptor to add
+ *
+ * @return Boolean if added
+ */
+static bool
+registry_add (registry_t * p_registry, int sockfd)
+{
+    bool b_added = false;
+
+    pthread_mutex_lock(&(p_registry->lock));
+    for (size_t index = 0u; index < MAX_CLIENTS; index++)
+    {
+        if (-1 == (p_registry->sockfds)[index])
+        {
+            (p_registry->sockfds)[index] = sockfd;
+            (p_registry->count)++;
+            b_added = true;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&(p_registry->lock));
+
+    return b_added;
+}
+
+/*!
+ * @brief Remove file descriptor from registry
+ *
+ * @param[in] p_registry Pointer to registry
+ * @param[in] sockfd     Socket file descriptor to remove
+ *
+ * @return Boolean if removed
+ */
+static bool
+registry_remove (registry_t * p_registry, int sockfd)
+{
+    bool b_removed = false;
+
+    pthread_mutex_lock(&(p_registry->lock));
+    for (size_t index = 0u; index < MAX_CLIENTS; index++)
+    {
+        if (sockfd == (p_registry->sockfds)[index])
+        {
+            (p_registry->sockfds)[index] = -1;
+            (p_registry->count)--;
+            b_removed = true;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&(p_registry->lock));
+
+    return b_removed;
 }
 
 /*!
@@ -251,20 +309,14 @@ handle_client_wrapper (void * p_arg)
 {
     session_t * p_session = p_arg;
 
+    // Handle client session
     handle_client(p_session);
 
     // Unregister client file descriptor
-    pthread_mutex_lock(&(p_session->p_registry->lock));
-    for (size_t index = 0u; index < MAX_CLIENTS; index++)
+    if (!registry_remove(p_session->p_registry, p_session->client_sockfd))
     {
-        if ((p_session->p_registry->fds)[index] == p_session->client_sockfd)
-        {
-            (p_session->p_registry->fds)[index] = -1;
-            (p_session->p_registry->count)--;
-            break;
-        }
+        fprintf(stderr, "client_sockfd %d not found in registry\n", p_session->client_sockfd);
     }
-    pthread_mutex_unlock(&(p_session->p_registry->lock));
 
     if (-1 == close(p_session->client_sockfd))
     {
@@ -414,17 +466,15 @@ client_socket (session_t * p_session)
         p_client_session->client_sockfd = client_sockfd;
 
         // Register client file descriptor
-        pthread_mutex_lock(&(p_session->p_registry->lock));
-        for (size_t index = 0u; index < MAX_CLIENTS; index++)
+        if (!registry_add(p_session->p_registry, client_sockfd))
         {
-            if (-1 == (p_session->p_registry->fds)[index])
+            fprintf(stderr, "MAX_CLIENTS reached, closing client_sockfd %d\n", client_sockfd);
+            if (-1 == close(client_sockfd))
             {
-                (p_session->p_registry->fds)[index] = client_sockfd;
-                (p_session->p_registry->count)++;
-                break;
+                perror("close");
             }
+            continue;
         }
-        pthread_mutex_unlock(&(p_session->p_registry->lock));
 
         if (!tpool_add_work(p_session->p_tm, handle_client_wrapper, p_client_session))
         {
@@ -482,7 +532,7 @@ handle_client (session_t * p_session)
         memset(p_recv_buf, 0, MAX_PAYLOAD_SIZE);
         memset(p_send_buf, 0, MAX_PAYLOAD_SIZE);
 
-        status = recv_request(p_session, &request, &response);
+        status = recv_request(p_session->client_sockfd, &request, &response);
         if (STATUS_OVERFLOW == status)
         {
             status = print_response(p_session, &response);
@@ -490,7 +540,7 @@ handle_client (session_t * p_session)
             {
                 goto cleanup;
             }
-            status = send_response(p_session, &response);
+            status = send_response(p_session->client_sockfd, &response);
             if (STATUS_SUCCESS != status)
             {
                 goto cleanup;
@@ -541,7 +591,7 @@ handle_client (session_t * p_session)
             goto cleanup;
         }
 
-        status = send_response(p_session, &response);
+        status = send_response(p_session->client_sockfd, &response);
         if (STATUS_SUCCESS != status)
         {
             goto cleanup;

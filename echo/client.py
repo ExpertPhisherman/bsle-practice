@@ -2,9 +2,30 @@ import cmd
 import sys
 import socket
 import struct
+import time
 
 class EchoClient(cmd.Cmd):
     """Echo client"""
+
+    def preloop(self):
+        """Executed once before the cmdloop starts."""
+        if self.sock is None:
+            return True
+
+        # Wait to receive a potential close
+        time.sleep(0.01)
+
+        self.sock.setblocking(False)
+        try:
+            data = self.sock.recv(1, socket.MSG_PEEK)
+            if len(data) == 0:
+                print("[!] MAX_CLIENTS reached")
+                sys.exit(1)
+        except BlockingIOError:
+            # Socket is open and empty
+            self.sock.setblocking(True)
+
+        return False
 
     def __init__(self):
         super().__init__()
@@ -33,28 +54,31 @@ class EchoClient(cmd.Cmd):
             except OSError as e:
                 print(f"Error binding to client: {e}")
                 self.init_vars()
-                exit(1)
+                return True
 
         try:
             self.sock.connect((rhost, rport))
+            print(f"Connected to {rhost}:{rport}")
         except ConnectionRefusedError as e:
             print(f"Error connecting to server: {e}")
             self.init_vars()
-            exit(1)
-        print(f"Connected to {rhost}:{rport}")
+            return True
+
+        return False
 
     def send(self):
         """Send request to server"""
         if self.sock is None:
-            return
+            return True
         try:
             request = struct.pack("!BI", self.opcode, self.length)
             request += self.payload
             self.sock.sendall(request)
+            return False
         except ConnectionError as e:
             print(f"Error sending data: {e}")
             self.init_vars()
-            exit(1)
+            return True
 
     def recvall(self, size):
         """Receive all data from server"""
@@ -69,7 +93,7 @@ class EchoClient(cmd.Cmd):
     def recv(self):
         """Receive response from server"""
         if self.sock is None:
-            return
+            return True
         try:
             # Receive opcode and payload size in one recvall
             response = self.recvall(5)
@@ -82,11 +106,12 @@ class EchoClient(cmd.Cmd):
             if len(payload) != size:
                 raise ConnectionError("Incomplete payload received")
             print(payload.decode('utf-8'))
+            return False
 
         except ConnectionError as e:
             print(f"Error receiving data: {e}")
             self.init_vars()
-            exit(1)
+            return True
 
     def do_ping(self, line):
         """Health check"""
@@ -94,7 +119,7 @@ class EchoClient(cmd.Cmd):
         self.length = 1
         self.payload = b'\x00'
         self.send()
-        self.recv()
+        return self.recv()
 
     def do_echo(self, line):
         """Echo message"""
@@ -102,7 +127,7 @@ class EchoClient(cmd.Cmd):
         self.length = len(line)
         self.payload = line.encode('utf-8')
         self.send()
-        self.recv()
+        return self.recv()
 
     def do_quit(self, line):
         """Close connection"""
@@ -124,13 +149,15 @@ def main():
 
     # TODO: Read command line options and arguments
     if len(sys.argv) > 3:
-        client.connect(sys.argv[1], int(sys.argv[2]), sys.argv[3], int(sys.argv[4]))
+        failed = client.connect(sys.argv[1], int(sys.argv[2]), sys.argv[3], int(sys.argv[4]))
     else:
-        client.connect(sys.argv[1], int(sys.argv[2]))
+        failed = client.connect(sys.argv[1], int(sys.argv[2]))
+
+    if failed:
+        return 1
 
     client.cmdloop()
-
     return 0
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())
