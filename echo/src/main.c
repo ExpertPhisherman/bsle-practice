@@ -22,7 +22,6 @@ main (int argc, char * argv[])
     uint16_t server_port = 0u;
     int backlog = DEFAULT_BACKLOG;
     bool b_verbose = false;
-    tpool_t * p_tm = NULL;
 
     session_t session =
     {
@@ -31,7 +30,9 @@ main (int argc, char * argv[])
         .server_sockfd = -1,
         .client_sockfd = -1,
         .backlog = backlog,
-        .b_verbose = b_verbose
+        .b_verbose = b_verbose,
+        .p_tm = NULL,
+        .p_registry = NULL
     };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
@@ -135,13 +136,12 @@ main (int argc, char * argv[])
     pthread_mutex_init(&(registry.lock), NULL);
     session.p_registry = &registry;
 
-    p_tm = tpool_create(WORKER_THREADS);
-    if (NULL == p_tm)
+    session.p_tm = tpool_create(WORKER_THREADS);
+    if (NULL == session.p_tm)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    session.p_tm = p_tm;
 
     status = client_socket(&session);
     if (STATUS_SUCCESS != status)
@@ -149,10 +149,6 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    status = STATUS_SUCCESS;
-    goto cleanup;
-
-cleanup:
     // Unblock all workers blocked in recv()
     pthread_mutex_lock(&(registry.lock));
     for (size_t index = 0u; index < MAX_CLIENTS; index++)
@@ -162,16 +158,19 @@ cleanup:
             if (-1 == shutdown((registry.sockfds)[index], SHUT_RDWR))
             {
                 perror("shutdown");
-                status = STATUS_SOCKET_FAILURE;
             }
         }
     }
     pthread_mutex_unlock(&(registry.lock));
 
-    tpool_wait(p_tm);
+    status = STATUS_SUCCESS;
+    goto cleanup;
 
-    tpool_destroy(p_tm);
-    p_tm = NULL;
+cleanup:
+    tpool_wait(session.p_tm);
+
+    tpool_destroy(session.p_tm);
+    session.p_tm = NULL;
 
     if (-1 != session.server_sockfd)
     {
