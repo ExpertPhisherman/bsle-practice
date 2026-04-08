@@ -7,7 +7,7 @@
 #include "common.h"
 
 void
-display_bytes (void const * const p_var, size_t const size, char const * const p_sep)
+display_bytes (void * p_var, size_t size, char * p_sep)
 {
     uint8_t chr;
 
@@ -23,7 +23,7 @@ display_bytes (void const * const p_var, size_t const size, char const * const p
 }
 
 void
-nfree (void const ** const pp_var)
+nfree (void ** pp_var)
 {
     if (NULL == pp_var)
     {
@@ -35,7 +35,7 @@ nfree (void const ** const pp_var)
         goto cleanup;
     }
 
-    free((void *)*pp_var);
+    free(*pp_var);
     *pp_var = NULL;
 
 cleanup:

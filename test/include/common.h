@@ -40,7 +40,7 @@ typedef enum status
  *
  * @return void
  */
-void display_bytes(void const * const p_var, size_t const size, char const * const p_sep);
+void display_bytes(void * p_var, size_t size, char * p_sep);
 
 /*!
  * @brief Free and set argument to NULL
@@ -49,7 +49,7 @@ void display_bytes(void const * const p_var, size_t const size, char const * con
  *
  * @return void
  */
-void nfree(void const ** const pp_var);
+void nfree(void ** pp_var);
 
 #endif /* COMMON_H */
 
