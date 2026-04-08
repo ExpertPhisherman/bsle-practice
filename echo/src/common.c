@@ -7,7 +7,7 @@
 #include "common.h"
 
 void
-display_bytes (void * p_var, size_t size, char * p_sep)
+display_bytes (void * p_var, size_t size, char const * p_sep)
 {
     uint8_t chr;
 
