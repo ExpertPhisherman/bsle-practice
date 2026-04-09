@@ -481,7 +481,7 @@ client_socket (session_t * p_session)
             fprintf(stderr, "tpool_add_work failed\n");
             if (!registry_remove(p_session->p_registry, client_sockfd))
             {
-                fprintf(stderr, "client_sockfd %d not found in registry\n", p_session->client_sockfd);
+                fprintf(stderr, "client_sockfd %d not found in registry\n", client_sockfd);
             }
             if (-1 == close(client_sockfd))
             {
