@@ -56,8 +56,6 @@ TIDY_CHECKS = -*, \
 	readability-misleading-indentation, \
 	readability-implicit-bool-conversion, \
 	readability-avoid-const-params-in-decls
-# hicpp-uppercase-literal-suffix,
-# readability-*,
 
 .PHONY: all debug clean tidy tidy-fix
 
@@ -83,10 +81,10 @@ debug: all
 
 # Clang-Tidy checks
 tidy:
-	$(TIDY) -header-filter='.*' -checks='$(TIDY_CHECKS)' $(SRCS) -- $(CPPFLAGS) $(CFLAGS)  -std=c11 -D_POSIX_C_SOURCE=200809L
+	$(TIDY) -header-filter='.*' -checks='$(TIDY_CHECKS)' $(SRCS) -- $(CPPFLAGS) $(CFLAGS)
 
 tidy-fix:
-	$(TIDY) -header-filter='.*' -checks='$(TIDY_CHECKS)' $(SRCS) -fix -- $(CPPFLAGS) $(CFLAGS)  -std=c11 -D_POSIX_C_SOURCE=200809L
+	$(TIDY) -header-filter='.*' -checks='$(TIDY_CHECKS)' $(SRCS) -fix -- $(CPPFLAGS) $(CFLAGS)
 
 # Cleanup
 clean:
