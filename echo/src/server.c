@@ -617,7 +617,7 @@ cleanup:
 }
 
 status_t
-sendall (int sockfd, void const * const p_buf, size_t const size)
+sendall (int sockfd, void * p_buf, size_t size)
 {
     status_t status;
 
@@ -665,7 +665,7 @@ cleanup:
 }
 
 status_t
-recvall (int sockfd, void * const p_buf, size_t const size)
+recvall (int sockfd, void * p_buf, size_t size)
 {
     status_t status;
 

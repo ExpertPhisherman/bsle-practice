@@ -4,7 +4,7 @@
  *
  */
 
-#include "main.h"
+#include "../include/main.h"
 
 static size_t const num_threads = 4u;
 static size_t const num_items   = 100u;

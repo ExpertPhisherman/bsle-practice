@@ -12,26 +12,27 @@ INCLUDE = include
 BUILD = build
 BIN = bin
 
-# Outputs
-LIB = $(BIN)/lib$(NAME).a
-TARGET = $(BIN)/$(NAME)
+.DEFAULT_GOAL := all
 
 # Local files
 SRCS = $(wildcard $(SRC)/*.c)
+MAIN_SRC = $(SRC)/main.c
+LIB_SRCS = $(filter-out $(MAIN_SRC),$(SRCS))
+
 OBJS = $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(SRCS))
+LIB_OBJS = $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(LIB_SRCS))
 DEPS = $(OBJS:.o=.d)
 
 # External static libraries derived from LIB_DIRS
 EXT_LIBS = $(foreach d,$(LIB_DIRS),$(d)/bin/lib$(notdir $(d)).a)
 
-.DEFAULT_GOAL := all
+# Outputs
+LIB = $(BIN)/lib$(NAME).a
+TARGET = $(BIN)/$(NAME)
 
 # Does this project have a main.c?
-MAIN_SRC = $(SRC)/main.c
 ifeq ($(wildcard $(MAIN_SRC)),$(MAIN_SRC))
 ALL_TARGETS = $(LIB) $(TARGET)
-
-# Executable for this project
 $(TARGET): $(OBJS) $(EXT_LIBS)
 	@mkdir -p $(BIN)
 	$(CC) $(CFLAGS) $^ -o $@
@@ -39,32 +40,32 @@ else
 ALL_TARGETS = $(LIB)
 endif
 
+$(EXT_LIBS):
+	$(MAKE) -C $(patsubst %/bin/,%,$(dir $@)) all
+
 # Clang-Tidy settings
 TIDY = clang-tidy
-TIDY_CHECKS = "-*,readability-*,hicpp-braces-around-statements, \
-               hicpp-uppercase-literal-suffix,hicpp-signed-bitwise, \
-               cppcoreguidelines-pro-bounds-array-to-pointer-decay, \
-               readability-braces-around-statements, \
-               readability-identifier-naming, \
-               readability-function-size, \
-               readability-misleading-indentation, \
-               readability-implicit-bool-conversion, \
-               readability-avoid-const-params-in-decls"
 
-.PHONY: all debug clean tidy tidy-fix FORCE
+TIDY_CHECKS = -*, \
+	hicpp-braces-around-statements, \
+	hicpp-signed-bitwise, \
+	cppcoreguidelines-pro-bounds-array-to-pointer-decay, \
+	readability-braces-around-statements, \
+	readability-identifier-naming, \
+	readability-function-size, \
+	readability-misleading-indentation, \
+	readability-implicit-bool-conversion, \
+	readability-avoid-const-params-in-decls
+# hicpp-uppercase-literal-suffix,
+# readability-*,
+
+.PHONY: all debug clean tidy tidy-fix
 
 # Default target
 all: $(ALL_TARGETS)
 
-# Always ask subprojects to rebuild themselves when their archive is checked.
-FORCE:
-
-# Recurse into each dependency project whenever its archive is checked
-$(EXT_LIBS): FORCE
-	$(MAKE) -C $(patsubst %/bin/,%,$(dir $@))
-
 # Static library for this project
-$(LIB): $(OBJS)
+$(LIB): $(LIB_OBJS)
 	@mkdir -p $(BIN)
 	$(AR) $(ARFLAGS) $@ $^
 
@@ -82,10 +83,10 @@ debug: all
 
 # Clang-Tidy checks
 tidy:
-	$(TIDY) $(SRCS) -- $(CPPFLAGS) -std=c11 -D_POSIX_C_SOURCE=200809L
+	$(TIDY) -header-filter='.*' -checks='$(TIDY_CHECKS)' $(SRCS) -- $(CPPFLAGS) $(CFLAGS)  -std=c11 -D_POSIX_C_SOURCE=200809L
 
 tidy-fix:
-	$(TIDY) $(SRCS) -fix -- $(CPPFLAGS) -std=c11 -D_POSIX_C_SOURCE=200809L
+	$(TIDY) -header-filter='.*' -checks='$(TIDY_CHECKS)' $(SRCS) -fix -- $(CPPFLAGS) $(CFLAGS)  -std=c11 -D_POSIX_C_SOURCE=200809L
 
 # Cleanup
 clean:

@@ -116,7 +116,7 @@ status_t handle_client(session_t * p_session);
  *
  * @return Status of operation
  */
-status_t sendall(int sockfd, void const * const p_buf, size_t const size);
+status_t sendall(int sockfd, void * p_buf, size_t size);
 
 /*!
  * @brief Receive all data from client
@@ -127,7 +127,7 @@ status_t sendall(int sockfd, void const * const p_buf, size_t const size);
  *
  * @return Status of operation
  */
-status_t recvall(int sockfd, void * const p_buf, size_t const size);
+status_t recvall(int sockfd, void * p_buf, size_t size);
 
 #endif /* SERVER_H */
 

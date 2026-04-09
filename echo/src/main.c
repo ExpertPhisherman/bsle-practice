@@ -4,7 +4,7 @@
  *
  */
 
-#include "main.h"
+#include "../include/main.h"
 
 volatile sig_atomic_t g_keep_running = 1;
 

@@ -1,3 +1,3 @@
 NAME = echo
-LIB_DIRS = ../tpool ../common
+LIB_DIRS = ../common ../tpool ../sll
 include ../mk/Makefile
