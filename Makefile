@@ -1,3 +1,5 @@
+# !!! SHARED MAKEFILE: NOT INTENDED FOR USE OUTSIDE OF A PROJECT DIRECTORY !!!
+
 # Compiler and flags
 CC = cc
 CFLAGS = -std=c11 -Wall -Werror -Wextra -Wformat=2 -Wpedantic -Wstrict-prototypes -Wwrite-strings -Wvla -Wfloat-equal -pthread -D_POSIX_C_SOURCE=200809L
