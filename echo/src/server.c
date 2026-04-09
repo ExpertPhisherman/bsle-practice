@@ -371,7 +371,7 @@ server_socket (session_t * p_session)
         goto cleanup;
     }
 
-    if (-1 == bind(server_sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)))
+    if (-1 == bind(server_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)))
     {
         perror("bind");
         if (-1 == close(server_sockfd))
@@ -428,7 +428,7 @@ client_socket (session_t * p_session)
         struct sockaddr_in client_addr;
 
         socklen_t sin_size = sizeof(client_addr);
-        client_sockfd = accept(p_session->server_sockfd, (struct sockaddr*)&client_addr, &sin_size);
+        client_sockfd = accept(p_session->server_sockfd, (struct sockaddr *)&client_addr, &sin_size);
         if (-1 == client_sockfd)
         {
             if (EINTR == errno)
@@ -625,7 +625,7 @@ sendall (int sockfd, void const * const p_buf, size_t const size)
 
     while (total < size)
     {
-        ssize_t sent = send(sockfd, (uint8_t*)p_buf + total, size - total, 0);
+        ssize_t sent = send(sockfd, (uint8_t *)p_buf + total, size - total, 0);
         if (-1 == sent)
         {
             if (EINTR == errno)
@@ -673,7 +673,7 @@ recvall (int sockfd, void * const p_buf, size_t const size)
 
     while (total < size)
     {
-        ssize_t recvd = recv(sockfd, (uint8_t*)p_buf + total, size - total, 0);
+        ssize_t recvd = recv(sockfd, (uint8_t *)p_buf + total, size - total, 0);
         if (-1 == recvd)
         {
             switch (errno)
