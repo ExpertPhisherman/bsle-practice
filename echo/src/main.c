@@ -138,7 +138,7 @@ main (int argc, char * argv[])
     if (0 != pthread_mutex_init(&(registry.lock), NULL))
     {
         perror("pthread_mutex_init");
-        status = STATUS_SIGNAL_FAILURE;
+        status = STATUS_MUTEX_FAILURE;
         goto cleanup;
     }
     session.p_registry = &registry;
