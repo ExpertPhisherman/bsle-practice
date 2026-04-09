@@ -22,24 +22,4 @@ display_bytes (void * p_var, size_t size, char const * p_sep)
     }
 }
 
-void
-nfree (void ** pp_var)
-{
-    if (NULL == pp_var)
-    {
-        goto cleanup;
-    }
-
-    if (NULL == *pp_var)
-    {
-        goto cleanup;
-    }
-
-    free(*pp_var);
-    *pp_var = NULL;
-
-cleanup:
-    return;
-}
-
 /*** end of file ***/

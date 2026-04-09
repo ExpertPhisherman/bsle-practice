@@ -12,8 +12,6 @@
 #include "tpool.h"
 #include "common.h"
 
-volatile sig_atomic_t g_keep_running = 1;
-
 /*!
  * @brief Gracefully shutdown server on SIGINT
  *

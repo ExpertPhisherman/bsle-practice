@@ -20,6 +20,7 @@
 #include "common.h"
 #include "tpool.h"
 #include <arpa/inet.h>
+#include <stdatomic.h>
 #include <errno.h>
 #include <limits.h>
 #include <netinet/in.h>

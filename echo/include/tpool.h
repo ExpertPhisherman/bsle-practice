@@ -25,11 +25,12 @@ typedef struct tpool_work
 
 typedef struct tpool
 {
-    tpool_work_t    * p_work_first; // Used to push and pop work objects
-    tpool_work_t    * p_work_last;  // Used to push and pop work objects
+    tpool_work_t    * p_work_first; // Head of work queue
+    tpool_work_t    * p_work_last;  // Tail of work queue
+    pthread_t       * p_threads;    // Array of worker thread IDs
     pthread_mutex_t   work_mutex;   // Used for all locking
     pthread_cond_t    work_cond;    // Signal when there is work to be processed
-    pthread_cond_t    working_cond; // Signal when no threads are processing
+    pthread_cond_t    working_cond; // Signal when all queued work is done
     size_t            working_cnt;  // Number of threads actively processing work
     size_t            thread_cnt;   // Number of threads alive
     bool              stop;         // Stop threads

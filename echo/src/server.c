@@ -161,7 +161,7 @@ recv_request (int sockfd, request_t * p_request, response_t * p_response)
     }
 
     p_request->opcode = p_header_buf[0];
-    p_request->size = *(uint32_t*)(p_header_buf + 1);
+    memcpy(&(p_request->size), p_header_buf + 1, sizeof(p_request->size));
 
     uint32_t host_request_size = ntohl(p_request->size);
 
@@ -221,7 +221,7 @@ send_response (int sockfd, response_t * p_response)
     uint8_t p_header_buf[5];
 
     p_header_buf[0] = p_response->status;
-    *(uint32_t*)(p_header_buf + 1) = p_response->size;
+    memcpy(p_header_buf + 1, &(p_response->size), sizeof(p_response->size));
 
     status = sendall(sockfd, p_header_buf, 5u);
     if (STATUS_SUCCESS != status)
@@ -479,6 +479,10 @@ client_socket (session_t * p_session)
         if (!tpool_add_work(p_session->p_tm, handle_client_wrapper, p_client_session))
         {
             fprintf(stderr, "tpool_add_work failed\n");
+            if (!registry_remove(p_session->p_registry, client_sockfd))
+            {
+                fprintf(stderr, "client_sockfd %d not found in registry\n", p_session->client_sockfd);
+            }
             if (-1 == close(client_sockfd))
             {
                 perror("close");
@@ -652,9 +656,9 @@ sendall (int sockfd, void const * const p_buf, size_t const size)
     goto cleanup;
 
 cleanup:
-    if (STATUS_RECV_FAILURE == status)
+    if (STATUS_SEND_FAILURE == status)
     {
-        perror("recvall");
+        perror("sendall");
     }
 
     return status;
@@ -702,9 +706,9 @@ recvall (int sockfd, void * const p_buf, size_t const size)
     goto cleanup;
 
 cleanup:
-    if (STATUS_SEND_FAILURE == status)
+    if (STATUS_RECV_FAILURE == status)
     {
-        perror("sendall");
+        perror("recvall");
     }
     else if (STATUS_CLIENT_DISCONNECT == status)
     {

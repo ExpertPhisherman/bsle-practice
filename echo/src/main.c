@@ -6,6 +6,8 @@
 
 #include "main.h"
 
+volatile sig_atomic_t g_keep_running = 1;
+
 void
 handle_sigint (int signo)
 {
@@ -16,7 +18,7 @@ handle_sigint (int signo)
 int
 main (int argc, char * argv[])
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     int opt;
     uint16_t server_port = 0u;
@@ -133,7 +135,12 @@ main (int argc, char * argv[])
     registry_t registry;
     memset(registry.sockfds, -1, sizeof(registry.sockfds));
     registry.count = 0u;
-    pthread_mutex_init(&(registry.lock), NULL);
+    if (0 != pthread_mutex_init(&(registry.lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_SIGNAL_FAILURE;
+        goto cleanup;
+    }
     session.p_registry = &registry;
 
     session.p_tm = tpool_create(WORKER_THREADS);
@@ -149,28 +156,37 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
+cleanup:
     // Unblock all workers blocked in recv()
-    pthread_mutex_lock(&(registry.lock));
-    for (size_t index = 0u; index < MAX_CLIENTS; index++)
+    if (NULL != session.p_registry)
     {
-        if (-1 != (registry.sockfds)[index])
+        pthread_mutex_lock(&(registry.lock));
+        for (size_t index = 0u; index < MAX_CLIENTS; index++)
         {
-            if (-1 == shutdown((registry.sockfds)[index], SHUT_RDWR))
+            if (-1 != (registry.sockfds)[index])
             {
-                perror("shutdown");
+                if (-1 == shutdown((registry.sockfds)[index], SHUT_RDWR))
+                {
+                    perror("shutdown");
+                }
             }
         }
+        pthread_mutex_unlock(&(registry.lock));
     }
-    pthread_mutex_unlock(&(registry.lock));
 
-    status = STATUS_SUCCESS;
-    goto cleanup;
+    // Wait for queued work to finish and join all threads
+    if (NULL != session.p_tm)
+    {
+        tpool_wait(session.p_tm);
+        tpool_destroy(session.p_tm);
+        session.p_tm = NULL;
+    }
 
-cleanup:
-    tpool_wait(session.p_tm);
-
-    tpool_destroy(session.p_tm);
-    session.p_tm = NULL;
+    if (NULL != session.p_registry)
+    {
+        pthread_mutex_destroy(&(registry.lock));
+        session.p_registry = NULL;
+    }
 
     if (-1 != session.server_sockfd)
     {

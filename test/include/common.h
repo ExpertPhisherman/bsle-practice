@@ -42,15 +42,6 @@ typedef enum status
  */
 void display_bytes(void * p_var, size_t size, char const * p_sep);
 
-/*!
- * @brief Free and set argument to NULL
- *
- * @param[in] pp_var Double pointer to variable
- *
- * @return void
- */
-void nfree(void ** pp_var);
-
 #endif /* COMMON_H */
 
 /*** end of file ***/
