@@ -10,6 +10,7 @@
 #include "server.h"
 #include "sll.h"
 #include "common.h"
+#include "tpool.h"
 
 /*!
  * @brief Gracefully shutdown server on SIGINT
