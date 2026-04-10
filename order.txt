@@ -1,6 +1,8 @@
-so your source file will be structured something like this
->#includes
->global variables (if any)
->static function declarations
->static function definitions
->rest of the function definitions
+Each source file shall be comprised of some or all of the following sections, in the order listed:
+comment block
+include statements
+data type, constant, and macro definitions
+static data declarations
+private function prototypes
+public function bodies
+private function bodies
