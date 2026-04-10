@@ -35,10 +35,10 @@ typedef struct item
 
 typedef struct ht
 {
-    sll_t    ** pp_entries; // Double pointer to entries
-    size_t      capacity;   // Maximum number of elements
-    size_t      len;        // Current length
-    hash_func_t p_hash;     // Pointer to hash function
+    sll_t       ** pp_elements; // Double pointer to elements
+    size_t         capacity;    // Maximum number of elements
+    size_t         len;         // Current length
+    hash_func_t    p_hash;      // Pointer to hash function
 } ht_t;
 
 /*!
@@ -62,7 +62,7 @@ uint64_t djb2_hash(void * p_key, size_t size);
 status_t ht_create(ht_t * p_ht, size_t capacity);
 
 /*!
- * @brief Display hash table entries
+ * @brief Display hash table elements
  *
  * @param[in] p_ht Pointer to hash table
  *

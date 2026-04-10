@@ -54,18 +54,18 @@ ht_create (ht_t * p_ht, size_t capacity)
     p_ht->len = 0u;
     p_ht->p_hash = djb2_hash;
 
-    // Allocate entries
-    p_ht->pp_entries = calloc(capacity, sizeof(*(p_ht->pp_entries)));
-    if (NULL == (p_ht->pp_entries))
+    // Allocate elements
+    p_ht->pp_elements = calloc(capacity, sizeof(*(p_ht->pp_elements)));
+    if (NULL == (p_ht->pp_elements))
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    // Allocate and set entries to empty SLLs
+    // Allocate and set elements to empty SLLs
     for (size_t idx = 0u; idx < capacity; idx++)
     {
-        // Allocate entry
+        // Allocate element
         sll_t * p_sll = malloc(sizeof(*p_sll));
         if (NULL == p_sll)
         {
@@ -79,8 +79,8 @@ ht_create (ht_t * p_ht, size_t capacity)
             goto cleanup;
         }
 
-        // Set entry
-        (p_ht->pp_entries)[idx] = p_sll;
+        // Set element
+        (p_ht->pp_elements)[idx] = p_sll;
     }
 
     status = STATUS_SUCCESS;
@@ -114,7 +114,7 @@ ht_display (ht_t * p_ht)
 
     for (size_t idx = 0u; idx < p_ht->capacity; idx++)
     {
-        sll_t * p_sll = (p_ht->pp_entries)[idx];
+        sll_t * p_sll = (p_ht->pp_elements)[idx];
         if (NULL != (p_sll->p_head))
         {
             printf("%zu: ", idx);
@@ -143,7 +143,7 @@ ht_in (ht_t * p_ht, void * p_key, size_t size)
     size_t capacity = p_ht->capacity;
     uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
 
-    b_key_in = sll_in((p_ht->pp_entries)[hash], p_key, size);
+    b_key_in = sll_in((p_ht->pp_elements)[hash], p_key, size);
     goto cleanup;
 
 cleanup:
@@ -168,7 +168,7 @@ ht_get (ht_t * p_ht, size_t idx, sll_t * p_sll)
     }
 
     // Copy SLL into destination variable
-    *p_sll = *((p_ht->pp_entries)[idx]);
+    *p_sll = *((p_ht->pp_elements)[idx]);
 
     status = STATUS_SUCCESS;
     goto cleanup;
@@ -191,7 +191,7 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
     size_t capacity = p_ht->capacity;
     uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
 
-    sll_t * p_sll = (p_ht->pp_entries)[hash];
+    sll_t * p_sll = (p_ht->pp_elements)[hash];
 
     // Insert data if not already exists in SLL
     if (!sll_in(p_sll, p_key, size))
@@ -235,7 +235,7 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
     size_t capacity = p_ht->capacity;
     uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
 
-    sll_t * p_sll = (p_ht->pp_entries)[hash];
+    sll_t * p_sll = (p_ht->pp_elements)[hash];
 
     // Remove data if exists in SLL
     if (sll_in(p_sll, p_key, size))
@@ -275,16 +275,16 @@ ht_destroy (ht_t * p_ht)
         goto cleanup;
     }
 
-    if (NULL == (p_ht->pp_entries))
+    if (NULL == (p_ht->pp_elements))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    // Free each entry
+    // Free each element
     for (size_t idx = 0u; idx < (p_ht->capacity); idx++)
     {
-        sll_t * p_sll = (p_ht->pp_entries)[idx];
+        sll_t * p_sll = (p_ht->pp_elements)[idx];
 
         // Free SLL nodes
         sll_destroy(p_sll);
@@ -292,16 +292,16 @@ ht_destroy (ht_t * p_ht)
         // Free SLL
         free(p_sll);
         p_sll = NULL;
-        (p_ht->pp_entries)[idx] = NULL;
+        (p_ht->pp_elements)[idx] = NULL;
     }
 
     status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
-    // Free all entries
-    free(p_ht->pp_entries);
-    p_ht->pp_entries = NULL;
+    // Free all elements
+    free(p_ht->pp_elements);
+    p_ht->pp_elements = NULL;
 
     p_ht->capacity = 0u;
     p_ht->len = 0u;
