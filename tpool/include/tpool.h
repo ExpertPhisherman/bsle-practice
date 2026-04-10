@@ -18,7 +18,7 @@ typedef void (*thread_func_t)(void * p_arg);
 
 typedef struct tpool_work
 {
-    thread_func_t       p_func; // Function pointer
+    thread_func_t       p_func; // Pointer to function
     void              * p_arg;  // Pointer to argument
     struct tpool_work * p_next; // Pointer to next work in the queue
 } tpool_work_t;
