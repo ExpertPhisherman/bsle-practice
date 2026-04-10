@@ -12,8 +12,6 @@
  * Removing all items from the hash table
  */
 
-// TODO: Use a macro that prints when DEBUG macro is defined
-
 #include "ht.h"
 
 uint64_t
@@ -23,14 +21,14 @@ djb2_hash (void * p_key, size_t size)
 
     uint64_t hash = 5381u;
 
-    // printf("Current key: ");
+    DEBUG_PRINT("Current key: ");
     for (size_t idx = 0u; idx < size; idx++)
     {
         chr = ((uint8_t *)p_key)[idx];
-        // printf("%c", chr);
+        DEBUG_PRINT("%c", chr);
         hash = ((hash << 5u) + hash) + chr; // (hash * 33) + chr
     }
-    // printf("\n");
+    DEBUG_PRINT("\n");
 
     return hash;
 }
