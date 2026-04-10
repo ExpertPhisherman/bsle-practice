@@ -9,7 +9,7 @@
 status_t
 sll_create (sll_t * p_sll)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_sll)
     {
@@ -20,7 +20,6 @@ sll_create (sll_t * p_sll)
     p_sll->p_head = NULL;
     p_sll->len = 0u;
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
@@ -30,7 +29,7 @@ cleanup:
 status_t
 sll_display (sll_t * p_sll)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_sll)
     {
@@ -60,7 +59,6 @@ sll_display (sll_t * p_sll)
     }
     printf("\n");
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
@@ -91,6 +89,7 @@ sll_in (sll_t * p_sll, void * p_data, size_t size)
         // Update current node
         p_curr = p_curr->p_next;
     }
+
     goto cleanup;
 
 cleanup:
@@ -100,7 +99,7 @@ cleanup:
 status_t
 sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_sll)
     {
@@ -170,7 +169,6 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
     // Increment SLL length
     (p_sll->len)++;
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
@@ -191,7 +189,7 @@ sll_append (sll_t * p_sll, void * p_data, size_t size)
 status_t
 sll_remove (sll_t * p_sll, void * p_data, size_t size)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_sll)
     {
@@ -251,7 +249,7 @@ cleanup:
 status_t
 sll_destroy (sll_t * p_sll)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_sll)
     {
@@ -276,7 +274,6 @@ sll_destroy (sll_t * p_sll)
         p_curr = p_next;
     }
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:

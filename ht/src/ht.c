@@ -36,7 +36,7 @@ djb2_hash (void * p_key, size_t size)
 status_t
 ht_create (ht_t * p_ht, size_t capacity)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_ht)
     {
@@ -83,7 +83,6 @@ ht_create (ht_t * p_ht, size_t capacity)
         (p_ht->pp_elements)[idx] = p_sll;
     }
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
@@ -98,7 +97,7 @@ cleanup:
 status_t
 ht_display (ht_t * p_ht)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_ht)
     {
@@ -122,7 +121,6 @@ ht_display (ht_t * p_ht)
         }
     }
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
@@ -144,6 +142,7 @@ ht_in (ht_t * p_ht, void * p_key, size_t size)
     uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
 
     b_key_in = sll_in((p_ht->pp_elements)[hash], p_key, size);
+
     goto cleanup;
 
 cleanup:
@@ -153,7 +152,7 @@ cleanup:
 status_t
 ht_get (ht_t * p_ht, size_t idx, sll_t * p_sll)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_ht)
     {
@@ -170,7 +169,6 @@ ht_get (ht_t * p_ht, size_t idx, sll_t * p_sll)
     // Copy SLL into destination variable
     *p_sll = *((p_ht->pp_elements)[idx]);
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
@@ -180,7 +178,7 @@ cleanup:
 status_t
 ht_insert (ht_t * p_ht, void * p_key, size_t size)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_ht)
     {
@@ -224,7 +222,7 @@ cleanup:
 status_t
 ht_remove (ht_t * p_ht, void * p_key, size_t size)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_ht)
     {
@@ -267,7 +265,7 @@ cleanup:
 status_t
 ht_destroy (ht_t * p_ht)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_ht)
     {
@@ -295,7 +293,6 @@ ht_destroy (ht_t * p_ht)
         (p_ht->pp_elements)[idx] = NULL;
     }
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
