@@ -1,6 +1,6 @@
 /** @file ht.c
  *
- * @brief (U) Demonstrate skill in creating and using a hash table that accepts any data type:
+ * @brief Hash table source
  *
  * @par
  * Creating a hash table with n number of items
@@ -17,16 +17,16 @@
 #include "ht.h"
 
 uint64_t
-djb2_hash (void * key, size_t key_len)
+djb2_hash (void * p_key, size_t size)
 {
     uint8_t chr;
 
     uint64_t hash = 5381u;
 
     // printf("Current key: ");
-    for (size_t idx = 0u; idx < key_len; idx++)
+    for (size_t idx = 0u; idx < size; idx++)
     {
-        chr = ((uint8_t *)key)[idx];
+        chr = ((uint8_t *)p_key)[idx];
         // printf("%c", chr);
         hash = ((hash << 5u) + hash) + chr; // (hash * 33) + chr
     }
@@ -54,7 +54,7 @@ ht_create (ht_t * p_ht, size_t capacity)
 
     p_ht->capacity = capacity;
     p_ht->len = 0u;
-    p_ht->hash = djb2_hash;
+    p_ht->p_hash = djb2_hash;
 
     // Allocate entries
     p_ht->pp_entries = calloc(capacity, sizeof(*(p_ht->pp_entries)));
@@ -132,24 +132,24 @@ cleanup:
 }
 
 bool
-ht_in (ht_t * p_ht, void * p_data, size_t size)
+ht_in (ht_t * p_ht, void * p_key, size_t size)
 {
-    bool b_data_in;
+    bool b_key_in;
 
     if (NULL == p_ht)
     {
-        b_data_in = false;
+        b_key_in = false;
         goto cleanup;
     }
 
     size_t capacity = p_ht->capacity;
-    uint64_t hash = ((p_ht->hash)(p_data, size)) % capacity;
+    uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
 
-    b_data_in = sll_in((p_ht->pp_entries)[hash], p_data, size);
+    b_key_in = sll_in((p_ht->pp_entries)[hash], p_key, size);
     goto cleanup;
 
 cleanup:
-    return b_data_in;
+    return b_key_in;
 }
 
 status_t
@@ -180,7 +180,7 @@ cleanup:
 }
 
 status_t
-ht_insert (ht_t * p_ht, void * p_data, size_t size)
+ht_insert (ht_t * p_ht, void * p_key, size_t size)
 {
     status_t status;
 
@@ -191,15 +191,15 @@ ht_insert (ht_t * p_ht, void * p_data, size_t size)
     }
 
     size_t capacity = p_ht->capacity;
-    uint64_t hash = ((p_ht->hash)(p_data, size)) % capacity;
+    uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
 
     sll_t * p_sll = (p_ht->pp_entries)[hash];
 
     // Insert data if not already exists in SLL
-    if (!sll_in(p_sll, p_data, size))
+    if (!sll_in(p_sll, p_key, size))
     {
         // Append node
-        status = sll_append(p_sll, p_data, size);
+        status = sll_append(p_sll, p_key, size);
 
         // Increment size if first node inserted
         if (1u == (p_sll->len))
@@ -224,7 +224,7 @@ cleanup:
 }
 
 status_t
-ht_remove (ht_t * p_ht, void * p_data, size_t size)
+ht_remove (ht_t * p_ht, void * p_key, size_t size)
 {
     status_t status;
 
@@ -235,14 +235,14 @@ ht_remove (ht_t * p_ht, void * p_data, size_t size)
     }
 
     size_t capacity = p_ht->capacity;
-    uint64_t hash = ((p_ht->hash)(p_data, size)) % capacity;
+    uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
 
     sll_t * p_sll = (p_ht->pp_entries)[hash];
 
     // Remove data if exists in SLL
-    if (sll_in(p_sll, p_data, size))
+    if (sll_in(p_sll, p_key, size))
     {
-        status = sll_remove(p_sll, p_data, size);
+        status = sll_remove(p_sll, p_key, size);
 
         // Decrement size if SLL is empty
         if (0u == (p_sll->len))
@@ -294,6 +294,7 @@ ht_destroy (ht_t * p_ht)
         // Free SLL
         free(p_sll);
         p_sll = NULL;
+        (p_ht->pp_entries)[idx] = NULL;
     }
 
     status = STATUS_SUCCESS;
@@ -306,7 +307,7 @@ cleanup:
 
     p_ht->capacity = 0u;
     p_ht->len = 0u;
-    p_ht->hash = NULL;
+    p_ht->p_hash = NULL;
 
     return status;
 }

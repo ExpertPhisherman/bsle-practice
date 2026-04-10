@@ -1,6 +1,6 @@
 /** @file ht.h
  *
- * @brief (U) Demonstrate skill in creating and using a hash table that accepts any data type:
+ * @brief Hash table header
  *
  * @par
  * Creating a hash table with n number of items
@@ -23,23 +23,33 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef uint64_t (*hash_func_t)(void * p_key, size_t size);
+
+typedef struct item
+{
+    void   * p_key;    // Pointer to key
+    size_t   key_size; // Size of key in bytes
+    void   * p_val;    // Pointer to value
+    size_t   val_size; // Size of value in bytes
+} item_t;
+
 typedef struct ht
 {
-    sll_t ** pp_entries;
-    size_t capacity;
-    size_t len;
-    uint64_t (*hash)(void * key, size_t key_len);
+    sll_t    ** pp_entries; // Double pointer to entries
+    size_t      capacity;   // Maximum number of elements
+    size_t      len;        // Current length
+    hash_func_t p_hash;     // Pointer to hash function
 } ht_t;
 
 /*!
  * @brief djb2 hash function
  *
- * @param[in] key     Pointer to key to be hashed
- * @param[in] key_len Key length
+ * @param[in] p_key Pointer to key to be hashed
+ * @param[in] size  Size of key in bytes
  *
  * @return 64-bit hash digest
  */
-uint64_t djb2_hash(void * key, size_t key_len);
+uint64_t djb2_hash(void * p_key, size_t size);
 
 /*!
  * @brief Create hash table
@@ -61,15 +71,15 @@ status_t ht_create(ht_t * p_ht, size_t capacity);
 status_t ht_display(ht_t * p_ht);
 
 /*!
- * @brief Check if data in hash table
+ * @brief Check if key in hash table
  *
- * @param[in] p_ht   Pointer to hash table
- * @param[in] p_data Pointer to data to find
- * @param[in] size   Size of data in bytes
+ * @param[in] p_ht  Pointer to hash table
+ * @param[in] p_key Pointer to key to find
+ * @param[in] size  Size of key in bytes
  *
- * @return Boolean if data in hash table
+ * @return Boolean if key in hash table
  */
-bool ht_in(ht_t * p_ht, void * p_data, size_t size);
+bool ht_in(ht_t * p_ht, void * p_key, size_t size);
 
 /*!
  * @brief Get SLL at index
@@ -83,26 +93,26 @@ bool ht_in(ht_t * p_ht, void * p_data, size_t size);
 status_t ht_get(ht_t * p_ht, size_t idx, sll_t * p_sll);
 
 /*!
- * @brief Insert data into hash table
+ * @brief Insert key into hash table
  *
- * @param[in] p_ht   Pointer to hash table
- * @param[in] p_data Pointer to data to insert
- * @param[in] size   Size of data in bytes
+ * @param[in] p_ht  Pointer to hash table
+ * @param[in] p_key Pointer to key to insert
+ * @param[in] size  Size of key in bytes
  *
  * @return Status of operation
  */
-status_t ht_insert(ht_t * p_ht, void * p_data, size_t size);
+status_t ht_insert(ht_t * p_ht, void * p_key, size_t size);
 
 /*!
- * @brief Remove data from hash table
+ * @brief Remove key from hash table
  *
- * @param[in] p_ht   Pointer to hash table
- * @param[in] p_data Pointer to data to remove
- * @param[in] size   Size of data in bytes
+ * @param[in] p_ht  Pointer to hash table
+ * @param[in] p_key Pointer to key to remove
+ * @param[in] size  Size of key in bytes
  *
  * @return Status of operation
  */
-status_t ht_remove(ht_t * p_ht, void * p_data, size_t size);
+status_t ht_remove(ht_t * p_ht, void * p_key, size_t size);
 
 /*!
  * @brief Destroy hash table

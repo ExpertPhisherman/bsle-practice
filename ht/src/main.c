@@ -15,7 +15,7 @@ main (int argc, char * argv[])
 
     ht_create(&ht, 17u);
 
-    char const * data_arr[] =
+    char const * key_arr[] =
     {
         "invinate", "blighter", "screeman", "pisachee", "tethelin", "medullar",
         "overdoer", "conjurer", "tunicate", "stratous", "inextant", "sombrous",
@@ -24,12 +24,12 @@ main (int argc, char * argv[])
         "reducent", "distance", "snowbird", "vitalist", "expirant", "femality",
         "perscent", "slapping", "histonal", "analytic", "belltail", "centrist"
     };
-    size_t len = sizeof(data_arr) / sizeof(char *);
+    size_t len = sizeof(key_arr) / sizeof(char *);
     for (size_t idx = 0u; idx < len; idx++)
     {
-        char const * data = data_arr[idx];
-        size_t size = strnlen(data, 256u);
-        ht_insert(&ht, (void *)data, size);
+        char const * key = key_arr[idx];
+        size_t size = strnlen(key, 256u);
+        ht_insert(&ht, (void *)key, size);
     }
 
     ht_display(&ht);
