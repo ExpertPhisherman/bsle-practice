@@ -4,15 +4,15 @@
  *
  */
 
+#ifndef SLL_H
+#define SLL_H
+
 #include "common.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifndef SLL_H
-#define SLL_H
 
 typedef struct node
 {
@@ -54,7 +54,7 @@ status_t sll_display(sll_t * p_sll);
  *
  * @return Boolean if data in SLL
  */
-bool sll_in(sll_t * p_sll, void const * p_data, size_t const size);
+bool sll_in(sll_t * p_sll, void * p_data, size_t size);
 
 /*!
  * @brief Insert data into SLL
@@ -62,10 +62,10 @@ bool sll_in(sll_t * p_sll, void const * p_data, size_t const size);
  * @param[in] p_sll  Pointer to SLL
  * @param[in] p_data Pointer to data to insert
  * @param[in] size   Size of data in bytes
- * @param[in] index  Index to insert data at
+ * @param[in] idx    Index to insert data at
  * @return Status of operation
  */
-status_t sll_insert(sll_t * p_sll, void const * p_data, size_t const size, size_t index);
+status_t sll_insert(sll_t * p_sll, void * p_data, size_t size, size_t idx);
 
 /*!
  * @brief Append data to SLL
@@ -75,7 +75,7 @@ status_t sll_insert(sll_t * p_sll, void const * p_data, size_t const size, size_
  * @param[in] size   Size of data in bytes
  * @return Status of operation
  */
-status_t sll_append(sll_t * p_sll, void const * p_data, size_t const size);
+status_t sll_append(sll_t * p_sll, void * p_data, size_t size);
 
 /*!
  * @brief Remove data from SLL
@@ -86,7 +86,7 @@ status_t sll_append(sll_t * p_sll, void const * p_data, size_t const size);
  *
  * @return Status of operation
  */
-status_t sll_remove(sll_t * p_sll, void const * p_data, size_t const size);
+status_t sll_remove(sll_t * p_sll, void * p_data, size_t size);
 
 /*!
  * @brief Destroy SLL

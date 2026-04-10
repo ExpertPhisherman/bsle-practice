@@ -68,7 +68,7 @@ cleanup:
 }
 
 bool
-sll_in (sll_t * p_sll, void const * p_data, size_t const size)
+sll_in (sll_t * p_sll, void * p_data, size_t size)
 {
     bool b_data_in = false;
 
@@ -98,7 +98,7 @@ cleanup:
 }
 
 status_t
-sll_insert (sll_t * p_sll, void const * p_data, size_t const size, size_t index)
+sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
 {
     status_t status;
 
@@ -108,8 +108,8 @@ sll_insert (sll_t * p_sll, void const * p_data, size_t const size, size_t index)
         goto cleanup;
     }
 
-    // NOTE: Allow index == p_sll->len for insert at end of SLL
-    if (index > p_sll->len)
+    // NOTE: Allow idx == p_sll->len for insert at end of SLL
+    if (idx > p_sll->len)
     {
         status = STATUS_OUT_OF_BOUNDS;
         goto cleanup;
@@ -117,7 +117,7 @@ sll_insert (sll_t * p_sll, void const * p_data, size_t const size, size_t index)
 
     node_t * p_prev = NULL;
     node_t * p_curr = p_sll->p_head;
-    while (0u < index)
+    while (0u < idx)
     {
         // Update previous node
         p_prev = p_curr;
@@ -126,7 +126,7 @@ sll_insert (sll_t * p_sll, void const * p_data, size_t const size, size_t index)
         p_curr = p_curr->p_next;
 
         // Decrement index
-        index--;
+        idx--;
     }
 
     // Allocate node
@@ -183,13 +183,13 @@ cleanup:
 }
 
 status_t
-sll_append (sll_t * p_sll, void const * p_data, size_t const size)
+sll_append (sll_t * p_sll, void * p_data, size_t size)
 {
     return sll_insert(p_sll, p_data, size, p_sll->len);
 }
 
 status_t
-sll_remove (sll_t * p_sll, void const * p_data, size_t const size)
+sll_remove (sll_t * p_sll, void * p_data, size_t size)
 {
     status_t status;
 

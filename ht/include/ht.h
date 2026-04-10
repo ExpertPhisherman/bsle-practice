@@ -12,23 +12,23 @@
  * Removing all items from the hash table
  */
 
-#include "common.h"
+#ifndef HT_H
+#define HT_H
+
 #include "sll.h"
+#include "common.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef HT_H
-#define HT_H
-
 typedef struct ht
 {
     sll_t ** pp_entries;
     size_t capacity;
-    size_t size;
-    uint64_t (* hash)(void const * const, size_t const);
+    size_t len;
+    uint64_t (*hash)(void * key, size_t key_len);
 } ht_t;
 
 /*!
@@ -39,7 +39,7 @@ typedef struct ht
  *
  * @return 64-bit hash digest
  */
-uint64_t djb2_hash(void const * const key, size_t const key_len);
+uint64_t djb2_hash(void * key, size_t key_len);
 
 /*!
  * @brief Create hash table
@@ -49,12 +49,12 @@ uint64_t djb2_hash(void const * const key, size_t const key_len);
  *
  * @return Status of operation
  */
-status_t ht_create(ht_t * p_ht, size_t const capacity);
+status_t ht_create(ht_t * p_ht, size_t capacity);
 
 /*!
  * @brief Display hash table entries
  *
- * @param[in] p_ht   Pointer to hash table
+ * @param[in] p_ht Pointer to hash table
  *
  * @return Status of operation
  */
@@ -63,43 +63,46 @@ status_t ht_display(ht_t * p_ht);
 /*!
  * @brief Check if data in hash table
  *
- * @param[in] p_ht Pointer to hash table
- * @param[in] data Data to find
+ * @param[in] p_ht   Pointer to hash table
+ * @param[in] p_data Pointer to data to find
+ * @param[in] size   Size of data in bytes
  *
  * @return Boolean if data in hash table
  */
-bool ht_in(ht_t * p_ht, sll_data_t const data);
+bool ht_in(ht_t * p_ht, void * p_data, size_t size);
 
 /*!
  * @brief Get SLL at index
  *
  * @param[in] p_ht  Pointer to hash table
- * @param[in] index Index to get SLL from
+ * @param[in] idx   Index to get SLL from
  * @param[in] p_sll Destination to send output
  *
  * @return Status of operation
  */
-status_t ht_get(ht_t * p_ht, size_t index, sll_t * p_sll);
+status_t ht_get(ht_t * p_ht, size_t idx, sll_t * p_sll);
 
 /*!
  * @brief Insert data into hash table
  *
- * @param[in] p_ht Pointer to hash table
- * @param[in] data Data to insert
+ * @param[in] p_ht   Pointer to hash table
+ * @param[in] p_data Pointer to data to insert
+ * @param[in] size   Size of data in bytes
  *
  * @return Status of operation
  */
-status_t ht_insert(ht_t * p_ht, sll_data_t const data);
+status_t ht_insert(ht_t * p_ht, void * p_data, size_t size);
 
 /*!
  * @brief Remove data from hash table
  *
- * @param[in] p_ht Pointer to hash table
- * @param[in] data Data to remove
+ * @param[in] p_ht   Pointer to hash table
+ * @param[in] p_data Pointer to data to remove
+ * @param[in] size   Size of data in bytes
  *
  * @return Status of operation
  */
-status_t ht_remove(ht_t * p_ht, sll_data_t const data);
+status_t ht_remove(ht_t * p_ht, void * p_data, size_t size);
 
 /*!
  * @brief Destroy hash table
