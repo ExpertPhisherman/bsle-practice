@@ -4,6 +4,7 @@ build/
 
 # VSCode configurations
 .vscode/
+*.code-workspace
 
 # Token
 token.txt
