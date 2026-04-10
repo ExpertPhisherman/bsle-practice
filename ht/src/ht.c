@@ -283,6 +283,7 @@ ht_destroy (ht_t * p_ht)
     for (size_t idx = 0u; idx < (p_ht->capacity); idx++)
     {
         sll_t * p_sll = (p_ht->pp_elements)[idx];
+        (p_ht->pp_elements)[idx] = NULL;
 
         // Free SLL nodes
         sll_destroy(p_sll);
@@ -290,7 +291,6 @@ ht_destroy (ht_t * p_ht)
         // Free SLL
         free(p_sll);
         p_sll = NULL;
-        (p_ht->pp_elements)[idx] = NULL;
     }
 
     goto cleanup;
