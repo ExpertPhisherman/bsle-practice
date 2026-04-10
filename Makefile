@@ -30,14 +30,14 @@ EXT_LIBS = $(foreach d,$(LIB_DIRS),$(d)/bin/lib$(notdir $(d)).a)
 
 # Outputs
 LIB = $(BIN)/lib$(NAME).a
-TARGET = $(BIN)/$(NAME)
+TARGET = $(BIN)/main
 
 # Does this project have a main.c?
 ifeq ($(wildcard $(MAIN_SRC)),$(MAIN_SRC))
 ALL_TARGETS = $(LIB) $(TARGET)
 $(TARGET): $(OBJS) $(EXT_LIBS)
 	@mkdir -p $(BIN)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(OBJS) -Wl,--start-group $(EXT_LIBS) -Wl,--end-group -o $@
 else
 ALL_TARGETS = $(LIB)
 endif
