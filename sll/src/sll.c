@@ -1,6 +1,6 @@
 /** @file sll.c
  *
- * @brief Singly linked list
+ * @brief Singly linked list source
  *
  */
 

@@ -1,6 +1,6 @@
 /** @file sll.h
  *
- * @brief Singly linked list
+ * @brief Singly linked list header
  *
  */
 
@@ -16,15 +16,15 @@
 
 typedef struct node
 {
-    void * p_data;
-    size_t size;
-    struct node * p_next;
+    void        * p_data; // Pointer to data
+    size_t        size;   // Size of data in bytes
+    struct node * p_next; // Pointer to next node
 } node_t;
 
 typedef struct sll
 {
-    node_t * p_head;
-    size_t len;
+    node_t * p_head; // Pointer to head node
+    size_t   len;    // Current length
 } sll_t;
 
 /*!
