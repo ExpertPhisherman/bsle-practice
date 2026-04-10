@@ -14,29 +14,7 @@
  *
  * @return Pointer to work object
  */
-static tpool_work_t *
-tpool_work_create (thread_func_t p_func, void * p_arg)
-{
-    tpool_work_t * p_work = NULL;
-
-    if (NULL == p_func)
-    {
-        goto cleanup;
-    }
-
-    p_work = malloc(sizeof(*p_work));
-    if (NULL == p_work)
-    {
-        goto cleanup;
-    }
-
-    p_work->p_func = p_func;
-    p_work->p_arg  = p_arg;
-    p_work->p_next = NULL;
-
-cleanup:
-    return p_work;
-}
+static tpool_work_t * tpool_work_create(thread_func_t p_func, void * p_arg);
 
 /*!
  * @brief Destroy work object
@@ -45,12 +23,7 @@ cleanup:
  *
  * @return void
  */
-static void
-tpool_work_destroy (tpool_work_t * p_work)
-{
-    free(p_work);
-    p_work = NULL;
-}
+static void tpool_work_destroy(tpool_work_t * p_work);
 
 /*!
  * @brief Pull work from the queue to be processed
@@ -59,33 +32,7 @@ tpool_work_destroy (tpool_work_t * p_work)
  *
  * @return Pointer to work object
  */
-static tpool_work_t *
-tpool_work_get (tpool_t * p_tm)
-{
-    tpool_work_t * p_work = NULL;
-
-    if (NULL == p_tm)
-    {
-        goto cleanup;
-    }
-
-    p_work = p_tm->p_work_first;
-    if (NULL == p_work)
-    {
-        goto cleanup;
-    }
-
-    p_tm->p_work_first = p_work->p_next;
-    if (NULL == p_tm->p_work_first)
-    {
-        p_tm->p_work_last = NULL;
-    }
-
-    p_work->p_next = NULL;
-
-cleanup:
-    return p_work;
-}
+static tpool_work_t * tpool_work_get(tpool_t * p_tm);
 
 /*!
  * @brief Wait for work and process it
@@ -94,71 +41,7 @@ cleanup:
  *
  * @return NULL pointer
  */
-static void *
-tpool_worker (void * p_arg)
-{
-    tpool_t      * p_tm = p_arg;
-    tpool_work_t * p_work = NULL;
-
-    if (NULL == p_tm)
-    {
-        goto cleanup;
-    }
-
-    while (1)
-    {
-        pthread_mutex_lock(&(p_tm->work_mutex));
-
-        /*
-        Wait until there is work to do or the pool is stopping.
-        While loop instead of if statement to handle spurious wakeups.
-        */
-        while ((NULL == p_tm->p_work_first) && (!(p_tm->stop)))
-        {
-            pthread_cond_wait(&(p_tm->work_cond), &(p_tm->work_mutex));
-        }
-
-        // Exit when stop is set and there is no more work to process
-        if (p_tm->stop)
-        {
-            pthread_mutex_unlock(&(p_tm->work_mutex));
-            break;
-        }
-
-        p_work = tpool_work_get(p_tm);
-        if (NULL != p_work)
-        {
-            (p_tm->working_cnt)++;
-        }
-
-        pthread_mutex_unlock(&(p_tm->work_mutex));
-
-        if (NULL != p_work)
-        {
-            p_work->p_func(p_work->p_arg);
-            tpool_work_destroy(p_work);
-            p_work = NULL;
-        }
-
-        pthread_mutex_lock(&(p_tm->work_mutex));
-
-        if (0u < p_tm->working_cnt)
-        {
-            (p_tm->working_cnt)--;
-        }
-
-        // Signal waiters when there is no queued work and no thread is working
-        if ((NULL == p_tm->p_work_first) && (0u == p_tm->working_cnt))
-        {
-            pthread_cond_broadcast(&(p_tm->working_cond));
-        }
-
-        pthread_mutex_unlock(&(p_tm->work_mutex));
-    }
-
-cleanup:
-    return NULL;
-}
+static void * tpool_worker(void * p_arg);
 
 tpool_t *
 tpool_create (size_t num)
@@ -370,6 +253,131 @@ tpool_wait (tpool_t * p_tm)
 cleanup:
     // Only return when there is no work and nothing processing
     return;
+}
+
+static tpool_work_t *
+tpool_work_create (thread_func_t p_func, void * p_arg)
+{
+    tpool_work_t * p_work = NULL;
+
+    if (NULL == p_func)
+    {
+        goto cleanup;
+    }
+
+    p_work = malloc(sizeof(*p_work));
+    if (NULL == p_work)
+    {
+        goto cleanup;
+    }
+
+    p_work->p_func = p_func;
+    p_work->p_arg  = p_arg;
+    p_work->p_next = NULL;
+
+cleanup:
+    return p_work;
+}
+
+static void
+tpool_work_destroy (tpool_work_t * p_work)
+{
+    free(p_work);
+    p_work = NULL;
+}
+
+static tpool_work_t *
+tpool_work_get (tpool_t * p_tm)
+{
+    tpool_work_t * p_work = NULL;
+
+    if (NULL == p_tm)
+    {
+        goto cleanup;
+    }
+
+    p_work = p_tm->p_work_first;
+    if (NULL == p_work)
+    {
+        goto cleanup;
+    }
+
+    p_tm->p_work_first = p_work->p_next;
+    if (NULL == p_tm->p_work_first)
+    {
+        p_tm->p_work_last = NULL;
+    }
+
+    p_work->p_next = NULL;
+
+cleanup:
+    return p_work;
+}
+
+static void *
+tpool_worker (void * p_arg)
+{
+    tpool_t      * p_tm = p_arg;
+    tpool_work_t * p_work = NULL;
+
+    if (NULL == p_tm)
+    {
+        goto cleanup;
+    }
+
+    while (1)
+    {
+        pthread_mutex_lock(&(p_tm->work_mutex));
+
+        /*
+        Wait until there is work to do or the pool is stopping.
+        While loop instead of if statement to handle spurious wakeups.
+        */
+        while ((NULL == p_tm->p_work_first) && (!(p_tm->stop)))
+        {
+            pthread_cond_wait(&(p_tm->work_cond), &(p_tm->work_mutex));
+        }
+
+        // Exit when stop is set and there is no more work to process
+        if (p_tm->stop)
+        {
+            pthread_mutex_unlock(&(p_tm->work_mutex));
+            break;
+        }
+
+        p_work = tpool_work_get(p_tm);
+        if (NULL != p_work)
+        {
+            (p_tm->working_cnt)++;
+        }
+
+        pthread_mutex_unlock(&(p_tm->work_mutex));
+
+        if (NULL != p_work)
+        {
+            p_work->p_func(p_work->p_arg);
+            tpool_work_destroy(p_work);
+            p_work = NULL;
+        }
+
+        pthread_mutex_lock(&(p_tm->work_mutex));
+
+        if (0u < p_tm->working_cnt)
+        {
+            (p_tm->working_cnt)--;
+        }
+
+        // Signal waiters when there is no queued work and no thread is working
+        if ((NULL == p_tm->p_work_first) && (0u == p_tm->working_cnt))
+        {
+            pthread_cond_broadcast(&(p_tm->working_cond));
+        }
+
+        pthread_mutex_unlock(&(p_tm->work_mutex));
+    }
+
+cleanup:
+    return NULL;
 }
 
 /*** end of file ***/
