@@ -29,19 +29,19 @@ typedef enum status
     STATUS_FAILURE           = EXIT_FAILURE,
     STATUS_NULL_ARG          = 2,
     STATUS_SIGNAL_FAILURE    = 3,
-    STATUS_SOCKET_FAILURE    = 4,
-    STATUS_SEND_FAILURE      = 5,
-    STATUS_RECV_FAILURE      = 6,
-    STATUS_CLIENT_DISCONNECT = 7,
-    STATUS_SERVER_DISCONNECT = 8,
-    STATUS_ALLOC_FAILURE     = 9,
-    STATUS_OVERFLOW          = 10,
-    STATUS_UNDERFLOW         = 11,
-    STATUS_EMPTY             = 12,
-    STATUS_EXISTS            = 13,
-    STATUS_NOT_EXISTS        = 14,
-    STATUS_OUT_OF_BOUNDS     = 15,
-    STATUS_MUTEX_FAILURE     = 16
+    STATUS_MUTEX_FAILURE     = 4,
+    STATUS_SOCKET_FAILURE    = 5,
+    STATUS_SEND_FAILURE      = 6,
+    STATUS_RECV_FAILURE      = 7,
+    STATUS_CLIENT_DISCONNECT = 8,
+    STATUS_SERVER_DISCONNECT = 9,
+    STATUS_ALLOC_FAILURE     = 10,
+    STATUS_OVERFLOW          = 11,
+    STATUS_UNDERFLOW         = 12,
+    STATUS_EMPTY             = 13,
+    STATUS_EXISTS            = 14,
+    STATUS_NOT_EXISTS        = 15,
+    STATUS_OUT_OF_BOUNDS     = 16
 } status_t;
 
 /*!
