@@ -122,8 +122,7 @@ ht_in (ht_t * p_ht, void * p_key, size_t size)
         goto cleanup;
     }
 
-    size_t capacity = p_ht->capacity;
-    uint64_t hash = (p_ht->p_hash)(p_key, size) % capacity;
+    uint64_t hash = (p_ht->p_hash)(p_key, size) % p_ht->capacity;
 
     b_key_in = sll_in((p_ht->pp_elements)[hash], p_key, size);
 
@@ -170,8 +169,7 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
         goto cleanup;
     }
 
-    size_t capacity = p_ht->capacity;
-    uint64_t hash = (p_ht->p_hash)(p_key, size) % capacity;
+    uint64_t hash = (p_ht->p_hash)(p_key, size) % p_ht->capacity;
 
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
@@ -213,8 +211,7 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
         goto cleanup;
     }
 
-    size_t capacity = p_ht->capacity;
-    uint64_t hash = (p_ht->p_hash)(p_key, size) % capacity;
+    uint64_t hash = (p_ht->p_hash)(p_key, size) % p_ht->capacity;
 
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
@@ -262,7 +259,7 @@ ht_destroy (ht_t * p_ht)
     }
 
     // Free each element
-    for (size_t idx = 0u; idx < (p_ht->capacity); idx++)
+    for (size_t idx = 0u; idx < p_ht->capacity; idx++)
     {
         sll_t * p_sll = (p_ht->pp_elements)[idx];
         (p_ht->pp_elements)[idx] = NULL;
