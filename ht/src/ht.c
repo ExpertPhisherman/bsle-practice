@@ -116,7 +116,7 @@ ht_in (ht_t * p_ht, void * p_key, size_t size)
 {
     bool b_key_in;
 
-    if (NULL == p_ht)
+    if ((NULL == p_ht) || (NULL == p_key))
     {
         b_key_in = false;
         goto cleanup;
@@ -134,37 +134,11 @@ cleanup:
 }
 
 status_t
-ht_get (ht_t * p_ht, size_t idx, sll_t * p_sll)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_ht)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    if (idx >= p_ht->capacity)
-    {
-        status = STATUS_OVERFLOW;
-        goto cleanup;
-    }
-
-    // Copy SLL into destination variable
-    *p_sll = *((p_ht->pp_elements)[idx]);
-
-    goto cleanup;
-
-cleanup:
-    return status;
-}
-
-status_t
 ht_insert (ht_t * p_ht, void * p_key, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_ht)
+    if ((NULL == p_ht) || (NULL == p_key))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -205,7 +179,7 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_ht)
+    if ((NULL == p_ht) || (NULL == p_key))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;

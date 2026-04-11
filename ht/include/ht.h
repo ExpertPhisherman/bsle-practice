@@ -72,17 +72,6 @@ status_t ht_display(ht_t * p_ht);
 bool ht_in(ht_t * p_ht, void * p_key, size_t size);
 
 /*!
- * @brief Get SLL at index
- *
- * @param[in] p_ht  Pointer to hash table
- * @param[in] idx   Index to get SLL from
- * @param[in] p_sll Destination to send output
- *
- * @return Status of operation
- */
-status_t ht_get(ht_t * p_ht, size_t idx, sll_t * p_sll);
-
-/*!
  * @brief Insert key into hash table
  *
  * @param[in] p_ht  Pointer to hash table
