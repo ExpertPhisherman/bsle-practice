@@ -15,6 +15,8 @@ display_bytes (void * p_var, size_t size, char const * p_sep)
     {
         chr = ((uint8_t *)p_var)[index];
         printf("%02hhx", chr);
+
+        // Print separator between each byte
         if (1u < (size - index))
         {
             printf("%s", p_sep);
