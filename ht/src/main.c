@@ -24,7 +24,7 @@ main (int argc, char * argv[])
         "reducent", "distance", "snowbird", "vitalist", "expirant", "femality",
         "perscent", "slapping", "histonal", "analytic", "belltail", "centrist"
     };
-    size_t len = sizeof(key_arr) / sizeof(char *);
+    size_t len = sizeof(key_arr) / sizeof(*key_arr);
     for (size_t idx = 0u; idx < len; idx++)
     {
         char const * key = key_arr[idx];
