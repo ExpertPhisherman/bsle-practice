@@ -123,8 +123,9 @@ ht_in (ht_t * p_ht, void * p_key, size_t size)
     }
 
     uint64_t hash = (p_ht->p_hash)(p_key, size) % p_ht->capacity;
+    sll_t * p_sll = (p_ht->pp_elements)[hash];
 
-    b_key_in = sll_in((p_ht->pp_elements)[hash], p_key, size);
+    b_key_in = sll_in(p_sll, p_key, size);
 
     goto cleanup;
 
@@ -170,7 +171,6 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
     }
 
     uint64_t hash = (p_ht->p_hash)(p_key, size) % p_ht->capacity;
-
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
     // Insert data if not already exists in SLL
@@ -212,7 +212,6 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
     }
 
     uint64_t hash = (p_ht->p_hash)(p_key, size) % p_ht->capacity;
-
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
     // Remove data if exists in SLL
