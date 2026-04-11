@@ -64,11 +64,7 @@ ht_create (ht_t * p_ht, size_t capacity)
             goto cleanup;
         }
 
-        status = sll_create(p_sll);
-        if (STATUS_NULL_ARG == status)
-        {
-            goto cleanup;
-        }
+        sll_create(p_sll);
 
         // Set element
         (p_ht->pp_elements)[idx] = p_sll;
@@ -183,22 +179,22 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
     // Insert data if not already exists in SLL
-    if (!sll_in(p_sll, p_key, size))
+    if (sll_in(p_sll, p_key, size))
     {
-        // Append node
-        status = sll_append(p_sll, p_key, size);
-
-        // Increment size if first node inserted
-        if (1u == p_sll->len)
-        {
-            (p_ht->len)++;
-        }
-
+        // NOTE: Data already exists in SLL
+        status = STATUS_EXISTS;
         goto cleanup;
     }
 
-    // NOTE: Data already exists in SLL
-    status = STATUS_EXISTS;
+    // Append node
+    status = sll_append(p_sll, p_key, size);
+
+    // Increment size if first node inserted
+    if (1u == p_sll->len)
+    {
+        (p_ht->len)++;
+    }
+
     goto cleanup;
 
 cleanup:
@@ -227,21 +223,22 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
     // Remove data if exists in SLL
-    if (sll_in(p_sll, p_key, size))
+    if (!sll_in(p_sll, p_key, size))
     {
-        status = sll_remove(p_sll, p_key, size);
-
-        // Decrement size if SLL is empty
-        if (0u == p_sll->len)
-        {
-            (p_ht->len)--;
-        }
-
+        // NOTE: Data does not exist in SLL
+        status = STATUS_NOT_EXISTS;
         goto cleanup;
     }
 
-    // NOTE: Data does not exist in SLL
-    status = STATUS_NOT_EXISTS;
+    // Remove node
+    status = sll_remove(p_sll, p_key, size);
+
+    // Decrement size if SLL is empty
+    if (0u == p_sll->len)
+    {
+        (p_ht->len)--;
+    }
+
     goto cleanup;
 
 cleanup:
@@ -266,7 +263,6 @@ ht_destroy (ht_t * p_ht)
 
     if (NULL == p_ht->pp_elements)
     {
-        status = STATUS_NULL_ARG;
         goto cleanup;
     }
 

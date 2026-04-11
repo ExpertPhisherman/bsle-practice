@@ -107,7 +107,7 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
         goto cleanup;
     }
 
-    // NOTE: Allow idx == p_sll->len for insert at end of SLL
+    // NOTE: Allow idx == p_sll->len for insert at tail of SLL
     if (idx > p_sll->len)
     {
         status = STATUS_OUT_OF_BOUNDS;
@@ -129,7 +129,7 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
     }
 
     // Allocate node
-    node_t * p_target = malloc(sizeof(node_t));
+    node_t * p_target = malloc(sizeof(*p_target));
     if (NULL == p_target)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -227,7 +227,6 @@ sll_remove (sll_t * p_sll, void * p_data, size_t size)
             (p_sll->len)--;
 
             // NOTE: Data found in SLL
-            status = STATUS_SUCCESS;
             goto cleanup;
         }
 
