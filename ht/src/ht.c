@@ -185,7 +185,7 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
 
     status = sll_append(p_sll, p_key, size);
 
-    // Increment size if first node inserted
+    // Increment length if first node inserted
     if (1u == p_sll->len)
     {
         (p_ht->len)++;
@@ -228,7 +228,7 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
 
     status = sll_remove(p_sll, p_key, size);
 
-    // Decrement size if last node removed
+    // Decrement length if last node removed
     if (0u == p_sll->len)
     {
         (p_ht->len)--;
