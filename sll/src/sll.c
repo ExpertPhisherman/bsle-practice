@@ -49,13 +49,12 @@ sll_display (sll_t * p_sll)
     {
         display_bytes(p_curr->p_data, p_curr->size, " ");
 
-        // Update current node
-        p_curr = p_curr->p_next;
-
-        if (NULL != p_curr)
+        if (NULL != p_curr->p_next)
         {
             printf(" -> ");
         }
+
+        p_curr = p_curr->p_next;
     }
     printf("\n");
 
@@ -86,7 +85,6 @@ sll_in (sll_t * p_sll, void * p_data, size_t size)
             goto cleanup;
         }
 
-        // Update current node
         p_curr = p_curr->p_next;
     }
 
@@ -118,17 +116,11 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
     node_t * p_curr = p_sll->p_head;
     while (0u < idx)
     {
-        // Update previous node
         p_prev = p_curr;
-
-        // Update current node
         p_curr = p_curr->p_next;
-
-        // Decrement index
         idx--;
     }
 
-    // Allocate node
     node_t * p_target = malloc(sizeof(*p_target));
     if (NULL == p_target)
     {
@@ -136,7 +128,6 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
         goto cleanup;
     }
 
-    // Allocate node data
     p_target->p_data = malloc(size);
     if (NULL == p_target->p_data)
     {
@@ -147,10 +138,7 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
         goto cleanup;
     }
 
-    // Write node data
     memcpy(p_target->p_data, p_data, size);
-
-    // Write node data size
     p_target->size = size;
 
     // Previous node links to inserted node
@@ -166,7 +154,6 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
     // Inserted node links to current node
     p_target->p_next = p_curr;
 
-    // Increment SLL length
     (p_sll->len)++;
 
     goto cleanup;
@@ -216,14 +203,11 @@ sll_remove (sll_t * p_sll, void * p_data, size_t size)
                 p_prev->p_next = p_curr->p_next;
             }
 
-            // Free node where data was found
             free(p_curr->p_data);
             p_curr->p_data = NULL;
-
             free(p_curr);
             p_curr = NULL;
 
-            // Decrement SLL length
             (p_sll->len)--;
 
             // NOTE: Data found in SLL
@@ -260,16 +244,13 @@ sll_destroy (sll_t * p_sll)
     node_t * p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
-        // Free current node
         node_t * p_next = p_curr->p_next;
 
         free(p_curr->p_data);
         p_curr->p_data = NULL;
-
         free(p_curr);
         p_curr = NULL;
 
-        // Update current node
         p_curr = p_next;
     }
 

@@ -45,7 +45,6 @@ ht_create (ht_t * p_ht, size_t capacity)
     p_ht->len = 0u;
     p_ht->p_hash = djb2_hash;
 
-    // Allocate elements
     p_ht->pp_elements = calloc(capacity, sizeof(*(p_ht->pp_elements)));
     if (NULL == p_ht->pp_elements)
     {
@@ -53,10 +52,8 @@ ht_create (ht_t * p_ht, size_t capacity)
         goto cleanup;
     }
 
-    // Allocate and set elements to empty SLLs
     for (size_t idx = 0u; idx < capacity; idx++)
     {
-        // Allocate element
         sll_t * p_sll = malloc(sizeof(*p_sll));
         if (NULL == p_sll)
         {
@@ -66,7 +63,7 @@ ht_create (ht_t * p_ht, size_t capacity)
 
         sll_create(p_sll);
 
-        // Set element
+        // Set element to empty SLL
         (p_ht->pp_elements)[idx] = p_sll;
     }
 
@@ -186,7 +183,6 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
         goto cleanup;
     }
 
-    // Append node
     status = sll_append(p_sll, p_key, size);
 
     // Increment size if first node inserted
@@ -230,10 +226,9 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
         goto cleanup;
     }
 
-    // Remove node
     status = sll_remove(p_sll, p_key, size);
 
-    // Decrement size if SLL is empty
+    // Decrement size if last node removed
     if (0u == p_sll->len)
     {
         (p_ht->len)--;
@@ -272,10 +267,7 @@ ht_destroy (ht_t * p_ht)
         sll_t * p_sll = (p_ht->pp_elements)[idx];
         (p_ht->pp_elements)[idx] = NULL;
 
-        // Free SLL nodes
         sll_destroy(p_sll);
-
-        // Free SLL
         free(p_sll);
         p_sll = NULL;
     }
@@ -298,7 +290,6 @@ static uint64_t
 djb2_hash (void * p_key, size_t size)
 {
     uint8_t chr;
-
     uint64_t hash = 5381u;
 
     DEBUG_PRINT("Current key: ");
