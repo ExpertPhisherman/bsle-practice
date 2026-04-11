@@ -42,16 +42,6 @@ typedef struct ht
 } ht_t;
 
 /*!
- * @brief djb2 hash function
- *
- * @param[in] p_key Pointer to key to be hashed
- * @param[in] size  Size of key in bytes
- *
- * @return 64-bit hash digest
- */
-uint64_t djb2_hash(void * p_key, size_t size);
-
-/*!
  * @brief Create hash table
  *
  * @param[in] p_ht     Pointer to hash table

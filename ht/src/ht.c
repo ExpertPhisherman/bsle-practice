@@ -14,24 +14,15 @@
 
 #include "ht.h"
 
-uint64_t
-djb2_hash (void * p_key, size_t size)
-{
-    uint8_t chr;
-
-    uint64_t hash = 5381u;
-
-    DEBUG_PRINT("Current key: ");
-    for (size_t idx = 0u; idx < size; idx++)
-    {
-        chr = ((uint8_t *)p_key)[idx];
-        DEBUG_PRINT("%c", chr);
-        hash = ((hash << 5u) + hash) + chr; // (hash * 33) + chr
-    }
-    DEBUG_PRINT("\n");
-
-    return hash;
-}
+/*!
+ * @brief djb2 hash function
+ *
+ * @param[in] p_key Pointer to key to be hashed
+ * @param[in] size  Size of key in bytes
+ *
+ * @return 64-bit hash digest
+ */
+static uint64_t djb2_hash(void * p_key, size_t size);
 
 status_t
 ht_create (ht_t * p_ht, size_t capacity)
@@ -305,6 +296,25 @@ cleanup:
     p_ht->p_hash = NULL;
 
     return status;
+}
+
+static uint64_t
+djb2_hash (void * p_key, size_t size)
+{
+    uint8_t chr;
+
+    uint64_t hash = 5381u;
+
+    DEBUG_PRINT("Current key: ");
+    for (size_t idx = 0u; idx < size; idx++)
+    {
+        chr = ((uint8_t *)p_key)[idx];
+        DEBUG_PRINT("%c", chr);
+        hash = ((hash << 5u) + hash) + chr; // (hash * 33) + chr
+    }
+    DEBUG_PRINT("\n");
+
+    return hash;
 }
 
 /*** end of file ***/
