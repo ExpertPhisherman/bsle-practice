@@ -47,7 +47,7 @@ ht_create (ht_t * p_ht, size_t capacity)
 
     // Allocate elements
     p_ht->pp_elements = calloc(capacity, sizeof(*(p_ht->pp_elements)));
-    if (NULL == (p_ht->pp_elements))
+    if (NULL == p_ht->pp_elements)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
@@ -105,7 +105,7 @@ ht_display (ht_t * p_ht)
     for (size_t idx = 0u; idx < p_ht->capacity; idx++)
     {
         sll_t * p_sll = (p_ht->pp_elements)[idx];
-        if (NULL != (p_sll->p_head))
+        if (NULL != p_sll->p_head)
         {
             printf("%zu: ", idx);
             sll_display(p_sll);
@@ -130,7 +130,7 @@ ht_in (ht_t * p_ht, void * p_key, size_t size)
     }
 
     size_t capacity = p_ht->capacity;
-    uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
+    uint64_t hash = (p_ht->p_hash)(p_key, size) % capacity;
 
     b_key_in = sll_in((p_ht->pp_elements)[hash], p_key, size);
 
@@ -178,7 +178,7 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
     }
 
     size_t capacity = p_ht->capacity;
-    uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
+    uint64_t hash = (p_ht->p_hash)(p_key, size) % capacity;
 
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
@@ -189,7 +189,7 @@ ht_insert (ht_t * p_ht, void * p_key, size_t size)
         status = sll_append(p_sll, p_key, size);
 
         // Increment size if first node inserted
-        if (1u == (p_sll->len))
+        if (1u == p_sll->len)
         {
             (p_ht->len)++;
         }
@@ -222,7 +222,7 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
     }
 
     size_t capacity = p_ht->capacity;
-    uint64_t hash = ((p_ht->p_hash)(p_key, size)) % capacity;
+    uint64_t hash = (p_ht->p_hash)(p_key, size) % capacity;
 
     sll_t * p_sll = (p_ht->pp_elements)[hash];
 
@@ -232,7 +232,7 @@ ht_remove (ht_t * p_ht, void * p_key, size_t size)
         status = sll_remove(p_sll, p_key, size);
 
         // Decrement size if SLL is empty
-        if (0u == (p_sll->len))
+        if (0u == p_sll->len)
         {
             (p_ht->len)--;
         }
@@ -264,7 +264,7 @@ ht_destroy (ht_t * p_ht)
         goto cleanup;
     }
 
-    if (NULL == (p_ht->pp_elements))
+    if (NULL == p_ht->pp_elements)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
