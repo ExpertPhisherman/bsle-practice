@@ -35,6 +35,11 @@ main (int argc, char * argv[])
 
     ht_display(&ht);
 
+    printf("Offset: %zu\n", offsetof(ht_t, pp_elements));
+    printf("Offset: %zu\n", offsetof(ht_t, capacity));
+    printf("Offset: %zu\n", offsetof(ht_t, len));
+    printf("Offset: %zu\n", offsetof(ht_t, p_hash_func));
+
     goto cleanup;
 
 cleanup:
