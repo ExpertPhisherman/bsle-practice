@@ -14,6 +14,26 @@
 
 #include "ht.h"
 
+/*
+TODO:
+- Store item (not only key) in has table and
+compute key from function with key passed in
+- Use key typedef to store key and key size
+*/
+
+/*!
+ * @brief djb2 hash function
+ *
+ * @param[in] p_item     Pointer to item
+ * @param[in] item_size  Size of item in bytes
+ * @param[in] pp_key     Double pointer to key
+ * @param[in] p_key_size Pointer to size of key in bytes
+ *
+ * @return 64-bit hash digest
+ */
+static status_t keygen(void * p_item, size_t item_size,
+                       void ** pp_key, size_t * p_key_size);
+
 /*!
  * @brief djb2 hash function
  *
@@ -164,6 +184,9 @@ ht_insert (ht_t * p_ht, void * p_key, size_t key_size)
         goto cleanup;
     }
 
+    // TODO: Compute key and store item
+    keygen(NULL, 0u, NULL, NULL);
+
     status = sll_append(p_sll, p_key, key_size);
 
     // Increment length if first node inserted
@@ -254,6 +277,29 @@ ht_destroy (ht_t * p_ht)
     // Free all elements
     free(p_ht->pp_elements);
     p_ht->pp_elements = NULL;
+
+    goto cleanup;
+
+cleanup:
+    return status;
+}
+
+static status_t
+keygen (void * p_item, size_t item_size,
+        void ** pp_key, size_t * p_key_size)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_item)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    (void)p_item;
+    (void)item_size;
+    (void)pp_key;
+    (void)p_key_size;
 
     goto cleanup;
 
