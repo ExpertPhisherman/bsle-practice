@@ -25,14 +25,6 @@
 
 typedef uint64_t (*hash_func_t)(void * p_key, size_t key_size);
 
-typedef struct item
-{
-    void   * p_key;    // Pointer to key
-    size_t   key_size; // Size of key in bytes
-    void   * p_val;    // Pointer to value
-    size_t   val_size; // Size of value in bytes
-} item_t;
-
 typedef struct ht
 {
     sll_t       ** pp_elements; // Double pointer to elements
