@@ -20,13 +20,13 @@
 #include "common.h"
 #include "tpool.h"
 #include <arpa/inet.h>
-#include <stdatomic.h>
 #include <errno.h>
 #include <limits.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
