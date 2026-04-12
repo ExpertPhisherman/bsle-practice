@@ -156,10 +156,10 @@ ht_insert (ht_t * p_ht, void * p_key, size_t key_size)
 
     sll_t * p_sll = ht_select(p_ht, p_key, key_size);
 
-    // Insert data if not already exists in SLL
+    // Insert data if it does not exist in SLL
     if (sll_in(p_sll, p_key, key_size))
     {
-        // NOTE: Data already exists in SLL
+        // NOTE: Data exists in SLL
         status = STATUS_EXISTS;
         goto cleanup;
     }
@@ -196,7 +196,7 @@ ht_remove (ht_t * p_ht, void * p_key, size_t key_size)
 
     sll_t * p_sll = ht_select(p_ht, p_key, key_size);
 
-    // Remove data if exists in SLL
+    // Remove data if it exists in SLL
     if (!sll_in(p_sll, p_key, key_size))
     {
         // NOTE: Data does not exist in SLL
