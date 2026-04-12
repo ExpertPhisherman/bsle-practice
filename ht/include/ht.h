@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef uint64_t (*hash_func_t)(void * p_key, size_t size);
+typedef uint64_t (*hash_func_t)(void * p_key, size_t key_size);
 
 typedef struct item
 {
@@ -38,7 +38,7 @@ typedef struct ht
     sll_t       ** pp_elements; // Double pointer to elements
     size_t         capacity;    // Maximum number of elements
     size_t         len;         // Current length
-    hash_func_t    p_hash;      // Pointer to hash function
+    hash_func_t    p_hash_func; // Pointer to hash function
 } ht_t;
 
 /*!
@@ -63,35 +63,35 @@ status_t ht_display(ht_t * p_ht);
 /*!
  * @brief Check if key in hash table
  *
- * @param[in] p_ht  Pointer to hash table
- * @param[in] p_key Pointer to key to find
- * @param[in] size  Size of key in bytes
+ * @param[in] p_ht     Pointer to hash table
+ * @param[in] p_key    Pointer to key to find
+ * @param[in] key_size Size of key in bytes
  *
  * @return Boolean if key in hash table
  */
-bool ht_in(ht_t * p_ht, void * p_key, size_t size);
+bool ht_in(ht_t * p_ht, void * p_key, size_t key_size);
 
 /*!
  * @brief Insert key into hash table
  *
- * @param[in] p_ht  Pointer to hash table
- * @param[in] p_key Pointer to key to insert
- * @param[in] size  Size of key in bytes
+ * @param[in] p_ht     Pointer to hash table
+ * @param[in] p_key    Pointer to key to find
+ * @param[in] key_size Size of key in bytes
  *
  * @return Status of operation
  */
-status_t ht_insert(ht_t * p_ht, void * p_key, size_t size);
+status_t ht_insert(ht_t * p_ht, void * p_key, size_t key_size);
 
 /*!
  * @brief Remove key from hash table
  *
- * @param[in] p_ht  Pointer to hash table
- * @param[in] p_key Pointer to key to remove
- * @param[in] size  Size of key in bytes
+ * @param[in] p_ht     Pointer to hash table
+ * @param[in] p_key    Pointer to key to find
+ * @param[in] key_size Size of key in bytes
  *
  * @return Status of operation
  */
-status_t ht_remove(ht_t * p_ht, void * p_key, size_t size);
+status_t ht_remove(ht_t * p_ht, void * p_key, size_t key_size);
 
 /*!
  * @brief Destroy hash table
