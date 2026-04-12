@@ -69,7 +69,7 @@ sll_in (sll_t * p_sll, void * p_data, size_t size)
 {
     bool b_data_in = false;
 
-    if (NULL == p_sll)
+    if ((NULL == p_sll) || (NULL == p_data))
     {
         goto cleanup;
     }
@@ -99,7 +99,7 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_sll)
+    if ((NULL == p_sll) || (NULL == p_data))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -170,7 +170,19 @@ cleanup:
 status_t
 sll_append (sll_t * p_sll, void * p_data, size_t size)
 {
-    return sll_insert(p_sll, p_data, size, p_sll->len);
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_sll) || (NULL == p_data))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    status = sll_insert(p_sll, p_data, size, p_sll->len);;
+    goto cleanup;
+
+cleanup:
+    return status;
 }
 
 status_t
@@ -178,7 +190,7 @@ sll_remove (sll_t * p_sll, void * p_data, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_sll)
+    if ((NULL == p_sll) || (NULL == p_data))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -254,12 +266,12 @@ sll_destroy (sll_t * p_sll)
         p_curr = p_next;
     }
 
-    goto cleanup;
-
-cleanup:
     p_sll->p_head = NULL;
     p_sll->len = 0u;
 
+    goto cleanup;
+
+cleanup:
     return status;
 }
 
