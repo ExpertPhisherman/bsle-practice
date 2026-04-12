@@ -289,8 +289,8 @@ ht_select (ht_t * p_ht, void * p_key, size_t key_size)
         goto cleanup;
     }
 
-    uint64_t hash = (p_ht->p_hash_func)(p_key, key_size) % p_ht->capacity;
-    p_sll = (p_ht->pp_elements)[hash];
+    uint64_t hash = (p_ht->p_hash_func)(p_key, key_size);
+    p_sll = (p_ht->pp_elements)[hash % p_ht->capacity];
 
     goto cleanup;
 
