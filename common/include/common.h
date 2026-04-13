@@ -48,7 +48,7 @@ typedef enum status
  * @brief Display variable bytes in hex
  *
  * @param[in] p_var Pointer to variable
- * @param[in] size  Variable size in bytes
+ * @param[in] size  Size of variable in bytes
  * @param[in] p_sep Pointer to separator between each byte
  *
  * @return void
