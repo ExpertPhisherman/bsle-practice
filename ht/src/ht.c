@@ -144,7 +144,7 @@ ht_display (ht_t * p_ht, char const * p_sep)
                 // Print separator between each non-empty element
                 printf("%s", p_sep);
             }
-            sll_display(p_sll, ", ");
+            sll_display(p_sll, p_sep);
             b_first = false;
         }
     }
@@ -157,10 +157,10 @@ cleanup:
     return status;
 }
 
-node_t *
+item_t *
 ht_in (ht_t * p_ht, void * p_key, size_t key_size)
 {
-    node_t * p_node = NULL;
+    item_t * p_item = NULL;
 
     if ((NULL == p_ht) || (NULL == p_key))
     {
@@ -168,12 +168,19 @@ ht_in (ht_t * p_ht, void * p_key, size_t key_size)
     }
 
     sll_t * p_sll = ht_select(p_ht, p_key, key_size);
-    p_node = sll_in(p_sll, p_key, key_size);
+    node_t * p_node = sll_in(p_sll, p_key, key_size);
+
+    if (NULL == p_node)
+    {
+        goto cleanup;
+    }
+
+    p_item = p_node->p_data;
 
     goto cleanup;
 
 cleanup:
-    return p_node;
+    return p_item;
 }
 
 status_t

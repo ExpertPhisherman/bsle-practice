@@ -71,9 +71,9 @@ status_t ht_display(ht_t * p_ht, char const * p_sep);
  * @param[in] p_key    Pointer to key to find
  * @param[in] key_size Size of key in bytes
  *
- * @return Pointer to found node
+ * @return Pointer to found item
  */
-node_t * ht_in(ht_t * p_ht, void * p_key, size_t key_size);
+item_t * ht_in(ht_t * p_ht, void * p_key, size_t key_size);
 
 /*!
  * @brief Insert item into hash table
