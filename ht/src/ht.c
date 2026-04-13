@@ -38,22 +38,24 @@ static sll_t * ht_select(ht_t * p_ht, void * p_key, size_t key_size);
 /*!
  * @brief Display item
  *
- * @param[in] p_var Pointer to item
- * @param[in] size  Size of item in bytes
- * @param[in] p_sep Pointer to separator between each byte
+ * @param[in] p_data Pointer to item
+ * @param[in] size   Size of item in bytes
+ * @param[in] p_sep  Pointer to separator between each byte
  *
  * @return void
  */
-static void display_item(void * p_var, size_t size, char const * p_sep);
+static void display_item(void * p_data, size_t size, char const * p_sep);
 
 /*!
- * @brief Display item
+ * @brief Compare item
  *
- * @param[in]
+ * @param[in] p_data   Pointer to item
+ * @param[in] p_key    Pointer to key to compare
+ * @param[in] key_size Size of key in bytes
  *
  * @return void
  */
-static bool cmp_item(void * p_node_data, void * p_search_data, size_t size);
+static bool cmp_item(void * p_data, void * p_key, size_t key_size);
 
 status_t
 ht_create (ht_t * p_ht, size_t capacity)
@@ -348,14 +350,14 @@ cleanup:
 }
 
 static void
-display_item (void * p_var, size_t size, char const * p_sep)
+display_item (void * p_data, size_t size, char const * p_sep)
 {
-    if (NULL == p_var)
+    if (NULL == p_data)
     {
         goto cleanup;
     }
 
-    item_t * p_item = p_var;
+    item_t * p_item = p_data;
 
     printf("\"");
     if (NULL != p_item->p_key)
@@ -381,7 +383,7 @@ cleanup:
 }
 
 static bool
-cmp_item (void * p_data, void * p_key, size_t size)
+cmp_item (void * p_data, void * p_key, size_t key_size)
 {
     bool b_result;
 
@@ -391,9 +393,9 @@ cmp_item (void * p_data, void * p_key, size_t size)
         goto cleanup;
     }
 
-    item_t * p_item = (item_t *)p_data;
-    b_result = (p_item->key_size == size) &&
-               (0 == memcmp(p_item->p_key, p_key, size));
+    item_t * p_item = p_data;
+    b_result = (p_item->key_size == key_size) &&
+               (0 == memcmp(p_item->p_key, p_key, key_size));
 
     goto cleanup;
 

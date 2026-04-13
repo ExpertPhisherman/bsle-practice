@@ -21,8 +21,8 @@ typedef struct node
     struct node * p_next; // Pointer to next node
 } node_t;
 
-typedef void (*display_func_t)(void * p_var, size_t size, char const * p_sep);
-typedef bool (*cmp_func_t)(void * p_node_data, void * p_search_data, size_t size);
+typedef void (*display_func_t)(void * p_data, size_t size, char const * p_sep);
+typedef bool (*cmp_func_t)(void * p_data, void * p_key, size_t key_size);
 
 typedef struct sll
 {
