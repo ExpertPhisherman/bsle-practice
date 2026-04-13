@@ -29,16 +29,13 @@ main (int argc, char * argv[])
     for (size_t idx = 0u; idx < len; idx++)
     {
         char const * key = key_arr[idx];
-        size_t size = strnlen(key, 256u);
-        ht_insert(&ht, (void *)key, size);
+        size_t key_size = strnlen(key, 256u);
+        ht_insert(&ht, (void *)key, key_size, (void *)key, 4u);
     }
 
-    ht_display(&ht);
-
-    printf("Offset: %zu\n", offsetof(ht_t, pp_elements));
-    printf("Offset: %zu\n", offsetof(ht_t, capacity));
-    printf("Offset: %zu\n", offsetof(ht_t, len));
-    printf("Offset: %zu\n", offsetof(ht_t, p_hash_func));
+    ht_insert(&ht, (void *)"dragbolt", 8u, (void *)"TEST", 4u);
+    ht_remove(&ht, (void *)"femality", 8u);
+    ht_display(&ht, ", ");
 
     goto cleanup;
 

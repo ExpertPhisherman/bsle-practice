@@ -19,6 +19,8 @@ sll_create (sll_t * p_sll)
 
     p_sll->p_head = NULL;
     p_sll->len = 0u;
+    p_sll->p_display_func = NULL;
+    p_sll->p_cmp_func = NULL;
 
     goto cleanup;
 
@@ -27,7 +29,7 @@ cleanup:
 }
 
 status_t
-sll_display (sll_t * p_sll)
+sll_display (sll_t * p_sll, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -43,20 +45,24 @@ sll_display (sll_t * p_sll)
         goto cleanup;
     }
 
+    if (NULL == p_sll->p_display_func)
+    {
+        goto cleanup;
+    }
+
     // Traverse nodes
     node_t * p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
-        display_bytes(p_curr->p_data, p_curr->size, " ");
+        (p_sll->p_display_func)(p_curr->p_data, p_curr->size, ": ");
 
         if (NULL != p_curr->p_next)
         {
-            printf(" -> ");
+            printf("%s", p_sep);
         }
 
         p_curr = p_curr->p_next;
     }
-    printf("\n");
 
     goto cleanup;
 
@@ -64,12 +70,12 @@ cleanup:
     return status;
 }
 
-bool
+node_t *
 sll_in (sll_t * p_sll, void * p_data, size_t size)
 {
-    bool b_data_in = false;
+    node_t * p_node = NULL;
 
-    if ((NULL == p_sll) || (NULL == p_data))
+    if ((NULL == p_sll) || (NULL == p_data) || (NULL == p_sll->p_cmp_func))
     {
         goto cleanup;
     }
@@ -79,9 +85,9 @@ sll_in (sll_t * p_sll, void * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if ((p_curr->size == size) && (0 == memcmp(p_curr->p_data, p_data, size)))
+        if ((p_sll->p_cmp_func)(p_curr->p_data, p_data, size))
         {
-            b_data_in = true;
+            p_node = p_curr;
             goto cleanup;
         }
 
@@ -91,7 +97,7 @@ sll_in (sll_t * p_sll, void * p_data, size_t size)
     goto cleanup;
 
 cleanup:
-    return b_data_in;
+    return p_node;
 }
 
 status_t
@@ -178,7 +184,7 @@ sll_append (sll_t * p_sll, void * p_data, size_t size)
         goto cleanup;
     }
 
-    status = sll_insert(p_sll, p_data, size, p_sll->len);;
+    status = sll_insert(p_sll, p_data, size, p_sll->len);
     goto cleanup;
 
 cleanup:
@@ -190,7 +196,7 @@ sll_remove (sll_t * p_sll, void * p_data, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_sll) || (NULL == p_data))
+    if ((NULL == p_sll) || (NULL == p_data) || (NULL == p_sll->p_cmp_func))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -203,7 +209,7 @@ sll_remove (sll_t * p_sll, void * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if ((p_curr->size == size) && (0 == memcmp(p_curr->p_data, p_data, size)))
+        if ((p_sll->p_cmp_func)(p_curr->p_data, p_data, size))
         {
             // Link skips node where data was found
             if (NULL == p_prev)
@@ -268,6 +274,8 @@ sll_destroy (sll_t * p_sll)
 
     p_sll->p_head = NULL;
     p_sll->len = 0u;
+    p_sll->p_display_func = NULL;
+    p_sll->p_cmp_func = NULL;
 
     goto cleanup;
 
