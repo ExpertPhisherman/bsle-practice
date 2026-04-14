@@ -19,7 +19,7 @@
 static status_t
 drain (int sockfd, uint32_t size)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
     uint8_t p_buf[DRAIN_CHUNK_SIZE];
 
     while (0u < size)
@@ -35,7 +35,6 @@ drain (int sockfd, uint32_t size)
         size -= chunk;
     }
 
-    status = STATUS_SUCCESS;
     goto cleanup;
 
 cleanup:
@@ -449,7 +448,7 @@ client_socket (session_t * p_session)
             printf("Accepted connection from %s:%hu (client_sockfd %d)\n", p_ipstr, client_port, client_sockfd);
         }
 
-        // Multithread client socket connections instead of fork
+        // Multithread client socket connections
         session_t * p_client_session = malloc(sizeof(*p_client_session));
         if (NULL == p_client_session)
         {

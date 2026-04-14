@@ -125,11 +125,11 @@ main (int argc, char * argv[])
     // NOTE: Test SLL functions before accepting client connection
     sll_t sll;
     sll_create(&sll);
-    sll_append(&sll, "abcd", 5u);
-    sll_append(&sll, "1234", 5u);
+    sll_append(&sll, (void *)"abcd", 5u);
+    sll_append(&sll, (void *)"1234", 5u);
     sll_append(&sll, &(uint32_t){2u}, 4u);
     sll_append(&sll, &(uint32_t){3u}, 4u);
-    sll_display(&sll);
+    sll_display(&sll, " ");
     sll_destroy(&sll);
 
     registry_t registry;
