@@ -33,7 +33,8 @@ main (int argc, char * argv[])
         ht_insert(&ht, (void *)key, key_size, (void *)key, 4u);
     }
 
-    ht_insert(&ht, (void *)"dragbolt", 8u, (void *)"TEST", 4u);
+    int temp = 97;
+    ht_insert(&ht, (void *)&temp, 8u, (void *)"TEST", 4u);
     ht_remove(&ht, (void *)"femality", 8u);
     ht_display(&ht, ", ");
 

@@ -80,8 +80,8 @@ ht_create (ht_t * p_ht, size_t capacity)
     p_ht->p_display_func = display_item;
     p_ht->p_cmp_func = cmp_item;
 
-    p_ht->pp_elements = calloc(capacity, sizeof(*(p_ht->pp_elements)));
-    if (NULL == p_ht->pp_elements)
+    p_ht->pp_buckets = calloc(capacity, sizeof(*(p_ht->pp_buckets)));
+    if (NULL == p_ht->pp_buckets)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
@@ -100,8 +100,8 @@ ht_create (ht_t * p_ht, size_t capacity)
         p_sll->p_display_func = p_ht->p_display_func;
         p_sll->p_cmp_func = p_ht->p_cmp_func;
 
-        // Set element to empty SLL
-        (p_ht->pp_elements)[idx] = p_sll;
+        // Set bucket to empty SLL
+        (p_ht->pp_buckets)[idx] = p_sll;
     }
 
     goto cleanup;
@@ -136,12 +136,12 @@ ht_display (ht_t * p_ht, char const * p_sep)
     bool b_first = true;
     for (size_t idx = 0u; idx < p_ht->capacity; idx++)
     {
-        sll_t * p_sll = (p_ht->pp_elements)[idx];
+        sll_t * p_sll = (p_ht->pp_buckets)[idx];
         if (NULL != p_sll->p_head)
         {
             if (!b_first)
             {
-                // Print separator between each non-empty element
+                // Print separator between each non-empty bucket
                 printf("%s", p_sep);
             }
             sll_display(p_sll, p_sep);
@@ -158,7 +158,7 @@ cleanup:
 }
 
 item_t *
-ht_in (ht_t * p_ht, void * p_key, size_t key_size)
+ht_get (ht_t * p_ht, void * p_key, size_t key_size)
 {
     item_t * p_item = NULL;
 
@@ -214,6 +214,7 @@ ht_insert (ht_t * p_ht,
     // Append item if key does not exist in SLL
     item_t item =
     {
+        .hash = (p_ht->p_hash_func)(p_key, key_size),
         .p_key = p_key,
         .key_size = key_size,
         .p_value = p_value,
@@ -290,17 +291,17 @@ ht_destroy (ht_t * p_ht)
     p_ht->p_display_func = NULL;
     p_ht->p_cmp_func = NULL;
 
-    if (NULL == p_ht->pp_elements)
+    if (NULL == p_ht->pp_buckets)
     {
         p_ht->capacity = 0u;
         goto cleanup;
     }
 
-    // Free each element
+    // Free each bucket
     for (size_t idx = 0u; idx < p_ht->capacity; idx++)
     {
-        sll_t * p_sll = (p_ht->pp_elements)[idx];
-        (p_ht->pp_elements)[idx] = NULL;
+        sll_t * p_sll = (p_ht->pp_buckets)[idx];
+        (p_ht->pp_buckets)[idx] = NULL;
 
         sll_destroy(p_sll);
         free(p_sll);
@@ -309,9 +310,9 @@ ht_destroy (ht_t * p_ht)
 
     p_ht->capacity = 0u;
 
-    // Free all elements
-    free(p_ht->pp_elements);
-    p_ht->pp_elements = NULL;
+    // Free all buckets
+    free(p_ht->pp_buckets);
+    p_ht->pp_buckets = NULL;
 
     goto cleanup;
 
@@ -348,7 +349,7 @@ ht_select (ht_t * p_ht, void * p_key, size_t key_size)
     }
 
     uint64_t hash = (p_ht->p_hash_func)(p_key, key_size);
-    p_sll = (p_ht->pp_elements)[hash % p_ht->capacity];
+    p_sll = (p_ht->pp_buckets)[hash % p_ht->capacity];
 
     goto cleanup;
 
