@@ -145,12 +145,11 @@ ht_display (ht_t * p_ht, char const * p_sep)
             b_first = false;
         }
     }
-    printf("}");
+    printf("}\n");
 
     goto cleanup;
 
 cleanup:
-    printf("\n");
     return status;
 }
 
