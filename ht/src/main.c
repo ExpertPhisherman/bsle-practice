@@ -33,13 +33,20 @@ main (int argc, char * argv[])
         ht_set(&ht, (void *)key, key_size, (void *)key, 4u);
     }
 
-    item_t * p_item = ht_get(&ht, (void *)"invinate", 8u);
-    (ht.p_display_item)(p_item);
-    printf("\n");
+    item_t * p_item = NULL;
 
     ht_set(&ht, &(int){97}, 4u, (void *)"TEST", 4u);
     ht_set(&ht, (void *)"dragbolt", 8u, (void *)"pluh", 4u);
     ht_del(&ht, (void *)"femality", 8u);
+
+    p_item = ht_get(&ht, &(int){97}, 4u);
+    (ht.p_display_item)(p_item);
+    printf("\n");
+
+    p_item = ht_get(&ht, (void *)"dragbolt", 8u);
+    (ht.p_display_item)(p_item);
+    printf("\n");
+
     ht_display(&ht, ", ");
 
     ht_destroy(&ht);
