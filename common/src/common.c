@@ -13,14 +13,14 @@ display_bytes (void * p_var, size_t size, char const * p_sep)
 
     for (size_t idx = 0u; idx < size; idx++)
     {
-        chr = ((uint8_t *)p_var)[idx];
-        printf("%02hhx", chr);
-
         // Print separator between each byte
-        if (1u < (size - idx))
+        if (1u <= idx)
         {
             printf("%s", p_sep);
         }
+
+        chr = ((uint8_t *)p_var)[idx];
+        printf("%02hhx", chr);
     }
 }
 
