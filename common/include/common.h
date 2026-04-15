@@ -21,7 +21,7 @@
 #define UNUSED(var) ((void)(var))
 
 typedef void (*display_func_t)(void * p_data);
-typedef bool (*cmp_func_t)(void * p_data, void * p_key, size_t key_size);
+typedef bool (*cmp_func_t)(void * p_data, void * p_data2);
 
 typedef enum status
 {

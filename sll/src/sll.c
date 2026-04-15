@@ -66,7 +66,7 @@ cleanup:
 }
 
 node_t *
-sll_get (sll_t * p_sll, void * p_data, size_t size)
+sll_get (sll_t * p_sll, void * p_data)
 {
     node_t * p_node = NULL;
 
@@ -80,7 +80,7 @@ sll_get (sll_t * p_sll, void * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if ((p_sll->p_cmp_node)(p_curr->p_data, p_data, size))
+        if ((p_sll->p_cmp_node)(p_curr->p_data, p_data))
         {
             p_node = p_curr;
             goto cleanup;
@@ -187,7 +187,7 @@ cleanup:
 }
 
 status_t
-sll_remove (sll_t * p_sll, void * p_data, size_t size)
+sll_remove (sll_t * p_sll, void * p_data)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -204,7 +204,7 @@ sll_remove (sll_t * p_sll, void * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if ((p_sll->p_cmp_node)(p_curr->p_data, p_data, size))
+        if ((p_sll->p_cmp_node)(p_curr->p_data, p_data))
         {
             // Link skips node where data was found
             if (NULL == p_prev)

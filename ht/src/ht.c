@@ -27,13 +27,12 @@ static uint64_t djb2_hash(void * p_key, size_t key_size);
 /*!
  * @brief Select SLL containing key in hash table
  *
- * @param[in] p_ht     Pointer to hash table
- * @param[in] p_key    Pointer to key to find
- * @param[in] key_size Size of key in bytes
+ * @param[in] p_ht   Pointer to hash table
+ * @param[in] p_item Pointer to item to find
  *
  * @return Pointer to SLL containing key
  */
-static sll_t * ht_select(ht_t * p_ht, void * p_key, size_t key_size);
+static sll_t * ht_select(ht_t * p_ht, item_t * p_item);
 
 /*!
  * @brief Display item
@@ -53,7 +52,7 @@ static void display_item(void * p_data);
  *
  * @return void
  */
-static bool cmp_item(void * p_data, void * p_key, size_t key_size);
+static bool cmp_item(void * p_data, void * p_data2);
 
 status_t
 ht_create (ht_t * p_ht, size_t capacity)
@@ -160,13 +159,21 @@ ht_get (ht_t * p_ht, void * p_key, size_t key_size)
 {
     item_t * p_item = NULL;
 
-    if ((NULL == p_ht) || (NULL == p_key))
+    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash))
     {
         goto cleanup;
     }
 
-    sll_t * p_sll = ht_select(p_ht, p_key, key_size);
-    node_t * p_node = sll_get(p_sll, p_key, key_size);
+    item_t item =
+    {
+        .p_hash    = p_ht->p_hash,
+        .hash      = (p_ht->p_hash)(p_key, key_size),
+        .p_key     = p_key,
+        .key_size  = key_size,
+    };
+
+    sll_t * p_sll = ht_select(p_ht, &item);
+    node_t * p_node = sll_get(p_sll, &item);
 
     if (NULL == p_node)
     {
@@ -188,14 +195,24 @@ ht_set (ht_t * p_ht,
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_value))
+    if ((NULL == p_ht) ||
+        (NULL == p_key) || (NULL == p_value) ||
+        (NULL == p_ht->p_hash))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sll_t * p_sll = ht_select(p_ht, p_key, key_size);
-    node_t * p_node = sll_get(p_sll, p_key, key_size);
+    item_t item =
+    {
+        .p_hash    = p_ht->p_hash,
+        .hash      = (p_ht->p_hash)(p_key, key_size),
+        .p_key     = p_key,
+        .key_size  = key_size,
+    };
+
+    sll_t * p_sll = ht_select(p_ht, &item);
+    node_t * p_node = sll_get(p_sll, &item);
 
     // Update item if key exists in SLL
     if (NULL != p_node)
@@ -210,15 +227,8 @@ ht_set (ht_t * p_ht,
     }
 
     // Append item if key does not exist in SLL
-    item_t item =
-    {
-        .p_hash     = p_ht->p_hash,
-        .hash       = (p_ht->p_hash)(p_key, key_size),
-        .p_key      = p_key,
-        .key_size   = key_size,
-        .p_value    = p_value,
-        .value_size = value_size,
-    };
+    item.p_value = p_value;
+    item.value_size = value_size;
     status = sll_append(p_sll, &item, sizeof(item));
 
     // Increment length if first node inserted
@@ -243,14 +253,22 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_ht) || (NULL == p_key))
+    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sll_t * p_sll = ht_select(p_ht, p_key, key_size);
-    node_t * p_node = sll_get(p_sll, p_key, key_size);
+    item_t item =
+    {
+        .p_hash    = p_ht->p_hash,
+        .hash      = (p_ht->p_hash)(p_key, key_size),
+        .p_key     = p_key,
+        .key_size  = key_size,
+    };
+
+    sll_t * p_sll = ht_select(p_ht, &item);
+    node_t * p_node = sll_get(p_sll, &item);
 
     // Remove item if key exists in SLL
     if (NULL == p_node)
@@ -260,7 +278,7 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
         goto cleanup;
     }
 
-    status = sll_remove(p_sll, p_key, key_size);
+    status = sll_remove(p_sll, &item);
 
     // Decrement length if last node removed
     if ((STATUS_SUCCESS == status) && (0u == p_sll->len))
@@ -338,17 +356,16 @@ djb2_hash (void * p_key, size_t key_size)
 }
 
 static sll_t *
-ht_select (ht_t * p_ht, void * p_key, size_t key_size)
+ht_select (ht_t * p_ht, item_t * p_item)
 {
     sll_t * p_sll = NULL;
 
-    if ((NULL == p_ht) || (NULL == p_key))
+    if ((NULL == p_ht) || (NULL == p_item))
     {
         goto cleanup;
     }
 
-    uint64_t hash = (p_ht->p_hash)(p_key, key_size);
-    p_sll = (p_ht->pp_buckets)[hash % p_ht->capacity];
+    p_sll = (p_ht->pp_buckets)[p_item->hash % p_ht->capacity];
 
     goto cleanup;
 
@@ -381,24 +398,30 @@ cleanup:
 }
 
 static bool
-cmp_item (void * p_data, void * p_key, size_t key_size)
+cmp_item (void * p_data, void * p_data2)
 {
     bool b_result = false;
 
-    if ((NULL == p_data) || (NULL == p_key))
+    if ((NULL == p_data) || (NULL == p_data2))
     {
         goto cleanup;
     }
 
     item_t * p_item = p_data;
-    if ((NULL == p_item->p_key) || (NULL == p_item->p_hash))
+    if (NULL == p_item->p_key)
     {
         goto cleanup;
     }
 
-    b_result = (p_item->hash == (p_item->p_hash)(p_key, key_size)) &&
-               (p_item->key_size == key_size) &&
-               (0 == memcmp(p_item->p_key, p_key, key_size));
+    item_t * p_item2 = p_data2;
+    if (NULL == p_item2->p_key)
+    {
+        goto cleanup;
+    }
+
+    b_result = (p_item->hash == p_item2->hash) &&
+               (p_item->key_size == p_item2->key_size) &&
+               (0 == memcmp(p_item->p_key, p_item2->p_key, p_item->key_size));
 
     goto cleanup;
 
