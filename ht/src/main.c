@@ -30,12 +30,12 @@ main (int argc, char * argv[])
     {
         char const * key = key_arr[idx];
         size_t key_size = strnlen(key, 256u);
-        ht_insert(&ht, (void *)key, key_size, (void *)key, 4u);
+        ht_set(&ht, (void *)key, key_size, (void *)key, 4u);
     }
 
     int temp = 97;
-    ht_insert(&ht, (void *)&temp, 8u, (void *)"TEST", 4u);
-    ht_remove(&ht, (void *)"femality", 8u);
+    ht_set(&ht, (void *)&temp, 8u, (void *)"TEST", 4u);
+    ht_del(&ht, (void *)"femality", 8u);
     ht_display(&ht, ", ");
 
     goto cleanup;

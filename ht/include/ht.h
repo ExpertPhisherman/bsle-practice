@@ -40,9 +40,9 @@ typedef struct ht
     sll_t          ** pp_buckets;     // Double pointer to buckets
     size_t            capacity;       // Current number of buckets
     size_t            len;            // Current occupied buckets
-    hash_func_t       p_hash_func;    // Pointer to hash function
-    display_func_t    p_display_func; // Pointer to display function
-    cmp_func_t        p_cmp_func;     // Pointer to compare function
+    hash_func_t       p_hash;         // Pointer to hash function
+    display_func_t    p_display_item; // Pointer to display function
+    cmp_func_t        p_cmp_item;     // Pointer to compare function
 } ht_t;
 
 /*!
@@ -87,20 +87,20 @@ item_t * ht_get(ht_t * p_ht, void * p_key, size_t key_size);
  *
  * @return Status of operation
  */
-status_t ht_insert(ht_t * p_ht,
-                   void * p_key, size_t key_size,
-                   void * p_value, size_t value_size);
+status_t ht_set(ht_t * p_ht,
+                void * p_key, size_t key_size,
+                void * p_value, size_t value_size);
 
 /*!
- * @brief Remove item at key in hash table
+ * @brief Delete item at key in hash table
  *
  * @param[in] p_ht     Pointer to hash table
- * @param[in] p_key    Pointer to key to remove
+ * @param[in] p_key    Pointer to key to delete
  * @param[in] key_size Size of key in bytes
  *
  * @return Status of operation
  */
-status_t ht_remove(ht_t * p_ht, void * p_key, size_t key_size);
+status_t ht_del(ht_t * p_ht, void * p_key, size_t key_size);
 
 /*!
  * @brief Destroy hash table

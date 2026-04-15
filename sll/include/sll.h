@@ -21,15 +21,12 @@ typedef struct node
     struct node * p_next; // Pointer to next node
 } node_t;
 
-typedef void (*display_func_t)(void * p_data, size_t size, char const * p_sep);
-typedef bool (*cmp_func_t)(void * p_data, void * p_key, size_t key_size);
-
 typedef struct sll
 {
     node_t         * p_head;         // Pointer to head node
     size_t           len;            // Current length
-    display_func_t   p_display_func; // Pointer to display function
-    cmp_func_t       p_cmp_func;     // Pointer to compare function
+    display_func_t   p_display_node; // Pointer to display function
+    cmp_func_t       p_cmp_node;     // Pointer to compare function
 } sll_t;
 
 /*!
@@ -52,15 +49,15 @@ status_t sll_create(sll_t * p_sll);
 status_t sll_display(sll_t * p_sll, char const * p_sep);
 
 /*!
- * @brief Check if data in SLL
+ * @brief Get node with data in SLL
  *
  * @param[in] p_sll  Pointer to SLL
- * @param[in] p_data Pointer to data to find
+ * @param[in] p_data Pointer to data to get
  * @param[in] size   Size of data in bytes
  *
  * @return Pointer to found node
  */
-node_t * sll_in(sll_t * p_sll, void * p_data, size_t size);
+node_t * sll_get(sll_t * p_sll, void * p_data, size_t size);
 
 /*!
  * @brief Insert data into SLL
