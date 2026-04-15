@@ -78,7 +78,7 @@ $(BUILD)/%.o: $(SRC)/%.c
 -include $(DEPS)
 
 # Debug
-debug: CFLAGS += -ggdb3 -DDEBUG
+debug: CFLAGS += -ggdb3 -Og -DDEBUG
 debug: all
 
 # Clang-Tidy checks
