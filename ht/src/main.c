@@ -22,7 +22,7 @@ main (int argc, char * argv[])
         "tenorite", "perflate", "narrater", "linolate", "wolfskin", "unrotted",
         "remargin", "dragbolt", "allosome", "ratproof", "unshaken", "ditroite",
         "reducent", "distance", "snowbird", "vitalist", "expirant", "femality",
-        "perscent", "slapping", "histonal", "analytic", "belltail", "centrist"
+        "perscent", "slapping", "histonal", "analytic", "belltail", "centrist",
     };
 
     size_t len = sizeof(key_arr) / sizeof(*key_arr);
@@ -33,8 +33,7 @@ main (int argc, char * argv[])
         ht_set(&ht, (void *)key, key_size, (void *)key, 4u);
     }
 
-    int temp = 97;
-    ht_set(&ht, (void *)&temp, 8u, (void *)"TEST", 4u);
+    ht_set(&ht, &(int){97}, 4u, (void *)"TEST", 4u);
     ht_del(&ht, (void *)"femality", 8u);
     ht_display(&ht, ", ");
 
