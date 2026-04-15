@@ -16,8 +16,8 @@ main (int argc, char * argv[])
     goto cleanup;
 
 cleanup:
-    (void)argc;
-    (void)argv;
+    UNUSED(argc);
+    UNUSED(argv);
 
     return status;
 }

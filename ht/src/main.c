@@ -37,13 +37,13 @@ main (int argc, char * argv[])
     ht_del(&ht, (void *)"femality", 8u);
     ht_display(&ht, ", ");
 
+    ht_destroy(&ht);
+
     goto cleanup;
 
 cleanup:
-    ht_destroy(&ht);
-
-    (void)argc;
-    (void)argv;
+    UNUSED(argc);
+    UNUSED(argv);
 
     return status;
 }

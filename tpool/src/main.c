@@ -56,8 +56,8 @@ main (int argc, char * argv[])
     tpool_destroy(p_tm);
     p_tm = NULL;
 
-    (void)argc;
-    (void)argv;
+    UNUSED(argc);
+    UNUSED(argv);
 
     return status;
 }

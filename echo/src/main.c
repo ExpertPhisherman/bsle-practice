@@ -11,7 +11,7 @@ volatile sig_atomic_t g_keep_running = 1;
 void
 handle_sigint (int signo)
 {
-    (void)signo;
+    UNUSED(signo);
     g_keep_running = 0;
 }
 

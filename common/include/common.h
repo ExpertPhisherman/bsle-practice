@@ -13,12 +13,12 @@
 #include <stdlib.h>
 
 #ifdef DEBUG
-    #define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
+    #define DEBUG_PRINT(...) (fprintf(stderr, __VA_ARGS__))
 #else
     #define DEBUG_PRINT(...)
 #endif
 
-#define UNUSED(var) (void)(var)
+#define UNUSED(var) ((void)(var))
 
 typedef void (*display_func_t)(void * p_data);
 typedef bool (*cmp_func_t)(void * p_data, void * p_key, size_t key_size);
