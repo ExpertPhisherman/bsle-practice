@@ -7,21 +7,21 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #ifdef DEBUG
-    #define DEBUG_PRINT(...) do \
-    { \
-        fprintf(stderr, __VA_ARGS__); \
-    } while(0)
+    #define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
 #else
-    #define DEBUG_PRINT(...) do \
-    { \
-        ; \
-    } while(0)
+    #define DEBUG_PRINT(...)
 #endif
+
+#define UNUSED(var) (void)(var)
+
+typedef void (*display_func_t)(void * p_data);
+typedef bool (*cmp_func_t)(void * p_data, void * p_key, size_t key_size);
 
 typedef enum status
 {
