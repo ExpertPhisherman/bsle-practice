@@ -24,16 +24,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef uint64_t (*hash_func_t)(void * p_key, size_t key_size);
+
 typedef struct item
 {
-    uint64_t   hash;       // Hash digest of key
-    void     * p_key;      // Pointer to key
-    size_t     key_size;   // Size of key in bytes
-    void     * p_value;    // Pointer to value
-    size_t     value_size; // Size of value in bytes
+    hash_func_t   p_hash;     // Pointer to hash function
+    uint64_t      hash;       // Hash digest of key
+    void        * p_key;      // Pointer to key
+    size_t        key_size;   // Size of key in bytes
+    void        * p_value;    // Pointer to value
+    size_t        value_size; // Size of value in bytes
 } item_t;
-
-typedef uint64_t (*hash_func_t)(void * p_key, size_t key_size);
 
 typedef struct ht
 {

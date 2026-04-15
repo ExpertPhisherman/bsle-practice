@@ -212,10 +212,11 @@ ht_set (ht_t * p_ht,
     // Append item if key does not exist in SLL
     item_t item =
     {
-        .hash = (p_ht->p_hash)(p_key, key_size),
-        .p_key = p_key,
-        .key_size = key_size,
-        .p_value = p_value,
+        .p_hash     = p_ht->p_hash,
+        .hash       = (p_ht->p_hash)(p_key, key_size),
+        .p_key      = p_key,
+        .key_size   = key_size,
+        .p_value    = p_value,
         .value_size = value_size,
     };
     status = sll_append(p_sll, &item, sizeof(item));
@@ -366,19 +367,11 @@ display_item (void * p_data)
     item_t * p_item = p_data;
 
     printf("\"");
-    if (NULL != p_item->p_key)
-    {
-        // NOTE: Assuming p_key is a string
-        fwrite(p_item->p_key, 1u, p_item->key_size, stdout);
-    }
-    printf("\"");
-    printf("%s", ": ");
-    printf("\"");
-    if (NULL != p_item->p_value)
-    {
-        // NOTE: Assuming p_value is a string
-        fwrite(p_item->p_value, 1u, p_item->value_size, stdout);
-    }
+    // NOTE: Assuming p_key is a string
+    printf("%.*s", (int)(p_item->key_size), (char *)(p_item->p_key));
+    printf("\": \"");
+    // NOTE: Assuming p_value is a string
+    printf("%.*s", (int)(p_item->value_size), (char *)(p_item->p_value));
     printf("\"");
 
     goto cleanup;
@@ -390,16 +383,20 @@ cleanup:
 static bool
 cmp_item (void * p_data, void * p_key, size_t key_size)
 {
-    bool b_result;
+    bool b_result = false;
 
     if ((NULL == p_data) || (NULL == p_key))
     {
-        b_result = false;
         goto cleanup;
     }
 
     item_t * p_item = p_data;
-    b_result = (p_item->hash == djb2_hash(p_key, key_size)) &&
+    if ((NULL == p_item->p_key) || (NULL == p_item->p_hash))
+    {
+        goto cleanup;
+    }
+
+    b_result = (p_item->hash == (p_item->p_hash)(p_key, key_size)) &&
                (p_item->key_size == key_size) &&
                (0 == memcmp(p_item->p_key, p_key, key_size));
 
