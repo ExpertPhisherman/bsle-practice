@@ -6,7 +6,10 @@
 
 #include "../include/main.h"
 
-volatile sig_atomic_t g_keep_running = 1;
+uint16_t const default_lport = 4444u;
+uint32_t const max_payload_size = 4096u;
+uint32_t const max_clients = 10u;
+uint32_t const worker_threads = 8u;
 
 void
 handle_sigint (int signo)
@@ -21,16 +24,17 @@ main (int argc, char * argv[])
     status_t status = STATUS_SUCCESS;
 
     int opt;
-    uint16_t server_port = 0u;
-    int backlog = DEFAULT_BACKLOG;
+    uint16_t lport = default_lport;
+    int backlog = default_backlog;
     bool b_verbose = false;
+    registry_t registry;
 
     session_t session =
     {
-        .server_port = server_port,
-        .client_port = 0u,
-        .server_sockfd = -1,
-        .client_sockfd = -1,
+        .lport = lport,
+        .rport = 0u,
+        .server_fd = -1,
+        .client_fd = -1,
         .backlog = backlog,
         .b_verbose = b_verbose,
         .p_tm = NULL,
@@ -65,20 +69,20 @@ main (int argc, char * argv[])
 
             case 'p':
                 u64 = strtoul(optarg, NULL, 10);
-                if (MAX_PORT >= u64)
+                if (max_port >= u64)
                 {
-                    server_port = (uint16_t)u64;
+                    lport = (uint16_t)u64;
                 }
                 else
                 {
-                    fprintf(stderr, "Port must be [1-65535]\n");
+                    fprintf(stderr, "Port must be [1-%hu]\n", max_port);
                     status = STATUS_FAILURE;
                     goto cleanup;
                 }
                 break;
 
             default:
-                fprintf(stderr, "Usage: %s [-v] [-b backlog] -p port\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-v] [-b backlog] [-p port]\n", argv[0]);
                 status = STATUS_FAILURE;
                 goto cleanup;
         }
@@ -87,14 +91,6 @@ main (int argc, char * argv[])
     if (optind != argc)
     {
         fprintf(stderr, "Unexpected positional arguments\n");
-        status = STATUS_FAILURE;
-        goto cleanup;
-    }
-
-    if (0u == server_port)
-    {
-        fprintf(stderr, "Argument -p port is required (positive integer)\n");
-        fprintf(stderr, "Usage: %s [-v] [-b backlog] -p port\n", argv[0]);
         status = STATUS_FAILURE;
         goto cleanup;
     }
@@ -112,29 +108,25 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    session.server_port = server_port;
+    session.lport = lport;
     session.backlog = backlog;
     session.b_verbose = b_verbose;
 
-    status = server_socket(&session);
+    status = server_sock(&session);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
     }
 
-    // NOTE: Test SLL functions before accepting client connection
-    sll_t sll;
-    sll_create(&sll);
-    sll_append(&sll, (void *)"abcd", 5u);
-    sll_append(&sll, (void *)"1234", 5u);
-    sll_append(&sll, &(uint32_t){2u}, 4u);
-    sll_append(&sll, &(uint32_t){3u}, 4u);
-    sll_display(&sll, " ");
-    sll_destroy(&sll);
+    registry.sockfds = malloc(max_clients * sizeof(*(registry.sockfds)));
+    if (NULL == registry.sockfds)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
 
-    registry_t registry;
-    memset(registry.sockfds, -1, sizeof(registry.sockfds));
     registry.count = 0u;
+    memset(registry.sockfds, -1, max_clients * sizeof(*(registry.sockfds)));
     if (0 != pthread_mutex_init(&(registry.lock), NULL))
     {
         perror("pthread_mutex_init");
@@ -143,7 +135,7 @@ main (int argc, char * argv[])
     }
     session.p_registry = &registry;
 
-    session.p_tm = tpool_create(WORKER_THREADS);
+    session.p_tm = tpool_create(worker_threads);
     if (NULL == session.p_tm)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -161,7 +153,7 @@ cleanup:
     if (NULL != session.p_registry)
     {
         pthread_mutex_lock(&(registry.lock));
-        for (size_t index = 0u; index < MAX_CLIENTS; index++)
+        for (size_t index = 0u; index < max_clients; index++)
         {
             if (-1 != (registry.sockfds)[index])
             {
@@ -188,9 +180,9 @@ cleanup:
         session.p_registry = NULL;
     }
 
-    if (-1 != session.server_sockfd)
+    if (-1 != session.server_fd)
     {
-        if (-1 == close(session.server_sockfd))
+        if (-1 == close(session.server_fd))
         {
             perror("close");
             status = STATUS_SOCKET_FAILURE;
@@ -201,6 +193,9 @@ cleanup:
     {
         fprintf(stderr, "errno: %d\n", errno);
     }
+
+    free(registry.sockfds);
+    registry.sockfds = NULL;
 
     return status;
 }
