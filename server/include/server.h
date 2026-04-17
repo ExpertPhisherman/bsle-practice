@@ -31,7 +31,7 @@
 extern uint32_t const drain_chunk_size;
 extern uint16_t const max_port;
 extern int const default_backlog;
-extern volatile sig_atomic_t g_keep_running;
+extern _Atomic sig_atomic_t g_keep_running;
 
 // App specific variables
 extern uint16_t const default_lport;
@@ -63,9 +63,9 @@ typedef struct response
 // Client registry
 typedef struct registry
 {
-    int             * sockfds; // Pointer to array of file descriptors
-    size_t            count;   // Current population of array
-    pthread_mutex_t   lock;    // Mutex lock for read/write control
+    int             * p_sockfds; // Pointer to array of sockets
+    size_t            count;     // Current population of array
+    pthread_mutex_t   lock;      // Mutex lock for read/write control
 } registry_t;
 
 // Session
@@ -73,8 +73,7 @@ typedef struct session
 {
     uint16_t     lport;      // Local port
     uint16_t     rport;      // Remote port
-    int          server_fd;  // Server listening socket file descriptor
-    int          client_fd;  // Client connected socket file descriptor
+    int          sockfd;     // Socket file descriptor
     int          backlog;    // Number of connection requests to queue
     bool         b_verbose;  // Verbosity
     tpool_t    * p_tm;       // Pointer to thread pool
@@ -97,7 +96,7 @@ status_t server_sock(session_t * p_session);
  *
  * @return Status of operation
  */
-status_t client_socket(session_t * p_session);
+status_t client_sock(session_t * p_session);
 
 /*!
  * @brief Handle client session
@@ -109,9 +108,9 @@ status_t client_socket(session_t * p_session);
 status_t handle_client(session_t * p_session);
 
 /*!
- * @brief Send all data to client
+ * @brief Send all data to socket
  *
- * @param[in] sockfd Socket file descriptor to send data to
+ * @param[in] sockfd Socket to send data to
  * @param[in] p_buf  Buffer to send
  * @param[in] size   Number of bytes to send
  *
@@ -120,9 +119,9 @@ status_t handle_client(session_t * p_session);
 status_t sendall(int sockfd, void * p_buf, size_t size);
 
 /*!
- * @brief Receive all data from client
+ * @brief Receive all data from socket
  *
- * @param[in] sockfd Socket file descriptor to receive data from
+ * @param[in] sockfd Socket to receive data from
  * @param[in] p_buf  Buffer to receive into
  * @param[in] size   Number of bytes to receive
  *

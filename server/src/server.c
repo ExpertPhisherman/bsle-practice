@@ -11,7 +11,7 @@
 uint32_t const drain_chunk_size = 512u;
 uint16_t const max_port = 65535u;
 int const default_backlog = 10;
-volatile sig_atomic_t g_keep_running = 1;
+_Atomic sig_atomic_t g_keep_running = 1;
 
 /*!
  * @brief Drain bytes from socket
@@ -24,25 +24,22 @@ volatile sig_atomic_t g_keep_running = 1;
 static status_t drain(int sockfd, uint32_t size);
 
 /*!
- * @brief Print request
+ * @brief Display request
  *
- * @param[in] p_session Pointer to session
  * @param[in] p_request Pointer to request
- * @param[in] p_response Pointer to response
  *
- * @return Status of operation
+ * @return void
  */
-static status_t print_request(session_t const * p_session, request_t const * p_request);
+static void display_request(request_t * p_request);
 
 /*!
- * @brief Print response
+ * @brief Display response
  *
- * @param[in] p_session Pointer to session
  * @param[in] p_response Pointer to response
  *
- * @return Status of operation
+ * @return void
  */
-static status_t print_response(session_t const * p_session, response_t const * p_response);
+static void display_response(response_t * p_response);
 
 /*!
  * @brief Receive request from client
@@ -52,7 +49,7 @@ static status_t print_response(session_t const * p_session, response_t const * p
  *
  * @return Status of operation
  */
-static status_t recv_request(int sockfd, request_t * p_request, response_t * p_response);
+static status_t recv_request(int sockfd, request_t * p_request);
 
 /*!
  * @brief Send response to client
@@ -107,18 +104,18 @@ server_sock (session_t * p_session)
         goto cleanup;
     }
 
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (-1 == server_fd)
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (-1 == sockfd)
     {
         perror("socket");
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
 
-    if (-1 == setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)))
+    if (-1 == setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)))
     {
         perror("setsockopt");
-        if (-1 == close(server_fd))
+        if (-1 == close(sockfd))
         {
             perror("close");
         }
@@ -136,7 +133,7 @@ server_sock (session_t * p_session)
     if ((1024u > (p_session->lport)) && (0 != geteuid()))
     {
         fprintf(stderr, "Cannot bind to privileged port %hu [1-1023] as non-root user\n", p_session->lport);
-        if (-1 == close(server_fd))
+        if (-1 == close(sockfd))
         {
             perror("close");
         }
@@ -145,10 +142,10 @@ server_sock (session_t * p_session)
         goto cleanup;
     }
 
-    if (-1 == bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)))
+    if (-1 == bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)))
     {
         perror("bind");
-        if (-1 == close(server_fd))
+        if (-1 == close(sockfd))
         {
             perror("close");
         }
@@ -157,10 +154,10 @@ server_sock (session_t * p_session)
         goto cleanup;
     }
 
-    if (-1 == listen(server_fd, p_session->backlog))
+    if (-1 == listen(sockfd, p_session->backlog))
     {
         perror("listen");
-        if (-1 == close(server_fd))
+        if (-1 == close(sockfd))
         {
             perror("close");
         }
@@ -173,10 +170,10 @@ server_sock (session_t * p_session)
     {
         char p_ipstr[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(server_addr.sin_addr.s_addr), p_ipstr, sizeof(p_ipstr));
-        printf("Listening on %s:%hu (server_fd: %d)\n", p_ipstr, p_session->lport, server_fd);
+        printf("Listening on %s:%hu (sockfd %d)\n", p_ipstr, p_session->lport, sockfd);
     }
 
-    p_session->server_fd = server_fd;
+    p_session->sockfd = sockfd;
     status = STATUS_SUCCESS;
     goto cleanup;
 
@@ -185,10 +182,10 @@ cleanup:
 }
 
 status_t
-client_socket (session_t * p_session)
+client_sock (session_t * p_session)
 {
     status_t status;
-    int client_fd;
+    int sockfd;
 
     if (NULL == p_session)
     {
@@ -202,8 +199,8 @@ client_socket (session_t * p_session)
         struct sockaddr_in client_addr;
 
         socklen_t sin_size = sizeof(client_addr);
-        client_fd = accept(p_session->server_fd, (struct sockaddr *)&client_addr, &sin_size);
-        if (-1 == client_fd)
+        sockfd = accept(p_session->sockfd, (struct sockaddr *)&client_addr, &sin_size);
+        if (-1 == sockfd)
         {
             if (EINTR == errno)
             {
@@ -220,15 +217,15 @@ client_socket (session_t * p_session)
         {
             char p_ipstr[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &(client_addr.sin_addr.s_addr), p_ipstr, sizeof(p_ipstr));
-            printf("Accepted connection from %s:%hu (client_fd %d)\n", p_ipstr, rport, client_fd);
+            printf("Accepted connection from %s:%hu (sockfd %d)\n", p_ipstr, rport, sockfd);
         }
 
         // Multithread client socket connections
         session_t * p_client_session = malloc(sizeof(*p_client_session));
         if (NULL == p_client_session)
         {
-            fprintf(stderr, "malloc failed for client_fd %d\n", client_fd);
-            if (-1 == close(client_fd))
+            fprintf(stderr, "malloc failed for sockfd %d\n", sockfd);
+            if (-1 == close(sockfd))
             {
                 perror("close");
             }
@@ -237,13 +234,13 @@ client_socket (session_t * p_session)
 
         *p_client_session = *p_session;
         p_client_session->rport = rport;
-        p_client_session->client_fd = client_fd;
+        p_client_session->sockfd = sockfd;
 
         // Register client file descriptor
-        if (!registry_add(p_session->p_registry, client_fd))
+        if (!registry_add(p_session->p_registry, sockfd))
         {
-            fprintf(stderr, "max_clients reached, closing client_fd %d\n", client_fd);
-            if (-1 == close(client_fd))
+            fprintf(stderr, "max_clients reached, closing sockfd %d\n", sockfd);
+            if (-1 == close(sockfd))
             {
                 perror("close");
             }
@@ -255,11 +252,11 @@ client_socket (session_t * p_session)
         if (!tpool_add_work(p_session->p_tm, handle_client_wrapper, p_client_session))
         {
             fprintf(stderr, "tpool_add_work failed\n");
-            if (!registry_remove(p_session->p_registry, client_fd))
+            if (!registry_remove(p_session->p_registry, sockfd))
             {
-                fprintf(stderr, "client_fd %d not found in registry\n", client_fd);
+                fprintf(stderr, "sockfd %d not found in registry\n", sockfd);
             }
-            if (-1 == close(client_fd))
+            if (-1 == close(sockfd))
             {
                 perror("close");
             }
@@ -271,7 +268,7 @@ client_socket (session_t * p_session)
 
     if (p_session->b_verbose)
     {
-        printf("\nShutting down server gracefully...\n");
+        printf("\nGraceful shutdown on server (sockfd %d)\n", p_session->sockfd);
     }
 
     status = STATUS_SUCCESS;
@@ -286,59 +283,65 @@ handle_client (session_t * p_session)
 {
     status_t status;
 
-    char * p_recv_buf;
-    char * p_send_buf;
-
     if (NULL == p_session)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_recv_buf = malloc(max_payload_size);
-    if (NULL == p_recv_buf)
+    int sockfd = p_session->sockfd;
+    request_t request;
+    response_t response;
+
+    request.opcode = 0x00;
+    request.size = 0u;
+    request.p_payload = malloc(max_payload_size);
+    if (NULL == request.p_payload)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    p_send_buf = malloc(max_payload_size);
-    if (NULL == p_send_buf)
+    response.status = 0x00;
+    response.size = 0u;
+    response.p_payload = malloc(max_payload_size);
+    if (NULL == response.p_payload)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
-    };
+    }
 
     while (g_keep_running)
     {
-        request_t request = {
-            .opcode    = 0u,
-            .size      = 0u,
-            .p_payload = p_recv_buf
-        };
+        memset(request.p_payload, 0, max_payload_size);
+        memset(response.p_payload, 0, max_payload_size);
 
-        response_t response = {
-            .status    = 0x00,
-            .size      = 0u,
-            .p_payload = p_send_buf
-        };
-
-        memset(p_recv_buf, 0, max_payload_size);
-        memset(p_send_buf, 0, max_payload_size);
-
-        status = recv_request(p_session->client_fd, &request, &response);
+        status = recv_request(sockfd, &request);
         if (STATUS_OVERFLOW == status)
         {
-            status = print_response(p_session, &response);
+            response.status = 0x01;
+            response.size = htonl((uint32_t)snprintf(
+                response.p_payload, max_payload_size,
+                "Request payload size %u exceeds max_payload_size %u",
+                ntohl(request.size), max_payload_size
+            ));
+            fprintf(stderr, "%s\n", response.p_payload);
+
+            if (p_session->b_verbose)
+            {
+                printf(
+                    "========================================\n"
+                    "Response to sockfd %d:\n", p_session->sockfd
+                );
+                display_response(&response);
+            }
+
+            status = send_response(sockfd, &response);
             if (STATUS_SUCCESS != status)
             {
                 goto cleanup;
             }
-            status = send_response(p_session->client_fd, &response);
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
+
             continue;
         }
         if (STATUS_SUCCESS != status)
@@ -346,10 +349,13 @@ handle_client (session_t * p_session)
             goto cleanup;
         }
 
-        status = print_request(p_session, &request);
-        if (STATUS_SUCCESS != status)
+        if (p_session->b_verbose)
         {
-            goto cleanup;
+            printf(
+                "========================================\n"
+                "Request from sockfd %d:\n", p_session->sockfd
+            );
+            display_request(&request);
         }
 
         char const * p_response_payload = "";
@@ -371,7 +377,7 @@ handle_client (session_t * p_session)
             default:
                 response.status = 0x01;
                 p_response_payload = "UNKNOWN OPCODE";
-                fprintf(stderr, "Unknown opcode from client_fd %d: 0x%02hhx\n", p_session->client_fd, request.opcode);
+                fprintf(stderr, "Unknown opcode from sockfd %d: 0x%02hhx\n", sockfd, request.opcode);
                 break;
         }
 
@@ -379,13 +385,16 @@ handle_client (session_t * p_session)
         response.size = htonl(host_response_size);
         memcpy(response.p_payload, p_response_payload, host_response_size);
 
-        status = print_response(p_session, &response);
-        if (STATUS_SUCCESS != status)
+        if (p_session->b_verbose)
         {
-            goto cleanup;
+                printf(
+                    "========================================\n"
+                    "Response to sockfd %d:\n", p_session->sockfd
+                );
+                display_response(&response);
         }
 
-        status = send_response(p_session->client_fd, &response);
+        status = send_response(sockfd, &response);
         if (STATUS_SUCCESS != status)
         {
             goto cleanup;
@@ -393,7 +402,7 @@ handle_client (session_t * p_session)
 
         if (OPCODE_QUIT == request.opcode)
         {
-            // QUIT opcode, close connection
+            // Close connection
             status = STATUS_SUCCESS;
             goto cleanup;
         }
@@ -403,10 +412,10 @@ handle_client (session_t * p_session)
     goto cleanup;
 
 cleanup:
-    free(p_recv_buf);
-    p_recv_buf = NULL;
-    free(p_send_buf);
-    p_send_buf = NULL;
+    free(request.p_payload);
+    request.p_payload = NULL;
+    free(response.p_payload);
+    response.p_payload = NULL;
 
     return status;
 }
@@ -471,20 +480,18 @@ recvall (int sockfd, void * p_buf, size_t size)
         ssize_t recvd = recv(sockfd, (uint8_t *)p_buf + total, size - total, 0);
         if (-1 == recvd)
         {
-            switch (errno)
+            if (EINTR == errno)
             {
-                case EINTR:
-                    if (!g_keep_running)
-                    {
-                        status = STATUS_SERVER_DISCONNECT;
-                        goto cleanup;
-                    }
-                    continue;
-
-                default:
-                    status = STATUS_RECV_FAILURE;
+                if (!g_keep_running)
+                {
+                    status = STATUS_SERVER_DISCONNECT;
                     goto cleanup;
+                }
+                continue;
             }
+
+            status = STATUS_RECV_FAILURE;
+            goto cleanup;
         }
         else if (0 == recvd)
         {
@@ -507,7 +514,7 @@ cleanup:
     }
     else if (STATUS_CLIENT_DISCONNECT == status)
     {
-        fprintf(stderr, "Abrupt disconnect from client_fd: %d\n", sockfd);
+        fprintf(stderr, "Abrupt disconnect from client (sockfd %d)\n", sockfd);
     }
     else
     {
@@ -524,6 +531,11 @@ drain (int sockfd, uint32_t size)
     uint8_t * p_buf;
 
     p_buf = malloc(drain_chunk_size);
+    if (NULL == p_buf)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
 
     while (0u < size)
     {
@@ -547,18 +559,10 @@ cleanup:
     return status;
 }
 
-static status_t
-print_request (session_t const * p_session, request_t const * p_request)
+static void
+display_request (request_t * p_request)
 {
-    status_t status = STATUS_SUCCESS;
-
-    if ((NULL == p_session) || (NULL == p_request))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    if (!p_session->b_verbose)
+    if (NULL == p_request)
     {
         goto cleanup;
     }
@@ -566,13 +570,10 @@ print_request (session_t const * p_session, request_t const * p_request)
     uint32_t host_request_size = ntohl(p_request->size);
 
     printf(
-        "========================================\n"
-        "Request from client_fd %d:\n"
         "{\n"
         "    opcode : 0x%02hhx\n"
         "    size   : %u\n"
         "    payload: ",
-        p_session->client_fd,
         p_request->opcode,
         host_request_size
     );
@@ -581,21 +582,13 @@ print_request (session_t const * p_session, request_t const * p_request)
     printf("\n}\n");
 
 cleanup:
-    return status;
+    return;
 }
 
-static status_t
-print_response (session_t const * p_session, response_t const * p_response)
+static void
+display_response (response_t * p_response)
 {
-    status_t status = STATUS_SUCCESS;
-
-    if ((NULL == p_session) || (NULL == p_response))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    if (!p_session->b_verbose)
+    if (NULL == p_response)
     {
         goto cleanup;
     }
@@ -603,13 +596,10 @@ print_response (session_t const * p_session, response_t const * p_response)
     uint32_t host_response_size = ntohl(p_response->size);
 
     printf(
-        "========================================\n"
-        "Response to client_fd %d:\n"
         "{\n"
         "    status : 0x%02hhx\n"
         "    size   : %u\n"
         "    payload: ",
-        p_session->client_fd,
         p_response->status,
         host_response_size
     );
@@ -618,15 +608,15 @@ print_response (session_t const * p_session, response_t const * p_response)
     printf("\n}\n");
 
 cleanup:
-    return status;
+    return;
 }
 
 static status_t
-recv_request (int sockfd, request_t * p_request, response_t * p_response)
+recv_request (int sockfd, request_t * p_request)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_request) || (NULL == p_response))
+    if (NULL == p_request)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -648,19 +638,7 @@ recv_request (int sockfd, request_t * p_request, response_t * p_response)
     // Reject oversized payloads
     if (host_request_size > max_payload_size)
     {
-        p_response->status = 0x01;
-        p_response->size = htonl((uint32_t)snprintf(
-            p_response->p_payload, max_payload_size,
-            "Request payload size %u exceeds max_payload_size %u",
-            host_request_size, max_payload_size
-        ));
-        fprintf(stderr, "%s\n", p_response->p_payload);
-
-        status = drain(sockfd, host_request_size);
-        if (STATUS_SUCCESS != status)
-        {
-            goto cleanup;
-        }
+        drain(sockfd, host_request_size);
 
         status = STATUS_OVERFLOW;
         goto cleanup;
@@ -681,7 +659,7 @@ cleanup:
 static status_t
 send_response (int sockfd, response_t * p_response)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     if (NULL == p_response)
     {
@@ -719,9 +697,9 @@ registry_add (registry_t * p_registry, int sockfd)
     pthread_mutex_lock(&(p_registry->lock));
     for (size_t index = 0u; index < max_clients; index++)
     {
-        if (-1 == (p_registry->sockfds)[index])
+        if (-1 == (p_registry->p_sockfds)[index])
         {
-            (p_registry->sockfds)[index] = sockfd;
+            (p_registry->p_sockfds)[index] = sockfd;
             (p_registry->count)++;
             b_added = true;
             break;
@@ -740,9 +718,9 @@ registry_remove (registry_t * p_registry, int sockfd)
     pthread_mutex_lock(&(p_registry->lock));
     for (size_t index = 0u; index < max_clients; index++)
     {
-        if (sockfd == (p_registry->sockfds)[index])
+        if (sockfd == (p_registry->p_sockfds)[index])
         {
-            (p_registry->sockfds)[index] = -1;
+            (p_registry->p_sockfds)[index] = -1;
             (p_registry->count)--;
             b_removed = true;
             break;
@@ -762,12 +740,12 @@ handle_client_wrapper (void * p_arg)
     handle_client(p_session);
 
     // Unregister client file descriptor
-    if (!registry_remove(p_session->p_registry, p_session->client_fd))
+    if (!registry_remove(p_session->p_registry, p_session->sockfd))
     {
-        fprintf(stderr, "client_fd %d not found in registry\n", p_session->client_fd);
+        fprintf(stderr, "sockfd %d not found in registry\n", p_session->sockfd);
     }
 
-    if (-1 == close(p_session->client_fd))
+    if (-1 == close(p_session->sockfd))
     {
         perror("close");
     }

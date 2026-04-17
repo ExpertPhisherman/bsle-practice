@@ -33,8 +33,7 @@ main (int argc, char * argv[])
     {
         .lport = lport,
         .rport = 0u,
-        .server_fd = -1,
-        .client_fd = -1,
+        .sockfd = -1,
         .backlog = backlog,
         .b_verbose = b_verbose,
         .p_tm = NULL,
@@ -118,15 +117,15 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    registry.sockfds = malloc(max_clients * sizeof(*(registry.sockfds)));
-    if (NULL == registry.sockfds)
+    registry.p_sockfds = malloc(max_clients * sizeof(*(registry.p_sockfds)));
+    if (NULL == registry.p_sockfds)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
     registry.count = 0u;
-    memset(registry.sockfds, -1, max_clients * sizeof(*(registry.sockfds)));
+    memset(registry.p_sockfds, -1, max_clients * sizeof(*(registry.p_sockfds)));
     if (0 != pthread_mutex_init(&(registry.lock), NULL))
     {
         perror("pthread_mutex_init");
@@ -142,7 +141,7 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    status = client_socket(&session);
+    status = client_sock(&session);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -155,9 +154,9 @@ cleanup:
         pthread_mutex_lock(&(registry.lock));
         for (size_t index = 0u; index < max_clients; index++)
         {
-            if (-1 != (registry.sockfds)[index])
+            if (-1 != (registry.p_sockfds)[index])
             {
-                if (-1 == shutdown((registry.sockfds)[index], SHUT_RDWR))
+                if (-1 == shutdown((registry.p_sockfds)[index], SHUT_RDWR))
                 {
                     perror("shutdown");
                 }
@@ -180,9 +179,9 @@ cleanup:
         session.p_registry = NULL;
     }
 
-    if (-1 != session.server_fd)
+    if (-1 != session.sockfd)
     {
-        if (-1 == close(session.server_fd))
+        if (-1 == close(session.sockfd))
         {
             perror("close");
             status = STATUS_SOCKET_FAILURE;
@@ -194,8 +193,8 @@ cleanup:
         fprintf(stderr, "errno: %d\n", errno);
     }
 
-    free(registry.sockfds);
-    registry.sockfds = NULL;
+    free(registry.p_sockfds);
+    registry.p_sockfds = NULL;
 
     return status;
 }
