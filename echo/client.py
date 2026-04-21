@@ -12,14 +12,14 @@ class EchoClient(cmd.Cmd):
         if self.sock is None:
             return True
 
-        # Wait to receive a potential close
+        # Wait to receive a potential shutdown
         time.sleep(0.01)
 
         self.sock.setblocking(False)
         try:
             data = self.sock.recv(1, socket.MSG_PEEK)
             if len(data) == 0:
-                print("[!] MAX_CLIENTS reached")
+                print("[!] max_clients reached")
                 sys.exit(1)
         except BlockingIOError:
             # Socket is open and empty

@@ -2,21 +2,11 @@
  *
  * @brief Main source
  *
+ * @par
+ *
  */
 
 #include "../include/main.h"
-
-uint16_t const default_lport = 4444u;
-uint32_t const max_payload_size = 4096u;
-uint32_t const max_clients = 10u;
-uint32_t const worker_threads = 8u;
-
-void
-handle_sigint (int signo)
-{
-    UNUSED(signo);
-    g_keep_running = 0;
-}
 
 int
 main (int argc, char * argv[])
@@ -92,22 +82,10 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    struct sigaction sa_int;
-    memset(&sa_int, 0, sizeof(sa_int));
-    sa_int.sa_handler = handle_sigint;
-    sa_int.sa_flags = 0;
-    sigemptyset(&sa_int.sa_mask);
-
-    if (-1 == sigaction(SIGINT, &sa_int, NULL))
-    {
-        perror("sigaction SIGINT");
-        status = STATUS_SIGNAL_FAILURE;
-        goto cleanup;
-    }
-
     hints.lport = lport;
     hints.backlog = backlog;
     hints.b_verbose = b_verbose;
+    load_app(&hints);
 
     server_t * p_server = server_create(&hints);
     if (NULL == p_server)
@@ -122,8 +100,7 @@ main (int argc, char * argv[])
         client_t * p_client = client_create(p_server);
         if (NULL == p_client)
         {
-            status = STATUS_NULL_ARG;
-            goto cleanup;
+            continue;
         }
 
         // TODO: Make into function session_create
@@ -132,6 +109,7 @@ main (int argc, char * argv[])
             p_session = malloc(sizeof(*p_session));
             if (NULL == p_session)
             {
+                fprintf(stderr, "malloc failed\n");
                 status = STATUS_NULL_ARG;
                 goto cleanup;
             }

@@ -2,6 +2,8 @@
  *
  * @brief Common definitions header
  *
+ * @par
+ *
  */
 
 #ifndef COMMON_H

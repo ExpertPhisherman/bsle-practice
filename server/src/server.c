@@ -1,17 +1,24 @@
 /** @file server.c
  *
- * @brief Echo server
+ * @brief Generic TCP server
  *
  * @par
- * Basic TCP server
+ *
  */
 
 #include "server.h"
 
-uint32_t const drain_chunk_size = 512u;
 uint16_t const max_port = 65535u;
-int const default_backlog = 10;
 _Atomic sig_atomic_t g_keep_running = 1;
+
+/*!
+ * @brief Gracefully shutdown server on SIGINT
+ *
+ * @param[in] signo Signal number
+ *
+ * @return void
+ */
+static void handle_sigint(int signo);
 
 /*!
  * @brief Create registry
@@ -51,89 +58,66 @@ static status_t registry_add(registry_t * p_registry, client_t * p_client);
  */
 static status_t registry_remove(registry_t * p_registry, client_t * p_client);
 
-/*!
- * @brief Send all data to socket
- *
- * @param[in] sockfd Socket to send data to
- * @param[in] p_buf  Buffer to send
- * @param[in] size   Number of bytes to send
- *
- * @return Status of operation
- */
-static status_t sendall(int sockfd, void * p_buf, size_t size);
+void
+handle_session_wrapper (void * p_arg)
+{
+    if (NULL == p_arg)
+    {
+        goto cleanup;
+    }
 
-/*!
- * @brief Receive all data from socket
- *
- * @param[in] sockfd Socket to receive data from
- * @param[in] p_buf  Buffer to receive into
- * @param[in] size   Number of bytes to receive
- *
- * @return Status of operation
- */
-static status_t recvall(int sockfd, void * p_buf, size_t size);
+    session_t * p_session = p_arg;
 
-/*!
- * @brief Drain bytes from socket
- *
- * @param[in] sockfd Socket file descriptor
- * @param[in] size   Number of bytes to drain
- *
- * @return Status of operation
- */
-static status_t drain(int sockfd, uint32_t size);
+    if (NULL == p_session->p_server->handle_session)
+    {
+        fprintf(stderr, "handle_session is NULL\n");
+        goto cleanup;
+    }
+    (p_session->p_server->handle_session)(p_session);
+    client_destroy(p_session->p_server, p_session->p_client);
 
-/*!
- * @brief Display request
- *
- * @param[in] p_request Pointer to request
- *
- * @return void
- */
-static void display_request(request_t * p_request);
+    free(p_session);
+    p_session = NULL;
+    p_arg = NULL;
 
-/*!
- * @brief Display response
- *
- * @param[in] p_response Pointer to response
- *
- * @return void
- */
-static void display_response(response_t * p_response);
-
-/*!
- * @brief Receive request from client
- *
- * @param[in] sockfd    Socket file descriptor
- * @param[in] p_request Pointer to request
- *
- * @return Status of operation
- */
-static status_t recv_request(int sockfd, request_t * p_request);
-
-/*!
- * @brief Send response to client
- *
- * @param[in] sockfd     Socket file descriptor
- * @param[in] p_response Pointer to response
- *
- * @return Status of operation
- */
-static status_t send_response(int sockfd, response_t * p_response);
+cleanup:
+    return;
+}
 
 server_t *
 server_create (server_t * p_hints)
 {
     status_t status = STATUS_SUCCESS;
+    server_t * p_server = NULL;
 
-    server_t * p_server = malloc(sizeof(*p_server));
+    if (NULL == p_hints)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    struct sigaction sa_int;
+    memset(&sa_int, 0, sizeof(sa_int));
+    sa_int.sa_handler = handle_sigint;
+    sa_int.sa_flags = 0;
+    sigemptyset(&sa_int.sa_mask);
+
+    if (-1 == sigaction(SIGINT, &sa_int, NULL))
+    {
+        perror("sigaction SIGINT");
+        status = STATUS_SIGNAL_FAILURE;
+        goto cleanup;
+    }
+
+    p_server = malloc(sizeof(*p_server));
     if (NULL == p_server)
     {
+        fprintf(stderr, "malloc failed\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    memcpy(p_server, p_hints, sizeof(*p_server));
+    *p_server = *p_hints;
 
     p_server->p_registry = registry_create();
     if (NULL == p_server->p_registry)
@@ -246,16 +230,13 @@ server_destroy (server_t * p_server)
         goto cleanup;
     }
 
-    // Wait for queued work to finish and join all threads
-    if (NULL != p_server->p_tm)
-    {
-        tpool_wait(p_server->p_tm);
-        tpool_destroy(p_server->p_tm);
-        p_server->p_tm = NULL;
-    }
-
     registry_destroy(p_server->p_registry);
     p_server->p_registry = NULL;
+
+    // Wait for queued work to finish and join all threads
+    tpool_wait(p_server->p_tm);
+    tpool_destroy(p_server->p_tm);
+    p_server->p_tm = NULL;
 
     if (-1 != p_server->sockfd)
     {
@@ -318,6 +299,7 @@ client_create (server_t * p_server)
     p_client = malloc(sizeof(*p_client));
     if (NULL == p_client)
     {
+        fprintf(stderr, "malloc failed\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -381,172 +363,6 @@ cleanup:
 }
 
 status_t
-handle_session (session_t * p_session)
-{
-    status_t status;
-
-    if (NULL == p_session)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    server_t * p_server = p_session->p_server;
-    client_t * p_client = p_session->p_client;
-
-    int sockfd = p_client->sockfd;
-    request_t request;
-    response_t response;
-
-    request.opcode = 0x00;
-    request.size = 0u;
-    request.p_payload = malloc(max_payload_size);
-    if (NULL == request.p_payload)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    response.status = 0x00;
-    response.size = 0u;
-    response.p_payload = malloc(max_payload_size);
-    if (NULL == response.p_payload)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    while (g_keep_running)
-    {
-        memset(request.p_payload, 0, max_payload_size);
-        memset(response.p_payload, 0, max_payload_size);
-
-        status = recv_request(sockfd, &request);
-        if (STATUS_OVERFLOW == status)
-        {
-            response.status = 0x01;
-            response.size = htonl((uint32_t)snprintf(
-                response.p_payload, max_payload_size,
-                "Request payload size %u exceeds max_payload_size %u",
-                ntohl(request.size), max_payload_size
-            ));
-            fprintf(stderr, "%s\n", response.p_payload);
-
-            if (p_server->b_verbose)
-            {
-                printf(
-                    "========================================\n"
-                    "Response to sockfd %d:\n", p_client->sockfd
-                );
-                display_response(&response);
-            }
-
-            status = send_response(sockfd, &response);
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
-
-            continue;
-        }
-        if (STATUS_SUCCESS != status)
-        {
-            goto cleanup;
-        }
-
-        if (p_server->b_verbose)
-        {
-            printf(
-                "========================================\n"
-                "Request from sockfd %d:\n", p_client->sockfd
-            );
-            display_request(&request);
-        }
-
-        char const * p_response_payload = "";
-        response.status = 0x00;
-        switch (request.opcode)
-        {
-            case OPCODE_PING:
-                p_response_payload = "PONG";
-                break;
-
-            case OPCODE_ECHO:
-                p_response_payload = request.p_payload;
-                break;
-
-            case OPCODE_QUIT:
-                p_response_payload = "GOODBYE";
-                break;
-
-            default:
-                response.status = 0x01;
-                p_response_payload = "UNKNOWN OPCODE";
-                fprintf(stderr, "Unknown opcode from sockfd %d: 0x%02hhx\n", sockfd, request.opcode);
-                break;
-        }
-
-        uint32_t host_response_size = strnlen(p_response_payload, max_payload_size);
-        response.size = htonl(host_response_size);
-        memcpy(response.p_payload, p_response_payload, host_response_size);
-
-        if (p_server->b_verbose)
-        {
-                printf(
-                    "========================================\n"
-                    "Response to sockfd %d:\n", p_client->sockfd
-                );
-                display_response(&response);
-        }
-
-        status = send_response(sockfd, &response);
-        if (STATUS_SUCCESS != status)
-        {
-            goto cleanup;
-        }
-
-        if (OPCODE_QUIT == request.opcode)
-        {
-            // Close connection
-            status = STATUS_SUCCESS;
-            goto cleanup;
-        }
-    }
-
-    status = STATUS_SERVER_DISCONNECT;
-    goto cleanup;
-
-cleanup:
-    free(request.p_payload);
-    request.p_payload = NULL;
-    free(response.p_payload);
-    response.p_payload = NULL;
-
-    return status;
-}
-
-void
-handle_session_wrapper (void * p_arg)
-{
-    if (NULL == p_arg)
-    {
-        goto cleanup;
-    }
-
-    session_t * p_session = p_arg;
-
-    handle_session(p_session);
-    client_destroy(p_session->p_server, p_session->p_client);
-
-    free(p_session);
-    p_session = NULL;
-    p_arg = NULL;
-
-cleanup:
-    return;
-}
-
-static status_t
 sendall (int sockfd, void * p_buf, size_t size)
 {
     status_t status;
@@ -594,7 +410,7 @@ cleanup:
     return status;
 }
 
-static status_t
+status_t
 recvall (int sockfd, void * p_buf, size_t size)
 {
     status_t status;
@@ -650,7 +466,7 @@ cleanup:
     return status;
 }
 
-static status_t
+status_t
 drain (int sockfd, uint32_t size)
 {
     status_t status = STATUS_SUCCESS;
@@ -659,6 +475,7 @@ drain (int sockfd, uint32_t size)
     p_buf = malloc(drain_chunk_size);
     if (NULL == p_buf)
     {
+        fprintf(stderr, "malloc failed\n");
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
@@ -686,140 +503,11 @@ cleanup:
 }
 
 static void
-display_request (request_t * p_request)
+handle_sigint (int signo)
 {
-    if (NULL == p_request)
-    {
-        goto cleanup;
-    }
-
-    uint32_t host_request_size = ntohl(p_request->size);
-
-    printf(
-        "{\n"
-        "    opcode : 0x%02hhx\n"
-        "    size   : %u\n"
-        "    payload: ",
-        p_request->opcode,
-        host_request_size
-    );
-
-    display_bytes(p_request->p_payload, host_request_size, " ");
-    printf("\n}\n");
-
-cleanup:
+    UNUSED(signo);
+    g_keep_running = 0;
     return;
-}
-
-static void
-display_response (response_t * p_response)
-{
-    if (NULL == p_response)
-    {
-        goto cleanup;
-    }
-
-    uint32_t host_response_size = ntohl(p_response->size);
-
-    printf(
-        "{\n"
-        "    status : 0x%02hhx\n"
-        "    size   : %u\n"
-        "    payload: ",
-        p_response->status,
-        host_response_size
-    );
-
-    display_bytes(p_response->p_payload, host_response_size, " ");
-    printf("\n}\n");
-
-cleanup:
-    return;
-}
-
-static status_t
-recv_request (int sockfd, request_t * p_request)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_request)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    // Receive opcode and payload size in one recvall
-    uint8_t p_header_buf[5];
-    status = recvall(sockfd, p_header_buf, 5u);
-    if (STATUS_SUCCESS != status)
-    {
-        goto cleanup;
-    }
-
-    p_request->opcode = p_header_buf[0];
-    memcpy(&(p_request->size), p_header_buf + 1, sizeof(p_request->size));
-
-    uint32_t host_request_size = ntohl(p_request->size);
-
-    // Reject oversized payloads
-    if (host_request_size > max_payload_size)
-    {
-        drain(sockfd, host_request_size);
-
-        status = STATUS_OVERFLOW;
-        goto cleanup;
-    }
-
-    // Receive payload
-    // NOTE: Enforces payload is exactly host_request_size bytes
-    status = recvall(sockfd, p_request->p_payload, host_request_size);
-    if (STATUS_SUCCESS != status)
-    {
-        goto cleanup;
-    }
-
-cleanup:
-    return status;
-}
-
-static status_t
-send_response (int sockfd, response_t * p_response)
-{
-    status_t status = STATUS_SUCCESS;
-    uint8_t * p_send_buf = NULL;
-
-    if (NULL == p_response)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    uint32_t header_size = 5u;
-    uint32_t payload_size = ntohl(p_response->size);
-    uint32_t packet_size = header_size + payload_size;
-
-    p_send_buf = malloc(packet_size);
-    if (NULL == p_send_buf)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    memcpy(p_send_buf + 0, &(p_response->status), sizeof(p_response->status));
-    memcpy(p_send_buf + 1, &(p_response->size), sizeof(p_response->size));
-    memcpy(p_send_buf + 5, p_response->p_payload, payload_size);
-
-    // Send opcode, payload size, and payload in one sendall
-    status = sendall(sockfd, p_send_buf, packet_size);
-    if (STATUS_SUCCESS != status)
-    {
-        goto cleanup;
-    }
-
-cleanup:
-    free(p_send_buf);
-    p_send_buf = NULL;
-    return status;
 }
 
 static registry_t *
@@ -828,12 +516,14 @@ registry_create (void)
     registry_t * p_registry = malloc(sizeof(*p_registry));
     if (NULL == p_registry)
     {
+        fprintf(stderr, "malloc failed\n");
         goto cleanup;
     }
 
     p_registry->pp_clients = malloc(max_clients * sizeof(*(p_registry->pp_clients)));
     if (NULL == p_registry->pp_clients)
     {
+        fprintf(stderr, "malloc failed\n");
         free(p_registry);
         p_registry = NULL;
 

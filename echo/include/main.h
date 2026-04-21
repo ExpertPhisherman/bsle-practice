@@ -2,23 +2,19 @@
  *
  * @brief Main header
  *
+ * @par
+ *
  */
 
 #ifndef MAIN_H
 #define MAIN_H
 
+#include "echo.h"
 #include "server.h"
 #include "common.h"
 #include "tpool.h"
 
-/*!
- * @brief Gracefully shutdown server on SIGINT
- *
- * @param[in] signo Signal number
- *
- * @return void
- */
-void handle_sigint(int signo);
+
 
 #endif /* MAIN_H */
 

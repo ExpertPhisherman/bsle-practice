@@ -2,6 +2,8 @@
  *
  * @brief Common definitions source
  *
+ * @par
+ *
  */
 
 #include "common.h"
