@@ -68,9 +68,14 @@ handle_session_wrapper (void * p_arg)
 
     session_t * p_session = p_arg;
 
+    if (NULL == p_session->p_server)
+    {
+        goto cleanup;
+    }
+
     if (NULL == p_session->p_server->handle_session)
     {
-        fprintf(stderr, "handle_session is NULL\n");
+        fprintf(stderr, "app not loaded\n");
         goto cleanup;
     }
     (p_session->p_server->handle_session)(p_session);

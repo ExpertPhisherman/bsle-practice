@@ -10,7 +10,7 @@
 
 uint16_t const default_lport = 4444u;
 uint32_t const max_payload_size = 4096u;
-uint32_t const max_clients = 1u;
+uint32_t const max_clients = 1000u;
 uint32_t const worker_threads = 8u;
 uint32_t const drain_chunk_size = 512u;
 int const default_backlog = 10;
@@ -128,7 +128,7 @@ handle_session (session_t * p_session)
 
         if (NULL == p_server->recv_request)
         {
-            fprintf(stderr, "recv_request is NULL\n");
+            fprintf(stderr, "app not loaded\n");
             status = STATUS_NULL_ARG;
             goto cleanup;
         }
@@ -154,7 +154,7 @@ handle_session (session_t * p_session)
 
             if (NULL == p_server->send_response)
             {
-                fprintf(stderr, "send_response is NULL\n");
+                fprintf(stderr, "app not loaded\n");
                 status = STATUS_NULL_ARG;
                 goto cleanup;
             }
@@ -222,7 +222,7 @@ handle_session (session_t * p_session)
 
         if (NULL == p_server->send_response)
         {
-            fprintf(stderr, "send_response is NULL\n");
+            fprintf(stderr, "app not loaded\n");
             status = STATUS_NULL_ARG;
             goto cleanup;
         }
