@@ -3,8 +3,7 @@
 
 ## Server
 
-- Make default server listening port
-- Change macros to integer constants
+- Test max_clients limit
 - Break out generic server behavior into its own source file and header
 - Generalize packet fields using SLL
 
