@@ -10,6 +10,9 @@
 #define MAIN_H
 
 #include "echo.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #endif /* MAIN_H */
 

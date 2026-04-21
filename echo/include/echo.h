@@ -11,6 +11,9 @@
 
 #include "server.h"
 #include "common.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 typedef enum opcode
 {
