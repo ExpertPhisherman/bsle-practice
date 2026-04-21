@@ -2,6 +2,8 @@
  *
  * @brief Main header
  *
+ * @par
+ *
  */
 
 #ifndef MAIN_H
@@ -9,6 +11,8 @@
 
 #include "common.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 
 

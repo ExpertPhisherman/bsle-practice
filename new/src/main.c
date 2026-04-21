@@ -2,6 +2,8 @@
  *
  * @brief Main source
  *
+ * @par
+ *
  */
 
 #include "../include/main.h"
