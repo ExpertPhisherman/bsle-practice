@@ -50,6 +50,7 @@ class EchoClient(cmd.Cmd):
                 lhost = "0.0.0.0"
             try:
                 # Use specified source port
+                self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.sock.bind((lhost, lport))
             except OSError as e:
                 print(f"Error binding to client: {e}")
