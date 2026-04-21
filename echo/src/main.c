@@ -17,6 +17,7 @@ main (int argc, char * argv[])
     uint16_t lport = default_lport;
     int backlog = default_backlog;
     bool b_verbose = false;
+    server_t * p_server = NULL;
 
     server_t hints =
     {
@@ -87,7 +88,7 @@ main (int argc, char * argv[])
     hints.b_verbose = b_verbose;
     load_app(&hints);
 
-    server_t * p_server = server_create(&hints);
+    p_server = server_create(&hints);
     if (NULL == p_server)
     {
         status = STATUS_ALLOC_FAILURE;

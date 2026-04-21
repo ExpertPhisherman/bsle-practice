@@ -218,7 +218,7 @@ server_create (server_t * p_hints)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        free(p_server);
+        server_destroy(p_server);
         p_server = NULL;
     }
     return p_server;
@@ -330,7 +330,7 @@ client_create (server_t * p_server)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        free(p_client);
+        client_destroy(p_server, p_client);
         p_client = NULL;
     }
     return p_client;
@@ -341,7 +341,7 @@ client_destroy (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_client)
+    if ((NULL == p_server) || (NULL == p_client))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
