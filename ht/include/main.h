@@ -2,6 +2,8 @@
  *
  * @brief Main header
  *
+ * @par
+ *
  */
 
 #ifndef MAIN_H

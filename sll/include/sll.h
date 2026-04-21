@@ -2,6 +2,8 @@
  *
  * @brief Singly linked list header
  *
+ * @par
+ *
  */
 
 #ifndef SLL_H
