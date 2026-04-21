@@ -61,50 +61,39 @@ static status_t recv_request(int sockfd, request_t * p_request);
  */
 static status_t send_response(int sockfd, response_t * p_response);
 
-/*!
- * @brief Add file descriptor to registry
- *
- * @param[in] p_registry Pointer to registry
- * @param[in] sockfd     Socket file descriptor to add
- *
- * @return Boolean if added
- */
-static bool registry_add(registry_t * p_registry, int sockfd);
-
-/*!
- * @brief Remove file descriptor from registry
- *
- * @param[in] p_registry Pointer to registry
- * @param[in] sockfd     Socket file descriptor to remove
- *
- * @return Boolean if removed
- */
-static bool registry_remove(registry_t * p_registry, int sockfd);
-
-/*!
- * @brief Wrapper for handle_client
- *
- * @param[in] p_arg Pointer to argument
- *
- * @return void
- */
-static void handle_client_wrapper(void * p_arg);
-
-status_t
-server_sock (session_t * p_session)
+session_t *
+server_session_create (session_t * p_hints)
 {
-    status_t status;
-    struct sockaddr_in server_addr;
+    status_t status = STATUS_SUCCESS;
 
-    int yes = 1;
-
-    if (NULL == p_session)
+    session_t * p_server_session = malloc(sizeof(*p_server_session));
+    if (NULL == p_server_session)
     {
-        status = STATUS_NULL_ARG;
+        status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    memcpy(p_server_session, p_hints, sizeof(*p_server_session));
+
+    p_server_session->p_registry = registry_create();
+    if (NULL == p_server_session->p_registry)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_server_session->p_tm = tpool_create(worker_threads);
+    if (NULL == p_server_session->p_tm)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    int sockfd;
+    struct sockaddr_in server_addr;
+    int yes = 1;
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == sockfd)
     {
         perror("socket");
@@ -126,13 +115,13 @@ server_sock (session_t * p_session)
 
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(p_session->lport);
+    server_addr.sin_port = htons(p_server_session->lport);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // Catch privileged port as non-root user
-    if ((1024u > (p_session->lport)) && (0 != geteuid()))
+    if ((1024u > (p_server_session->lport)) && (0 != geteuid()))
     {
-        fprintf(stderr, "Cannot bind to privileged port %hu [1-1023] as non-root user\n", p_session->lport);
+        fprintf(stderr, "Cannot bind to privileged port %hu [1-1023] as non-root user\n", p_server_session->lport);
         if (-1 == close(sockfd))
         {
             perror("close");
@@ -154,7 +143,7 @@ server_sock (session_t * p_session)
         goto cleanup;
     }
 
-    if (-1 == listen(sockfd, p_session->backlog))
+    if (-1 == listen(sockfd, p_server_session->backlog))
     {
         perror("listen");
         if (-1 == close(sockfd))
@@ -166,112 +155,170 @@ server_sock (session_t * p_session)
         goto cleanup;
     }
 
-    if (p_session->b_verbose)
+    if (p_server_session->b_verbose)
     {
         char p_ipstr[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(server_addr.sin_addr.s_addr), p_ipstr, sizeof(p_ipstr));
-        printf("Listening on %s:%hu (sockfd %d)\n", p_ipstr, p_session->lport, sockfd);
+        printf("Listening on %s:%hu (sockfd %d)\n", p_ipstr, p_server_session->lport, sockfd);
     }
 
-    p_session->sockfd = sockfd;
-    status = STATUS_SUCCESS;
+    p_server_session->sockfd = sockfd;
+
+    goto cleanup;
+
+cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        free(p_server_session);
+        p_server_session = NULL;
+    }
+    return p_server_session;
+}
+
+status_t
+server_session_destroy (session_t * p_server_session)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_server_session)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Wait for queued work to finish and join all threads
+    if (NULL != p_server_session->p_tm)
+    {
+        tpool_wait(p_server_session->p_tm);
+        tpool_destroy(p_server_session->p_tm);
+        p_server_session->p_tm = NULL;
+    }
+
+    registry_destroy(p_server_session->p_registry);
+    p_server_session->p_registry = NULL;
+
+    if (-1 != p_server_session->sockfd)
+    {
+        if (-1 == close(p_server_session->sockfd))
+        {
+            perror("close");
+            status = STATUS_SOCKET_FAILURE;
+        }
+    }
+
+    free(p_server_session);
+    p_server_session = NULL;
+
     goto cleanup;
 
 cleanup:
     return status;
 }
 
-status_t
-client_sock (session_t * p_session)
+session_t *
+client_session_create (session_t * p_server_session)
 {
-    status_t status;
-    int sockfd;
+    status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_session)
+    session_t * p_client_session = NULL;
+
+    if (NULL == p_server_session)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    // Accept loop
-    while (g_keep_running)
+    int sockfd;
+    struct sockaddr_in client_addr;
+
+    socklen_t sin_size = sizeof(client_addr);
+    sockfd = accept(p_server_session->sockfd, (struct sockaddr *)&client_addr, &sin_size);
+    if (-1 == sockfd)
     {
-        struct sockaddr_in client_addr;
-
-        socklen_t sin_size = sizeof(client_addr);
-        sockfd = accept(p_session->sockfd, (struct sockaddr *)&client_addr, &sin_size);
-        if (-1 == sockfd)
+        if (EINTR == errno)
         {
-            if (EINTR == errno)
-            {
-                continue;
-            }
-
-            perror("accept");
-            continue;
+            status = g_keep_running ? STATUS_SOCKET_FAILURE : STATUS_SERVER_DISCONNECT;
+            goto cleanup;
         }
 
-        uint16_t rport = ntohs(client_addr.sin_port);
-
-        if (p_session->b_verbose)
-        {
-            char p_ipstr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &(client_addr.sin_addr.s_addr), p_ipstr, sizeof(p_ipstr));
-            printf("Accepted connection from %s:%hu (sockfd %d)\n", p_ipstr, rport, sockfd);
-        }
-
-        // Multithread client socket connections
-        session_t * p_client_session = malloc(sizeof(*p_client_session));
-        if (NULL == p_client_session)
-        {
-            fprintf(stderr, "malloc failed for sockfd %d\n", sockfd);
-            if (-1 == close(sockfd))
-            {
-                perror("close");
-            }
-            continue;
-        }
-
-        *p_client_session = *p_session;
-        p_client_session->rport = rport;
-        p_client_session->sockfd = sockfd;
-
-        // Register client file descriptor
-        if (!registry_add(p_session->p_registry, sockfd))
-        {
-            fprintf(stderr, "max_clients reached, closing sockfd %d\n", sockfd);
-            if (-1 == close(sockfd))
-            {
-                perror("close");
-            }
-            free(p_client_session);
-            p_client_session = NULL;
-            continue;
-        }
-
-        if (!tpool_add_work(p_session->p_tm, handle_client_wrapper, p_client_session))
-        {
-            fprintf(stderr, "tpool_add_work failed\n");
-            if (!registry_remove(p_session->p_registry, sockfd))
-            {
-                fprintf(stderr, "sockfd %d not found in registry\n", sockfd);
-            }
-            if (-1 == close(sockfd))
-            {
-                perror("close");
-            }
-            free(p_client_session);
-            p_client_session = NULL;
-            continue;
-        }
+        perror("accept");
+        status = STATUS_SOCKET_FAILURE;
+        goto cleanup;
     }
 
-    if (p_session->b_verbose)
+    uint16_t rport = ntohs(client_addr.sin_port);
+
+    if (p_server_session->b_verbose)
     {
-        printf("\nGraceful shutdown on server (sockfd %d)\n", p_session->sockfd);
+        char p_ipstr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(client_addr.sin_addr.s_addr), p_ipstr, sizeof(p_ipstr));
+        printf("Accepted connection from %s:%hu (sockfd %d)\n", p_ipstr, rport, sockfd);
     }
 
-    status = STATUS_SUCCESS;
+    p_client_session = malloc(sizeof(*p_client_session));
+    if (NULL == p_client_session)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_client_session->lport = 0u;
+    p_client_session->rport = rport;
+    p_client_session->sockfd = sockfd;
+    p_client_session->backlog = -1;
+    p_client_session->b_verbose = p_server_session->b_verbose;
+    p_client_session->p_tm = NULL;
+    p_client_session->p_registry = p_server_session->p_registry;
+
+    // Register client file descriptor
+    if (STATUS_FULL == registry_add(p_server_session->p_registry, p_client_session))
+    {
+        fprintf(stderr, "max_clients reached, rejecting sockfd %d\n", p_client_session->sockfd);
+        if (-1 == close(p_client_session->sockfd))
+        {
+            perror("close");
+        }
+
+        status = STATUS_FULL;
+        goto cleanup;
+    }
+
+    goto cleanup;
+
+cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        free(p_client_session);
+        p_client_session = NULL;
+    }
+    return p_client_session;
+}
+
+status_t
+client_session_destroy (session_t * p_client_session)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_client_session)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Unregister file descriptor
+    if (STATUS_NOT_EXISTS == registry_remove(p_client_session->p_registry, p_client_session))
+    {
+        fprintf(stderr, "sockfd %d not found in registry\n", p_client_session->sockfd);
+    }
+
+    if (-1 == close(p_client_session->sockfd))
+    {
+        perror("close");
+    }
+
+    free(p_client_session);
+    p_client_session = NULL;
+
     goto cleanup;
 
 cleanup:
@@ -660,6 +707,7 @@ static status_t
 send_response (int sockfd, response_t * p_response)
 {
     status_t status = STATUS_SUCCESS;
+    uint8_t * p_send_buf = NULL;
 
     if (NULL == p_response)
     {
@@ -667,92 +715,189 @@ send_response (int sockfd, response_t * p_response)
         goto cleanup;
     }
 
-    // Send opcode and payload size in one sendall
-    uint8_t p_header_buf[5];
+    uint32_t header_size = 5u;
+    uint32_t payload_size = ntohl(p_response->size);
+    uint32_t packet_size = header_size + payload_size;
 
-    p_header_buf[0] = p_response->status;
-    memcpy(p_header_buf + 1, &(p_response->size), sizeof(p_response->size));
-
-    status = sendall(sockfd, p_header_buf, 5u);
-    if (STATUS_SUCCESS != status)
+    p_send_buf = malloc(packet_size);
+    if (NULL == p_send_buf)
     {
+        status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    status = sendall(sockfd, p_response->p_payload, ntohl(p_response->size));
+    memcpy(p_send_buf + 0, &(p_response->status), sizeof(p_response->status));
+    memcpy(p_send_buf + 1, &(p_response->size), sizeof(p_response->size));
+    memcpy(p_send_buf + 5, p_response->p_payload, payload_size);
+
+    // Send opcode, payload size, and payload in one sendall
+    status = sendall(sockfd, p_send_buf, packet_size);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
     }
 
 cleanup:
+    free(p_send_buf);
+    p_send_buf = NULL;
     return status;
 }
 
-static bool
-registry_add (registry_t * p_registry, int sockfd)
+registry_t *
+registry_create (void)
 {
-    bool b_added = false;
+    registry_t * p_registry = malloc(sizeof(*p_registry));
+    if (NULL == p_registry)
+    {
+        goto cleanup;
+    }
+
+    p_registry->pp_sessions = malloc(max_clients * sizeof(*(p_registry->pp_sessions)));
+    if (NULL == p_registry->pp_sessions)
+    {
+        free(p_registry);
+        p_registry = NULL;
+
+        goto cleanup;
+    }
+
+    p_registry->count = 0u;
+    memset(p_registry->pp_sessions, 0, max_clients * sizeof(*(p_registry->pp_sessions)));
+    if (0 != pthread_mutex_init(&(p_registry->lock), NULL))
+    {
+        free(p_registry->pp_sessions);
+        p_registry->pp_sessions = NULL;
+        free(p_registry);
+        p_registry = NULL;
+
+        perror("pthread_mutex_init");
+        goto cleanup;
+    }
+
+cleanup:
+    return p_registry;
+}
+
+status_t
+registry_add (registry_t * p_registry, session_t * p_session)
+{
+    status_t status = STATUS_FULL;
+
+    if ((NULL == p_registry) || (NULL == p_session))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
 
     pthread_mutex_lock(&(p_registry->lock));
     for (size_t index = 0u; index < max_clients; index++)
     {
-        if (-1 == (p_registry->p_sockfds)[index])
+        if (NULL == (p_registry->pp_sessions)[index])
         {
-            (p_registry->p_sockfds)[index] = sockfd;
+            (p_registry->pp_sessions)[index] = p_session;
             (p_registry->count)++;
-            b_added = true;
+            status = STATUS_SUCCESS;
             break;
         }
     }
     pthread_mutex_unlock(&(p_registry->lock));
 
-    return b_added;
+cleanup:
+    return status;
 }
 
-static bool
-registry_remove (registry_t * p_registry, int sockfd)
+status_t
+registry_remove (registry_t * p_registry, session_t * p_session)
 {
-    bool b_removed = false;
+    status_t status = STATUS_NOT_EXISTS;
+
+    if ((NULL == p_registry) || (NULL == p_session))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
 
     pthread_mutex_lock(&(p_registry->lock));
     for (size_t index = 0u; index < max_clients; index++)
     {
-        if (sockfd == (p_registry->p_sockfds)[index])
+        if (NULL == (p_registry->pp_sessions)[index])
         {
-            (p_registry->p_sockfds)[index] = -1;
+            continue;
+        }
+
+        if (p_session->sockfd == ((p_registry->pp_sessions)[index])->sockfd)
+        {
+            (p_registry->pp_sessions)[index] = NULL;
             (p_registry->count)--;
-            b_removed = true;
+            status = STATUS_SUCCESS;
             break;
         }
     }
     pthread_mutex_unlock(&(p_registry->lock));
 
-    return b_removed;
+cleanup:
+    return status;
 }
 
-static void
+status_t
+registry_destroy (registry_t * p_registry)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_registry)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Unblock all workers blocked in recv()
+    pthread_mutex_lock(&(p_registry->lock));
+    for (size_t index = 0u; index < max_clients; index++)
+    {
+        session_t * p_session = (p_registry->pp_sessions)[index];
+        if (NULL != p_session)
+        {
+            if (-1 == shutdown(p_session->sockfd, SHUT_RDWR))
+            {
+                perror("shutdown");
+            }
+
+            (p_registry->pp_sessions)[index] = NULL;
+        }
+    }
+    pthread_mutex_unlock(&(p_registry->lock));
+
+    free(p_registry->pp_sessions);
+    p_registry->pp_sessions = NULL;
+
+    p_registry->count = 0u;
+
+    pthread_mutex_destroy(&(p_registry->lock));
+
+    free(p_registry);
+    p_registry = NULL;
+
+cleanup:
+    return status;
+}
+
+void
 handle_client_wrapper (void * p_arg)
 {
+    if (NULL == p_arg)
+    {
+        goto cleanup;
+    }
+
     session_t * p_session = p_arg;
 
-    // Handle client session
     handle_client(p_session);
+    client_session_destroy(p_session);
 
-    // Unregister client file descriptor
-    if (!registry_remove(p_session->p_registry, p_session->sockfd))
-    {
-        fprintf(stderr, "sockfd %d not found in registry\n", p_session->sockfd);
-    }
-
-    if (-1 == close(p_session->sockfd))
-    {
-        perror("close");
-    }
-
-    free(p_session);
     p_session = NULL;
+    p_arg = NULL;
 
+cleanup:
     return;
 }
 

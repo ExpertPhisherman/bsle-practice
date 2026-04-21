@@ -39,6 +39,18 @@ extern uint32_t const max_payload_size;
 extern uint32_t const max_clients;
 extern uint32_t const worker_threads;
 
+typedef struct registry registry_t;
+
+typedef struct server
+{
+    uint16_t     lport;      // Local port
+    int          sockfd;     // Socket file descriptor
+    int          backlog;    // Number of connection requests to queue
+    bool         b_verbose;  // Verbosity
+    tpool_t    * p_tm;       // Pointer to thread pool
+    registry_t * p_registry; // Pointer to client registry
+} server_t;
+
 typedef enum opcode
 {
     OPCODE_PING = 0x01, // Respond with PONG
@@ -60,15 +72,7 @@ typedef struct response
     char     * p_payload; // Pointer to payload
 } response_t;
 
-// Client registry
-typedef struct registry
-{
-    int             * p_sockfds; // Pointer to array of sockets
-    size_t            count;     // Current population of array
-    pthread_mutex_t   lock;      // Mutex lock for read/write control
-} registry_t;
-
-// Session
+// Client session
 typedef struct session
 {
     uint16_t     lport;      // Local port
@@ -80,23 +84,96 @@ typedef struct session
     registry_t * p_registry; // Pointer to client registry
 } session_t;
 
-/*!
- * @brief Prepare, bind, and listen on socket
- *
- * @param[in] p_session Pointer to session
- *
- * @return Status of operation
- */
-status_t server_sock(session_t * p_session);
+// Client registry
+typedef struct registry
+{
+    session_t       ** pp_sessions; // Double pointer to sessions
+    size_t             count;       // Current population of array
+    pthread_mutex_t    lock;        // Mutex lock for read/write control
+} registry_t;
 
 /*!
- * @brief Accept and establish connection on socket
+ * @brief Create registry
  *
- * @param[in] p_session Pointer to session
+ * @param[in] void
+ *
+ * @return Pointer to registry
+ */
+registry_t * registry_create(void);
+
+/*!
+ * @brief Destroy registry
+ *
+ * @param[in] p_registry Pointer to registry
  *
  * @return Status of operation
  */
-status_t client_sock(session_t * p_session);
+status_t registry_destroy(registry_t * p_registry);
+
+/*!
+ * @brief Add session to registry
+ *
+ * @param[in] p_registry Pointer to registry
+ * @param[in] p_session  Pointer to session to add
+ *
+ * @return Status of operation
+ */
+status_t registry_add(registry_t * p_registry, session_t * p_session);
+
+/*!
+ * @brief Remove file descriptor from registry
+ *
+ * @param[in] p_registry Pointer to registry
+ * @param[in] p_session  Pointer to session to remove
+ *
+ * @return Status of operation
+ */
+status_t registry_remove(registry_t * p_registry, session_t * p_session);
+
+/*!
+ * @brief Wrapper for handle_client
+ *
+ * @param[in] p_arg Pointer to argument
+ *
+ * @return void
+ */
+void handle_client_wrapper(void * p_arg);
+
+/*!
+ * @brief Create server session
+ *
+ * @param[in] p_hints Pointer to session hints
+ *
+ * @return Pointer to server session
+ */
+session_t * server_session_create(session_t * p_hints);
+
+/*!
+ * @brief Destroy server session
+ *
+ * @param[in] p_server_session Pointer to server session
+ *
+ * @return Status of operation
+ */
+status_t server_session_destroy(session_t * p_server_session);
+
+/*!
+ * @brief Create client session
+ *
+ * @param[in] p_server_session Pointer to server session
+ *
+ * @return Pointer to client session
+ */
+session_t * client_session_create(session_t * p_server_session);
+
+/*!
+ * @brief Destroy client session
+ *
+ * @param[in] p_client_session Pointer to client session
+ *
+ * @return Status of operation
+ */
+status_t client_session_destroy(session_t * p_client_session);
 
 /*!
  * @brief Handle client session
