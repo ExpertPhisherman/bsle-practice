@@ -10,11 +10,6 @@
 #define MAIN_H
 
 #include "echo.h"
-#include "server.h"
-#include "common.h"
-#include "tpool.h"
-
-
 
 #endif /* MAIN_H */
 

@@ -10,6 +10,7 @@
 #define ECHO_H
 
 #include "server.h"
+#include "common.h"
 
 typedef enum opcode
 {
