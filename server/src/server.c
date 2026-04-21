@@ -30,6 +30,15 @@ static void handle_sigint(int signo);
 static registry_t * registry_create(void);
 
 /*!
+ * @brief Shutdown all clients in registry
+ *
+ * @param[in] p_registry Pointer to registry
+ *
+ * @return Status of operation
+ */
+static status_t registry_shutdown(registry_t * p_registry);
+
+/*!
  * @brief Destroy registry
  *
  * @param[in] p_registry Pointer to registry
@@ -235,13 +244,15 @@ server_destroy (server_t * p_server)
         goto cleanup;
     }
 
-    registry_destroy(p_server->p_registry);
-    p_server->p_registry = NULL;
+    registry_shutdown(p_server->p_registry);
 
     // Wait for queued work to finish and join all threads
     tpool_wait(p_server->p_tm);
     tpool_destroy(p_server->p_tm);
     p_server->p_tm = NULL;
+
+    registry_destroy(p_server->p_registry);
+    p_server->p_registry = NULL;
 
     if (-1 != p_server->sockfd)
     {
@@ -564,11 +575,11 @@ registry_add (registry_t * p_registry, client_t * p_client)
     }
 
     pthread_mutex_lock(&(p_registry->lock));
-    for (size_t index = 0u; index < max_clients; index++)
+    for (size_t idx = 0u; idx < max_clients; idx++)
     {
-        if (NULL == (p_registry->pp_clients)[index])
+        if (NULL == (p_registry->pp_clients)[idx])
         {
-            (p_registry->pp_clients)[index] = p_client;
+            (p_registry->pp_clients)[idx] = p_client;
             (p_registry->count)++;
             status = STATUS_SUCCESS;
             break;
@@ -592,19 +603,51 @@ registry_remove (registry_t * p_registry, client_t * p_client)
     }
 
     pthread_mutex_lock(&(p_registry->lock));
-    for (size_t index = 0u; index < max_clients; index++)
+    for (size_t idx = 0u; idx < max_clients; idx++)
     {
-        if (NULL == (p_registry->pp_clients)[index])
+        if (NULL == (p_registry->pp_clients)[idx])
         {
             continue;
         }
 
-        if (p_client->sockfd == ((p_registry->pp_clients)[index])->sockfd)
+        if (p_client->sockfd == ((p_registry->pp_clients)[idx])->sockfd)
         {
-            (p_registry->pp_clients)[index] = NULL;
+            (p_registry->pp_clients)[idx] = NULL;
             (p_registry->count)--;
             status = STATUS_SUCCESS;
             break;
+        }
+    }
+    pthread_mutex_unlock(&(p_registry->lock));
+
+cleanup:
+    return status;
+}
+
+static status_t
+registry_shutdown (registry_t * p_registry)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_registry)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Unblock all workers blocked in recv()
+    pthread_mutex_lock(&(p_registry->lock));
+    for (size_t idx = 0u; idx < max_clients; idx++)
+    {
+        client_t * p_client = (p_registry->pp_clients)[idx];
+        if (NULL != p_client)
+        {
+            if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
+            {
+                perror("shutdown");
+            }
+
+            (p_registry->pp_clients)[idx] = NULL;
         }
     }
     pthread_mutex_unlock(&(p_registry->lock));
@@ -624,23 +667,7 @@ registry_destroy (registry_t * p_registry)
         goto cleanup;
     }
 
-    // Unblock all workers blocked in recv()
-    pthread_mutex_lock(&(p_registry->lock));
-    for (size_t index = 0u; index < max_clients; index++)
-    {
-        client_t * p_client = (p_registry->pp_clients)[index];
-        if (NULL != p_client)
-        {
-            if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
-            {
-                perror("shutdown");
-            }
-
-            (p_registry->pp_clients)[index] = NULL;
-        }
-    }
-    pthread_mutex_unlock(&(p_registry->lock));
-
+    // NOTE: Workers should be done
     free(p_registry->pp_clients);
     p_registry->pp_clients = NULL;
 
