@@ -2,21 +2,11 @@
  *
  * @brief Main source
  *
+ * @par
+ *
  */
 
 #include "../include/main.h"
-
-int16_t const default_lport = 4444u;
-uint32_t const max_payload_size = 4096u;
-uint32_t const max_clients = 10u;
-uint32_t const worker_threads = 8u;
-
-void
-handle_sigint (int signo)
-{
-    UNUSED(signo);
-    g_keep_running = 0;
-}
 
 int
 main (int argc, char * argv[])
@@ -27,18 +17,16 @@ main (int argc, char * argv[])
     uint16_t lport = default_lport;
     int backlog = default_backlog;
     bool b_verbose = false;
-    registry_t registry;
+    server_t * p_server = NULL;
 
-    session_t session =
+    server_t hints =
     {
         .lport = lport,
-        .rport = 0u,
-        .server_sockfd = -1,
-        .client_sockfd = -1,
+        .sockfd = -1,
         .backlog = backlog,
         .b_verbose = b_verbose,
         .p_tm = NULL,
-        .p_registry = NULL
+        .p_registry = NULL,
     };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
@@ -95,107 +83,66 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    struct sigaction sa_int;
-    memset(&sa_int, 0, sizeof(sa_int));
-    sa_int.sa_handler = handle_sigint;
-    sa_int.sa_flags = 0;
-    sigemptyset(&sa_int.sa_mask);
+    hints.lport = lport;
+    hints.backlog = backlog;
+    hints.b_verbose = b_verbose;
+    load_app(&hints);
 
-    if (-1 == sigaction(SIGINT, &sa_int, NULL))
-    {
-        perror("sigaction SIGINT");
-        status = STATUS_SIGNAL_FAILURE;
-        goto cleanup;
-    }
-
-    session.lport = lport;
-    session.backlog = backlog;
-    session.b_verbose = b_verbose;
-
-    status = server_socket(&session);
-    if (STATUS_SUCCESS != status)
-    {
-        goto cleanup;
-    }
-
-    registry.sockfds = malloc(max_clients * sizeof(*(registry.sockfds)));
-    if (NULL == registry.sockfds)
+    p_server = server_create(&hints);
+    if (NULL == p_server)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    registry.count = 0u;
-    memset(registry.sockfds, -1, max_clients * sizeof(*(registry.sockfds)));
-    if (0 != pthread_mutex_init(&(registry.lock), NULL))
+    // Accept loop
+    while (g_keep_running)
     {
-        perror("pthread_mutex_init");
-        status = STATUS_MUTEX_FAILURE;
-        goto cleanup;
-    }
-    session.p_registry = &registry;
+        client_t * p_client = client_create(p_server);
+        if (NULL == p_client)
+        {
+            continue;
+        }
 
-    session.p_tm = tpool_create(worker_threads);
-    if (NULL == session.p_tm)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
+        // TODO: Make into function session_create
+        session_t * p_session = NULL;
+        {
+            p_session = malloc(sizeof(*p_session));
+            if (NULL == p_session)
+            {
+                fprintf(stderr, "malloc failed\n");
+                status = STATUS_NULL_ARG;
+                goto cleanup;
+            }
+
+            *p_session = (session_t)
+            {
+                .p_server = p_server,
+                .p_client = p_client,
+            };
+        }
+
+        if (!tpool_add_work(p_server->p_tm, handle_session_wrapper, p_session))
+        {
+            fprintf(stderr, "tpool_add_work failed\n");
+        }
+
+        // NOTE: Current function no longer has ownership
+        p_client = NULL;
     }
 
-    status = client_socket(&session);
-    if (STATUS_SUCCESS != status)
+    if (p_server->b_verbose)
     {
-        goto cleanup;
+        printf("\nGraceful shutdown on server (sockfd %d)\n", p_server->sockfd);
     }
 
 cleanup:
-    // Unblock all workers blocked in recv()
-    if (NULL != session.p_registry)
-    {
-        pthread_mutex_lock(&(registry.lock));
-        for (size_t index = 0u; index < max_clients; index++)
-        {
-            if (-1 != (registry.sockfds)[index])
-            {
-                if (-1 == shutdown((registry.sockfds)[index], SHUT_RDWR))
-                {
-                    perror("shutdown");
-                }
-            }
-        }
-        pthread_mutex_unlock(&(registry.lock));
-    }
-
-    // Wait for queued work to finish and join all threads
-    if (NULL != session.p_tm)
-    {
-        tpool_wait(session.p_tm);
-        tpool_destroy(session.p_tm);
-        session.p_tm = NULL;
-    }
-
-    if (NULL != session.p_registry)
-    {
-        pthread_mutex_destroy(&(registry.lock));
-        session.p_registry = NULL;
-    }
-
-    if (-1 != session.server_sockfd)
-    {
-        if (-1 == close(session.server_sockfd))
-        {
-            perror("close");
-            status = STATUS_SOCKET_FAILURE;
-        }
-    }
+    server_destroy(p_server);
 
     if ((STATUS_SUCCESS != status) && (0 != errno))
     {
         fprintf(stderr, "errno: %d\n", errno);
     }
-
-    free(registry.sockfds);
-    registry.sockfds = NULL;
 
     return status;
 }
