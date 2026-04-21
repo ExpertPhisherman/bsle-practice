@@ -28,10 +28,9 @@ main (int argc, char * argv[])
     int backlog = default_backlog;
     bool b_verbose = false;
 
-    session_t hints =
+    server_t hints =
     {
         .lport = lport,
-        .rport = 0u,
         .sockfd = -1,
         .backlog = backlog,
         .b_verbose = b_verbose,
@@ -110,8 +109,8 @@ main (int argc, char * argv[])
     hints.backlog = backlog;
     hints.b_verbose = b_verbose;
 
-    session_t * p_server_session = server_session_create(&hints);
-    if (NULL == p_server_session)
+    server_t * p_server = server_create(&hints);
+    if (NULL == p_server)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
@@ -120,28 +119,46 @@ main (int argc, char * argv[])
     // Accept loop
     while (g_keep_running)
     {
-        session_t * p_client_session = client_session_create(p_server_session);
-        if (NULL == p_client_session)
+        client_t * p_client = client_create(p_server);
+        if (NULL == p_client)
         {
-            continue;
+            status = STATUS_NULL_ARG;
+            goto cleanup;
         }
 
-        if (!tpool_add_work(p_server_session->p_tm, handle_client_wrapper, p_client_session))
+        // TODO: Make into function session_create
+        session_t * p_session = NULL;
+        {
+            p_session = malloc(sizeof(*p_session));
+            if (NULL == p_session)
+            {
+                status = STATUS_NULL_ARG;
+                goto cleanup;
+            }
+
+            *p_session = (session_t)
+            {
+                .p_server = p_server,
+                .p_client = p_client,
+            };
+        }
+
+        if (!tpool_add_work(p_server->p_tm, handle_session_wrapper, p_session))
         {
             fprintf(stderr, "tpool_add_work failed\n");
         }
 
         // NOTE: Current function no longer has ownership
-        p_client_session = NULL;
+        p_client = NULL;
     }
 
-    if (p_server_session->b_verbose)
+    if (p_server->b_verbose)
     {
-        printf("\nGraceful shutdown on server (sockfd %d)\n", p_server_session->sockfd);
+        printf("\nGraceful shutdown on server (sockfd %d)\n", p_server->sockfd);
     }
 
 cleanup:
-    server_session_destroy(p_server_session);
+    server_destroy(p_server);
 
     if ((STATUS_SUCCESS != status) && (0 != errno))
     {

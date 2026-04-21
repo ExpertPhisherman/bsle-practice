@@ -39,18 +39,6 @@ extern uint32_t const max_payload_size;
 extern uint32_t const max_clients;
 extern uint32_t const worker_threads;
 
-typedef struct registry registry_t;
-
-typedef struct server
-{
-    uint16_t     lport;      // Local port
-    int          sockfd;     // Socket file descriptor
-    int          backlog;    // Number of connection requests to queue
-    bool         b_verbose;  // Verbosity
-    tpool_t    * p_tm;       // Pointer to thread pool
-    registry_t * p_registry; // Pointer to client registry
-} server_t;
-
 typedef enum opcode
 {
     OPCODE_PING = 0x01, // Respond with PONG
@@ -72,139 +60,90 @@ typedef struct response
     char     * p_payload; // Pointer to payload
 } response_t;
 
-// Client session
-typedef struct session
+typedef struct client
+{
+    uint16_t     rport;     // Remote port
+    int          sockfd;    // Socket file descriptor
+} client_t;
+
+// Client registry
+typedef struct registry
+{
+    client_t        ** pp_clients; // Double pointer to clients
+    size_t             count;      // Current population of array
+    pthread_mutex_t    lock;       // Mutex lock for read/write control
+} registry_t;
+
+typedef struct server
 {
     uint16_t     lport;      // Local port
-    uint16_t     rport;      // Remote port
     int          sockfd;     // Socket file descriptor
     int          backlog;    // Number of connection requests to queue
     bool         b_verbose;  // Verbosity
     tpool_t    * p_tm;       // Pointer to thread pool
     registry_t * p_registry; // Pointer to client registry
+} server_t;
+
+typedef struct session
+{
+    server_t * p_server; // Pointer to server
+    client_t * p_client; // Pointer to client
 } session_t;
 
-// Client registry
-typedef struct registry
-{
-    session_t       ** pp_sessions; // Double pointer to sessions
-    size_t             count;       // Current population of array
-    pthread_mutex_t    lock;        // Mutex lock for read/write control
-} registry_t;
-
 /*!
- * @brief Create registry
- *
- * @param[in] void
- *
- * @return Pointer to registry
- */
-registry_t * registry_create(void);
-
-/*!
- * @brief Destroy registry
- *
- * @param[in] p_registry Pointer to registry
- *
- * @return Status of operation
- */
-status_t registry_destroy(registry_t * p_registry);
-
-/*!
- * @brief Add session to registry
- *
- * @param[in] p_registry Pointer to registry
- * @param[in] p_session  Pointer to session to add
- *
- * @return Status of operation
- */
-status_t registry_add(registry_t * p_registry, session_t * p_session);
-
-/*!
- * @brief Remove file descriptor from registry
- *
- * @param[in] p_registry Pointer to registry
- * @param[in] p_session  Pointer to session to remove
- *
- * @return Status of operation
- */
-status_t registry_remove(registry_t * p_registry, session_t * p_session);
-
-/*!
- * @brief Wrapper for handle_client
+ * @brief Wrapper for handle_session
  *
  * @param[in] p_arg Pointer to argument
  *
  * @return void
  */
-void handle_client_wrapper(void * p_arg);
+void handle_session_wrapper(void * p_arg);
 
 /*!
- * @brief Create server session
+ * @brief Create server
  *
- * @param[in] p_hints Pointer to session hints
+ * @param[in] p_hints Pointer to server hints
  *
- * @return Pointer to server session
+ * @return Pointer to server
  */
-session_t * server_session_create(session_t * p_hints);
+server_t * server_create(server_t * p_hints);
 
 /*!
- * @brief Destroy server session
+ * @brief Destroy server
  *
- * @param[in] p_server_session Pointer to server session
+ * @param[in] p_server Pointer to server
  *
  * @return Status of operation
  */
-status_t server_session_destroy(session_t * p_server_session);
+status_t server_destroy(server_t * p_server);
 
 /*!
- * @brief Create client session
+ * @brief Create client
  *
- * @param[in] p_server_session Pointer to server session
+ * @param[in] p_server Pointer to server
  *
- * @return Pointer to client session
+ * @return Pointer to client
  */
-session_t * client_session_create(session_t * p_server_session);
+client_t * client_create(server_t * p_server);
 
 /*!
- * @brief Destroy client session
+ * @brief Destroy client
  *
- * @param[in] p_client_session Pointer to client session
+ * @param[in] p_server Pointer to server
+ * @param[in] p_client Pointer to client
  *
  * @return Status of operation
  */
-status_t client_session_destroy(session_t * p_client_session);
+status_t client_destroy(server_t * p_server, client_t * p_client);
 
 /*!
- * @brief Handle client session
+ * @brief Handle session
  *
  * @param[in] p_session Pointer to session
  *
  * @return Status of operation
  */
-status_t handle_client(session_t * p_session);
-
-/*!
- * @brief Send all data to socket
- *
- * @param[in] sockfd Socket to send data to
- * @param[in] p_buf  Buffer to send
- * @param[in] size   Number of bytes to send
- *
- * @return Status of operation
- */
-status_t sendall(int sockfd, void * p_buf, size_t size);
-
-/*!
- * @brief Receive all data from socket
- *
- * @param[in] sockfd Socket to receive data from
- * @param[in] p_buf  Buffer to receive into
- * @param[in] size   Number of bytes to receive
- *
- * @return Status of operation
- */
-status_t recvall(int sockfd, void * p_buf, size_t size);
+status_t handle_session(session_t * p_session);
 
 #endif /* SERVER_H */
 
