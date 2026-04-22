@@ -22,6 +22,20 @@ typedef enum opcode
     OPCODE_QUIT = 0x03, // Close client connection
 } opcode_t;
 
+typedef struct request
+{
+    uint8_t    opcode;    // Opcode
+    uint32_t   size;      // Size of payload in network byte order
+    char     * p_payload; // Pointer to payload
+} request_t;
+
+typedef struct response
+{
+    uint8_t    status;    // Opcode
+    uint32_t   size;      // Size of payload in network byte order
+    char     * p_payload; // Pointer to payload
+} response_t;
+
 /*!
  * @brief Load application functions
  *

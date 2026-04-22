@@ -28,8 +28,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-typedef struct session session_t;
-
 extern uint16_t const max_port;
 extern _Atomic sig_atomic_t g_keep_running;
 
@@ -41,19 +39,28 @@ extern uint32_t const worker_threads;
 extern uint32_t const drain_chunk_size;
 extern int const default_backlog;
 
-typedef struct request
-{
-    uint8_t    opcode;    // Opcode
-    uint32_t   size;      // Size of payload in network byte order
-    char     * p_payload; // Pointer to payload
-} request_t;
+typedef struct request request_t;
+typedef struct response response_t;
 
-typedef struct response
+typedef struct server server_t;
+typedef struct client client_t;
+typedef struct session session_t;
+typedef struct registry registry_t;
+
+typedef struct server
 {
-    uint8_t    status;    // Opcode
-    uint32_t   size;      // Size of payload in network byte order
-    char     * p_payload; // Pointer to payload
-} response_t;
+    uint16_t      lport;      // Local port
+    int           backlog;    // Number of connection requests to queue
+    bool          b_verbose;  // Verbosity
+    int           sockfd;     // Socket file descriptor
+    tpool_t     * p_tm;       // Pointer to thread pool
+    registry_t  * p_registry; // Pointer to client registry
+    void       (*display_request)(request_t * p_request);
+    void       (*display_response)(response_t * p_response);
+    status_t   (*recv_request)(int sockfd, request_t * p_request);
+    status_t   (*send_response)(int sockfd, response_t * p_response);
+    status_t   (*handle_session)(session_t * p_session);
+} server_t;
 
 typedef struct client
 {
@@ -61,34 +68,18 @@ typedef struct client
     int          sockfd;    // Socket file descriptor
 } client_t;
 
-// Client registry
+typedef struct session
+{
+    server_t * p_server; // Pointer to server
+    client_t * p_client; // Pointer to client
+} session_t;
+
 typedef struct registry
 {
     client_t        ** pp_clients; // Double pointer to clients
     size_t             count;      // Current population of array
     pthread_mutex_t    lock;       // Mutex lock for read/write control
 } registry_t;
-
-typedef struct server
-{
-    uint16_t     lport;      // Local port
-    int          backlog;    // Number of connection requests to queue
-    bool         b_verbose;  // Verbosity
-    int          sockfd;     // Socket file descriptor
-    tpool_t    * p_tm;       // Pointer to thread pool
-    registry_t * p_registry; // Pointer to client registry
-    void     (*display_request)(request_t * p_request);
-    void     (*display_response)(response_t * p_response);
-    status_t (*recv_request)(int sockfd, request_t * p_request);
-    status_t (*send_response)(int sockfd, response_t * p_response);
-    status_t (*handle_session)(session_t * p_session);
-} server_t;
-
-typedef struct session
-{
-    server_t * p_server; // Pointer to server
-    client_t * p_client; // Pointer to client
-} session_t;
 
 /*!
  * @brief Wrapper for handle_session
