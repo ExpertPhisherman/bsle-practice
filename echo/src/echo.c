@@ -8,12 +8,14 @@
 
 #include "echo.h"
 
+extern _Atomic sig_atomic_t g_keep_running;
+
 uint16_t const default_lport = 4444u;
+int const default_backlog = 10;
 uint32_t const max_payload_size = 4096u;
+uint32_t const chunk_size = 512u;
 uint32_t const max_clients = 1000u;
 uint32_t const worker_threads = 8u;
-uint32_t const drain_chunk_size = 512u;
-int const default_backlog = 10;
 
 /*!
  * @brief Handle session
@@ -63,7 +65,7 @@ static status_t recv_request(int sockfd, request_t * p_request);
 static status_t send_response(int sockfd, response_t * p_response);
 
 status_t
-load_app (server_t * p_server)
+echo_load_app (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -293,9 +295,9 @@ recv_request (int sockfd, request_t * p_request)
         goto cleanup;
     }
 
-    // Receive opcode and payload size in one recvall
+    // Receive opcode and payload size in one sockutil_recvall
     uint8_t p_header_buf[5];
-    status = recvall(sockfd, p_header_buf, 5u);
+    status = sockutil_recvall(sockfd, p_header_buf, 5u);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -309,7 +311,7 @@ recv_request (int sockfd, request_t * p_request)
     // Reject oversized payloads
     if (host_request_size > max_payload_size)
     {
-        drain(sockfd, host_request_size);
+        sockutil_drain(sockfd, host_request_size, chunk_size);
 
         status = STATUS_OVERFLOW;
         goto cleanup;
@@ -317,7 +319,7 @@ recv_request (int sockfd, request_t * p_request)
 
     // Receive payload
     // NOTE: Enforces payload is exactly host_request_size bytes
-    status = recvall(sockfd, p_request->p_payload, host_request_size);
+    status = sockutil_recvall(sockfd, p_request->p_payload, host_request_size);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -355,8 +357,8 @@ send_response (int sockfd, response_t * p_response)
     memcpy(p_send_buf + 1, &(p_response->size), sizeof(p_response->size));
     memcpy(p_send_buf + 5, p_response->p_payload, payload_size);
 
-    // Send opcode, payload size, and payload in one sendall
-    status = sendall(sockfd, p_send_buf, packet_size);
+    // Send opcode, payload size, and payload in one sockutil_sendall
+    status = sockutil_sendall(sockfd, p_send_buf, packet_size);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;

@@ -10,6 +10,7 @@
 #define ECHO_H
 
 #include "server.h"
+#include "sockutil.h"
 #include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +44,7 @@ typedef struct response
  *
  * @return Status of operation
  */
-status_t load_app(server_t * p_server);
+status_t echo_load_app(server_t * p_server);
 
 #endif /* ECHO_H */
 

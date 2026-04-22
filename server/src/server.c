@@ -8,6 +8,9 @@
 
 #include "server.h"
 
+extern uint32_t const max_clients;
+extern uint32_t const worker_threads;
+
 uint16_t const max_port = 65535u;
 _Atomic sig_atomic_t g_keep_running = 1;
 
@@ -19,6 +22,15 @@ _Atomic sig_atomic_t g_keep_running = 1;
  * @return void
  */
 static void handle_sigint(int signo);
+
+/*!
+ * @brief Wrapper for handle_session
+ *
+ * @param[in] p_arg Pointer to argument
+ *
+ * @return void
+ */
+static void handle_session_wrapper(void * p_arg);
 
 /*!
  * @brief Create client
@@ -85,37 +97,6 @@ static status_t registry_shutdown(registry_t * p_registry);
  * @return Status of operation
  */
 static status_t registry_destroy(registry_t * p_registry);
-
-void
-handle_session_wrapper (void * p_arg)
-{
-    if (NULL == p_arg)
-    {
-        goto cleanup;
-    }
-
-    session_t * p_session = p_arg;
-    p_arg = NULL;
-
-    if (NULL == p_session->p_server)
-    {
-        goto cleanup;
-    }
-
-    if (NULL == p_session->p_server->handle_session)
-    {
-        fprintf(stderr, "App not loaded\n");
-        goto cleanup;
-    }
-
-    (p_session->p_server->handle_session)(p_session);
-
-cleanup:
-    client_destroy(p_session->p_server, p_session->p_client);
-    free(p_session);
-    p_session = NULL;
-    return;
-}
 
 server_t *
 server_create (server_t * p_hints)
@@ -240,8 +221,6 @@ server_create (server_t * p_hints)
     }
 
     p_server->sockfd = sockfd;
-
-    load_app(p_hints);
     p_server->handle_session = p_hints->handle_session;
 
     goto cleanup;
@@ -355,151 +334,42 @@ cleanup:
     return status;
 }
 
-status_t
-sendall (int sockfd, void * p_buf, size_t size)
-{
-    status_t status;
-
-    size_t total = 0u;
-
-    while (total < size)
-    {
-        ssize_t sent = send(sockfd, (uint8_t *)p_buf + total, size - total, 0);
-        if (-1 == sent)
-        {
-            if (EINTR == errno)
-            {
-                if (!g_keep_running)
-                {
-                    status = STATUS_SERVER_DISCONNECT;
-                    goto cleanup;
-                }
-                continue;
-            }
-
-            status = STATUS_SEND_FAILURE;
-            goto cleanup;
-        }
-        else if (0 == sent)
-        {
-            status = STATUS_SEND_FAILURE;
-            goto cleanup;
-        }
-        else
-        {
-            total += (size_t)sent;
-        }
-    }
-
-    status = STATUS_SUCCESS;
-    goto cleanup;
-
-cleanup:
-    if (STATUS_SEND_FAILURE == status)
-    {
-        perror("sendall");
-    }
-
-    return status;
-}
-
-status_t
-recvall (int sockfd, void * p_buf, size_t size)
-{
-    status_t status;
-
-    size_t total = 0u;
-
-    while (total < size)
-    {
-        ssize_t recvd = recv(sockfd, (uint8_t *)p_buf + total, size - total, 0);
-        if (-1 == recvd)
-        {
-            if (EINTR == errno)
-            {
-                if (!g_keep_running)
-                {
-                    status = STATUS_SERVER_DISCONNECT;
-                    goto cleanup;
-                }
-                continue;
-            }
-
-            status = STATUS_RECV_FAILURE;
-            goto cleanup;
-        }
-        else if (0 == recvd)
-        {
-            status = g_keep_running ? STATUS_CLIENT_DISCONNECT : STATUS_SERVER_DISCONNECT;
-            goto cleanup;
-        }
-        else
-        {
-            total += (size_t)recvd;
-        }
-    }
-
-    status = STATUS_SUCCESS;
-    goto cleanup;
-
-cleanup:
-    if (STATUS_RECV_FAILURE == status)
-    {
-        perror("recvall");
-    }
-    else if (STATUS_CLIENT_DISCONNECT == status)
-    {
-        fprintf(stderr, "Abrupt disconnect from client (sockfd %d)\n", sockfd);
-    }
-    else
-    {
-        // Pass
-    }
-
-    return status;
-}
-
-status_t
-drain (int sockfd, uint32_t size)
-{
-    status_t status = STATUS_SUCCESS;
-    uint8_t * p_buf;
-
-    p_buf = malloc(drain_chunk_size);
-    if (NULL == p_buf)
-    {
-        fprintf(stderr, "malloc failed\n");
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    while (0u < size)
-    {
-        uint32_t chunk = (size < drain_chunk_size) ? size : drain_chunk_size;
-
-        status = recvall(sockfd, p_buf, chunk);
-        if (STATUS_SUCCESS != status)
-        {
-            goto cleanup;
-        }
-
-        size -= chunk;
-    }
-
-    goto cleanup;
-
-cleanup:
-    free(p_buf);
-    p_buf = NULL;
-
-    return status;
-}
-
 static void
 handle_sigint (int signo)
 {
     UNUSED(signo);
     g_keep_running = 0;
+    return;
+}
+
+static void
+handle_session_wrapper (void * p_arg)
+{
+    if (NULL == p_arg)
+    {
+        goto cleanup;
+    }
+
+    session_t * p_session = p_arg;
+    p_arg = NULL;
+
+    if (NULL == p_session->p_server)
+    {
+        goto cleanup;
+    }
+
+    if (NULL == p_session->p_server->handle_session)
+    {
+        fprintf(stderr, "App not loaded\n");
+        goto cleanup;
+    }
+
+    (p_session->p_server->handle_session)(p_session);
+
+cleanup:
+    client_destroy(p_session->p_server, p_session->p_client);
+    free(p_session);
+    p_session = NULL;
     return;
 }
 

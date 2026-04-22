@@ -8,6 +8,11 @@
 
 #include "../include/main.h"
 
+extern uint16_t const max_port;
+extern _Atomic sig_atomic_t g_keep_running;
+extern uint16_t const default_lport;
+extern int const default_backlog;
+
 int
 main (int argc, char * argv[])
 {
@@ -87,6 +92,7 @@ main (int argc, char * argv[])
     hints.lport = lport;
     hints.backlog = backlog;
     hints.b_verbose = b_verbose;
+    echo_load_app(&hints);
 
     p_server = server_create(&hints);
     if (NULL == p_server)
