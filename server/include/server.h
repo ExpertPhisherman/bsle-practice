@@ -46,8 +46,8 @@ typedef struct server
 
 typedef struct client
 {
-    uint16_t     rport;     // Remote port
-    int          sockfd;    // Socket file descriptor
+    uint16_t rport;  // Remote port
+    int      sockfd; // Socket file descriptor
 } client_t;
 
 typedef struct session
