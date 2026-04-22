@@ -27,6 +27,7 @@ main (int argc, char * argv[])
         .b_verbose = b_verbose,
         .p_tm = NULL,
         .p_registry = NULL,
+        .handle_session = NULL,
     };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
@@ -86,7 +87,6 @@ main (int argc, char * argv[])
     hints.lport = lport;
     hints.backlog = backlog;
     hints.b_verbose = b_verbose;
-    load_app(&hints);
 
     p_server = server_create(&hints);
     if (NULL == p_server)
@@ -125,6 +125,9 @@ main (int argc, char * argv[])
         if (!tpool_add_work(p_server->p_tm, handle_session_wrapper, p_session))
         {
             fprintf(stderr, "tpool_add_work failed\n");
+            client_destroy(p_server, p_session->p_client);
+            free(p_session);
+            p_session = NULL;
         }
 
         // NOTE: Current function no longer has ownership

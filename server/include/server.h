@@ -28,6 +28,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+typedef struct server server_t;
+typedef struct client client_t;
+typedef struct session session_t;
+typedef struct registry registry_t;
+
 extern uint16_t const max_port;
 extern _Atomic sig_atomic_t g_keep_running;
 
@@ -38,14 +43,7 @@ extern uint32_t const max_clients;
 extern uint32_t const worker_threads;
 extern uint32_t const drain_chunk_size;
 extern int const default_backlog;
-
-typedef struct request request_t;
-typedef struct response response_t;
-
-typedef struct server server_t;
-typedef struct client client_t;
-typedef struct session session_t;
-typedef struct registry registry_t;
+extern status_t load_app(server_t * p_server);
 
 typedef struct server
 {
@@ -55,10 +53,6 @@ typedef struct server
     int           sockfd;     // Socket file descriptor
     tpool_t     * p_tm;       // Pointer to thread pool
     registry_t  * p_registry; // Pointer to client registry
-    void       (*display_request)(request_t * p_request);
-    void       (*display_response)(response_t * p_response);
-    status_t   (*recv_request)(int sockfd, request_t * p_request);
-    status_t   (*send_response)(int sockfd, response_t * p_response);
     status_t   (*handle_session)(session_t * p_session);
 } server_t;
 

@@ -73,10 +73,6 @@ load_app (server_t * p_server)
         goto cleanup;
     }
 
-    p_server->display_request = display_request;
-    p_server->display_response = display_response;
-    p_server->recv_request = recv_request;
-    p_server->send_response = send_response;
     p_server->handle_session = handle_session;
 
 cleanup:
@@ -126,13 +122,7 @@ handle_session (session_t * p_session)
         memset(request.p_payload, 0, max_payload_size);
         memset(response.p_payload, 0, max_payload_size);
 
-        if (NULL == p_server->recv_request)
-        {
-            fprintf(stderr, "app not loaded\n");
-            status = STATUS_NULL_ARG;
-            goto cleanup;
-        }
-        status = (p_server->recv_request)(sockfd, &request);
+        status = recv_request(sockfd, &request);
         if (STATUS_OVERFLOW == status)
         {
             response.status = 0x01;
@@ -143,22 +133,16 @@ handle_session (session_t * p_session)
             ));
             fprintf(stderr, "%s\n", response.p_payload);
 
-            if ((p_server->b_verbose) && (NULL != p_server->display_response))
+            if (p_server->b_verbose)
             {
                 printf(
                     "========================================\n"
                     "Response to sockfd %d:\n", p_client->sockfd
                 );
-                (p_server->display_response)(&response);
+                (display_response)(&response);
             }
 
-            if (NULL == p_server->send_response)
-            {
-                fprintf(stderr, "app not loaded\n");
-                status = STATUS_NULL_ARG;
-                goto cleanup;
-            }
-            status = (p_server->send_response)(sockfd, &response);
+            status = send_response(sockfd, &response);
             if (STATUS_SUCCESS != status)
             {
                 goto cleanup;
@@ -175,13 +159,13 @@ handle_session (session_t * p_session)
             // Pass
         }
 
-        if ((p_server->b_verbose) && (NULL != p_server->display_request))
+        if (p_server->b_verbose)
         {
             printf(
                 "========================================\n"
                 "Request from sockfd %d:\n", p_client->sockfd
             );
-            (p_server->display_request)(&request);
+            display_request(&request);
         }
 
         char const * p_response_payload = "";
@@ -211,22 +195,16 @@ handle_session (session_t * p_session)
         response.size = htonl(host_response_size);
         memcpy(response.p_payload, p_response_payload, host_response_size);
 
-        if ((p_server->b_verbose) && (NULL != p_server->display_response))
+        if (p_server->b_verbose)
         {
             printf(
                 "========================================\n"
                 "Response to sockfd %d:\n", p_client->sockfd
             );
-            (p_server->display_response)(&response);
+            display_response(&response);
         }
 
-        if (NULL == p_server->send_response)
-        {
-            fprintf(stderr, "app not loaded\n");
-            status = STATUS_NULL_ARG;
-            goto cleanup;
-        }
-        status = (p_server->send_response)(sockfd, &response);
+        status = send_response(sockfd, &response);
         if (STATUS_SUCCESS != status)
         {
             goto cleanup;

@@ -76,6 +76,7 @@ handle_session_wrapper (void * p_arg)
     }
 
     session_t * p_session = p_arg;
+    p_arg = NULL;
 
     if (NULL == p_session->p_server)
     {
@@ -87,14 +88,13 @@ handle_session_wrapper (void * p_arg)
         fprintf(stderr, "app not loaded\n");
         goto cleanup;
     }
-    (p_session->p_server->handle_session)(p_session);
-    client_destroy(p_session->p_server, p_session->p_client);
 
-    free(p_session);
-    p_session = NULL;
-    p_arg = NULL;
+    (p_session->p_server->handle_session)(p_session);
 
 cleanup:
+    client_destroy(p_session->p_server, p_session->p_client);
+    free(p_session);
+    p_session = NULL;
     return;
 }
 
@@ -221,6 +221,9 @@ server_create (server_t * p_hints)
     }
 
     p_server->sockfd = sockfd;
+
+    load_app(p_hints);
+    p_server->handle_session = p_hints->handle_session;
 
     goto cleanup;
 
