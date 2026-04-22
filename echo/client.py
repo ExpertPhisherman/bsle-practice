@@ -147,7 +147,7 @@ class EchoClient(cmd.Cmd):
         return self.do_quit(line)
 
 def main():
-    parser = argparse.ArgumentParser(description="New module template")
+    parser = argparse.ArgumentParser(description="Echo client")
 
     parser.add_argument("rhost", help="Remote host")
     parser.add_argument("rport", type=int, help="Remote port")
