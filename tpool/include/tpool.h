@@ -46,15 +46,6 @@ typedef struct tpool
 tpool_t * tpool_create(size_t num);
 
 /*!
- * @brief Destroy thread pool
- *
- * @param[in] p_tm Pointer to thread pool
- *
- * @return void
- */
-void tpool_destroy(tpool_t * p_tm);
-
-/*!
  * @brief Add work to the queue for processing
  *
  * @param[in] p_tm   Pointer to thread pool
@@ -73,6 +64,15 @@ bool tpool_add_work(tpool_t * p_tm, thread_func_t p_func, void * p_arg);
  * @return void
  */
 void tpool_wait(tpool_t * p_tm);
+
+/*!
+ * @brief Destroy thread pool
+ *
+ * @param[in] p_tm Pointer to thread pool
+ *
+ * @return void
+ */
+void tpool_destroy(tpool_t * p_tm);
 
 #endif /* TPOOL_H */
 
