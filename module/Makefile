@@ -1,3 +1,3 @@
-NAME = new
+NAME = module
 LIB_DIRS = ../common
 include ../Makefile
