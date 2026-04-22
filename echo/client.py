@@ -1,3 +1,4 @@
+import argparse
 import cmd
 import sys
 import socket
@@ -146,13 +147,18 @@ class EchoClient(cmd.Cmd):
         return self.do_quit(line)
 
 def main():
+    parser = argparse.ArgumentParser(description="New module template")
+
+    parser.add_argument("rhost", help="Remote host")
+    parser.add_argument("rport", type=int, help="Remote port")
+    parser.add_argument("-l", "--lhost", help="Local host")
+    parser.add_argument("-p", "--lport", type=int, help="Local port")
+
+    args = parser.parse_args()
+
     client = EchoClient()
 
-    # TODO: Read command line options and arguments
-    if len(sys.argv) > 3:
-        failed = client.connect(sys.argv[1], int(sys.argv[2]), sys.argv[3], int(sys.argv[4]))
-    else:
-        failed = client.connect(sys.argv[1], int(sys.argv[2]))
+    failed = client.connect(args.rhost, args.rport, args.lhost, args.lport)
 
     if failed:
         return 1
