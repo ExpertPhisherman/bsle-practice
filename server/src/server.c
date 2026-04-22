@@ -223,8 +223,6 @@ server_create (server_t * p_hints)
     p_server->sockfd = sockfd;
     p_server->handle_session = p_hints->handle_session;
 
-    goto cleanup;
-
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -289,8 +287,6 @@ server_run (server_t * p_server)
         printf("\nGraceful shutdown on server (sockfd %d)\n", p_server->sockfd);
     }
 
-    goto cleanup;
-
 cleanup:
     return status;
 }
@@ -327,8 +323,6 @@ server_destroy (server_t * p_server)
 
     free(p_server);
     p_server = NULL;
-
-    goto cleanup;
 
 cleanup:
     return status;
@@ -437,8 +431,6 @@ client_create (server_t * p_server)
         goto cleanup;
     }
 
-    goto cleanup;
-
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -472,8 +464,6 @@ client_destroy (server_t * p_server, client_t * p_client)
 
     free(p_client);
     p_client = NULL;
-
-    goto cleanup;
 
 cleanup:
     return status;
@@ -593,15 +583,17 @@ registry_shutdown (registry_t * p_registry)
     for (size_t idx = 0u; idx < max_clients; idx++)
     {
         client_t * p_client = (p_registry->pp_clients)[idx];
-        if (NULL != p_client)
+        if (NULL == p_client)
         {
-            if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
-            {
-                perror("shutdown");
-            }
-
-            (p_registry->pp_clients)[idx] = NULL;
+            continue;
         }
+
+        if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
+        {
+            perror("shutdown");
+        }
+
+        (p_registry->pp_clients)[idx] = NULL;
     }
     pthread_mutex_unlock(&(p_registry->lock));
 
