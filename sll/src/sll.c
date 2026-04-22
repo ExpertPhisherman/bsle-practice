@@ -124,38 +124,38 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
         idx--;
     }
 
-    node_t * p_target = malloc(sizeof(*p_target));
-    if (NULL == p_target)
+    node_t * p_node = malloc(sizeof(*p_node));
+    if (NULL == p_node)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    p_target->p_data = malloc(size);
-    if (NULL == p_target->p_data)
+    p_node->p_data = malloc(size);
+    if (NULL == p_node->p_data)
     {
-        free(p_target);
-        p_target = NULL;
+        free(p_node);
+        p_node = NULL;
 
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    memcpy(p_target->p_data, p_data, size);
-    p_target->size = size;
+    memcpy(p_node->p_data, p_data, size);
+    p_node->size = size;
 
     // Previous node links to inserted node
     if (NULL == p_prev)
     {
-        p_sll->p_head = p_target;
+        p_sll->p_head = p_node;
     }
     else
     {
-        p_prev->p_next = p_target;
+        p_prev->p_next = p_node;
     }
 
     // Inserted node links to current node
-    p_target->p_next = p_curr;
+    p_node->p_next = p_curr;
 
     (p_sll->len)++;
 
