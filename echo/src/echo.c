@@ -221,7 +221,6 @@ handle_session (session_t * p_session)
     }
 
     status = STATUS_SERVER_DISCONNECT;
-    goto cleanup;
 
 cleanup:
     free(request.p_payload);
@@ -288,6 +287,7 @@ static status_t
 recv_request (int sockfd, request_t * p_request)
 {
     status_t status = STATUS_SUCCESS;
+    uint8_t * p_recv_buf = NULL;
 
     if (NULL == p_request)
     {
@@ -295,37 +295,59 @@ recv_request (int sockfd, request_t * p_request)
         goto cleanup;
     }
 
+    uint32_t header_size = 5u;
+
+    p_recv_buf = malloc(header_size);
+    if (NULL == p_recv_buf)
+    {
+        fprintf(stderr, "malloc failed\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
     // Receive opcode and payload size in one sockutil_recvall
-    uint8_t p_header_buf[5];
-    status = sockutil_recvall(sockfd, p_header_buf, 5u);
+    status = sockutil_recvall(sockfd, p_recv_buf, header_size);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
     }
 
-    p_request->opcode = p_header_buf[0];
-    memcpy(&(p_request->size), p_header_buf + 1, sizeof(p_request->size));
+    memcpy(&(p_request->opcode), p_recv_buf + 0, sizeof(p_request->opcode));
+    memcpy(&(p_request->size), p_recv_buf + 1, sizeof(p_request->size));
 
-    uint32_t host_request_size = ntohl(p_request->size);
+    uint32_t payload_size = ntohl(p_request->size);
+    uint32_t packet_size = header_size + payload_size;
 
     // Reject oversized payloads
-    if (host_request_size > max_payload_size)
+    if (payload_size > max_payload_size)
     {
-        sockutil_drain(sockfd, host_request_size, chunk_size);
+        sockutil_drain(sockfd, payload_size, chunk_size);
 
         status = STATUS_OVERFLOW;
         goto cleanup;
     }
 
+    p_recv_buf = realloc(p_recv_buf, packet_size);
+    if (NULL == p_recv_buf)
+    {
+        fprintf(stderr, "realloc failed\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
     // Receive payload
-    // NOTE: Enforces payload is exactly host_request_size bytes
-    status = sockutil_recvall(sockfd, p_request->p_payload, host_request_size);
+    // NOTE: Enforces payload is exactly payload_size bytes
+    status = sockutil_recvall(sockfd, p_recv_buf + 5, payload_size);
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
     }
 
+    memcpy(p_request->p_payload, p_recv_buf + 5, payload_size);
+
 cleanup:
+    free(p_recv_buf);
+    p_recv_buf = NULL;
     return status;
 }
 
