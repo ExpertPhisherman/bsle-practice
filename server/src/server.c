@@ -49,24 +49,6 @@ static status_t client_destroy(server_t * p_server, client_t * p_client);
 static registry_t * registry_create(void);
 
 /*!
- * @brief Shutdown all clients in registry
- *
- * @param[in] p_registry Pointer to registry
- *
- * @return Status of operation
- */
-static status_t registry_shutdown(registry_t * p_registry);
-
-/*!
- * @brief Destroy registry
- *
- * @param[in] p_registry Pointer to registry
- *
- * @return Status of operation
- */
-static status_t registry_destroy(registry_t * p_registry);
-
-/*!
  * @brief Add client to registry
  *
  * @param[in] p_registry Pointer to registry
@@ -86,6 +68,24 @@ static status_t registry_add(registry_t * p_registry, client_t * p_client);
  */
 static status_t registry_remove(registry_t * p_registry, client_t * p_client);
 
+/*!
+ * @brief Shutdown all clients in registry
+ *
+ * @param[in] p_registry Pointer to registry
+ *
+ * @return Status of operation
+ */
+static status_t registry_shutdown(registry_t * p_registry);
+
+/*!
+ * @brief Destroy registry
+ *
+ * @param[in] p_registry Pointer to registry
+ *
+ * @return Status of operation
+ */
+static status_t registry_destroy(registry_t * p_registry);
+
 void
 handle_session_wrapper (void * p_arg)
 {
@@ -104,7 +104,7 @@ handle_session_wrapper (void * p_arg)
 
     if (NULL == p_session->p_server->handle_session)
     {
-        fprintf(stderr, "app not loaded\n");
+        fprintf(stderr, "App not loaded\n");
         goto cleanup;
     }
 
