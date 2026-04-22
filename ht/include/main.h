@@ -11,8 +11,6 @@
 
 #include "ht.h"
 
-
-
 #endif /* MAIN_H */
 
 /*** end of file ***/
