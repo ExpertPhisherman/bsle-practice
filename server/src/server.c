@@ -21,6 +21,25 @@ _Atomic sig_atomic_t g_keep_running = 1;
 static void handle_sigint(int signo);
 
 /*!
+ * @brief Create client
+ *
+ * @param[in] p_server Pointer to server
+ *
+ * @return Pointer to client
+ */
+static client_t * client_create(server_t * p_server);
+
+/*!
+ * @brief Destroy client
+ *
+ * @param[in] p_server Pointer to server
+ * @param[in] p_client Pointer to client
+ *
+ * @return Status of operation
+ */
+static status_t client_destroy(server_t * p_server, client_t * p_client);
+
+/*!
  * @brief Create registry
  *
  * @param[in] void
@@ -237,6 +256,67 @@ cleanup:
 }
 
 status_t
+server_run (server_t * p_server)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_server)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Accept loop
+    while (g_keep_running)
+    {
+        client_t * p_client = client_create(p_server);
+        if (NULL == p_client)
+        {
+            continue;
+        }
+
+        // TODO: Make into function session_create
+        session_t * p_session = NULL;
+        {
+            p_session = malloc(sizeof(*p_session));
+            if (NULL == p_session)
+            {
+                fprintf(stderr, "malloc failed\n");
+                status = STATUS_NULL_ARG;
+                goto cleanup;
+            }
+
+            *p_session = (session_t)
+            {
+                .p_server = p_server,
+                .p_client = p_client,
+            };
+        }
+
+        if (!tpool_add_work(p_server->p_tm, handle_session_wrapper, p_session))
+        {
+            fprintf(stderr, "tpool_add_work failed\n");
+            client_destroy(p_server, p_session->p_client);
+            free(p_session);
+            p_session = NULL;
+        }
+
+        // NOTE: Current function no longer has ownership
+        p_client = NULL;
+    }
+
+    if (p_server->b_verbose)
+    {
+        printf("\nGraceful shutdown on server (sockfd %d)\n", p_server->sockfd);
+    }
+
+    goto cleanup;
+
+cleanup:
+    return status;
+}
+
+status_t
 server_destroy (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
@@ -268,112 +348,6 @@ server_destroy (server_t * p_server)
 
     free(p_server);
     p_server = NULL;
-
-    goto cleanup;
-
-cleanup:
-    return status;
-}
-
-client_t *
-client_create (server_t * p_server)
-{
-    status_t status = STATUS_SUCCESS;
-
-    client_t * p_client = NULL;
-
-    if (NULL == p_server)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    int sockfd;
-    struct sockaddr_in client_addr;
-
-    socklen_t sin_size = sizeof(client_addr);
-    sockfd = accept(p_server->sockfd, (struct sockaddr *)&client_addr, &sin_size);
-    if (-1 == sockfd)
-    {
-        if (EINTR == errno)
-        {
-            status = g_keep_running ? STATUS_SOCKET_FAILURE : STATUS_SERVER_DISCONNECT;
-            goto cleanup;
-        }
-
-        perror("accept");
-        status = STATUS_SOCKET_FAILURE;
-        goto cleanup;
-    }
-
-    uint16_t rport = ntohs(client_addr.sin_port);
-
-    if (p_server->b_verbose)
-    {
-        char p_ipstr[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(client_addr.sin_addr.s_addr), p_ipstr, sizeof(p_ipstr));
-        printf("Accepted connection from %s:%hu (sockfd %d)\n", p_ipstr, rport, sockfd);
-    }
-
-    p_client = malloc(sizeof(*p_client));
-    if (NULL == p_client)
-    {
-        fprintf(stderr, "malloc failed\n");
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    p_client->rport = rport;
-    p_client->sockfd = sockfd;
-
-    // Register client file descriptor
-    if (STATUS_FULL == registry_add(p_server->p_registry, p_client))
-    {
-        fprintf(stderr, "max_clients reached, rejecting sockfd %d\n", p_client->sockfd);
-        if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
-        {
-            perror("shutdown");
-        }
-
-        status = STATUS_FULL;
-        goto cleanup;
-    }
-
-    goto cleanup;
-
-cleanup:
-    if (STATUS_SUCCESS != status)
-    {
-        client_destroy(p_server, p_client);
-        p_client = NULL;
-    }
-    return p_client;
-}
-
-status_t
-client_destroy (server_t * p_server, client_t * p_client)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if ((NULL == p_server) || (NULL == p_client))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    // Unregister file descriptor
-    if (STATUS_NOT_EXISTS == registry_remove(p_server->p_registry, p_client))
-    {
-        fprintf(stderr, "sockfd %d not found in registry\n", p_client->sockfd);
-    }
-
-    if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
-    {
-        perror("shutdown");
-    }
-
-    free(p_client);
-    p_client = NULL;
 
     goto cleanup;
 
@@ -527,6 +501,112 @@ handle_sigint (int signo)
     UNUSED(signo);
     g_keep_running = 0;
     return;
+}
+
+static client_t *
+client_create (server_t * p_server)
+{
+    status_t status = STATUS_SUCCESS;
+
+    client_t * p_client = NULL;
+
+    if (NULL == p_server)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    int sockfd;
+    struct sockaddr_in client_addr;
+
+    socklen_t sin_size = sizeof(client_addr);
+    sockfd = accept(p_server->sockfd, (struct sockaddr *)&client_addr, &sin_size);
+    if (-1 == sockfd)
+    {
+        if (EINTR == errno)
+        {
+            status = g_keep_running ? STATUS_SOCKET_FAILURE : STATUS_SERVER_DISCONNECT;
+            goto cleanup;
+        }
+
+        perror("accept");
+        status = STATUS_SOCKET_FAILURE;
+        goto cleanup;
+    }
+
+    uint16_t rport = ntohs(client_addr.sin_port);
+
+    if (p_server->b_verbose)
+    {
+        char p_ipstr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(client_addr.sin_addr.s_addr), p_ipstr, sizeof(p_ipstr));
+        printf("Accepted connection from %s:%hu (sockfd %d)\n", p_ipstr, rport, sockfd);
+    }
+
+    p_client = malloc(sizeof(*p_client));
+    if (NULL == p_client)
+    {
+        fprintf(stderr, "malloc failed\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_client->rport = rport;
+    p_client->sockfd = sockfd;
+
+    // Register client file descriptor
+    if (STATUS_FULL == registry_add(p_server->p_registry, p_client))
+    {
+        fprintf(stderr, "max_clients reached, rejecting sockfd %d\n", p_client->sockfd);
+        if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
+        {
+            perror("shutdown");
+        }
+
+        status = STATUS_FULL;
+        goto cleanup;
+    }
+
+    goto cleanup;
+
+cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        client_destroy(p_server, p_client);
+        p_client = NULL;
+    }
+    return p_client;
+}
+
+static status_t
+client_destroy (server_t * p_server, client_t * p_client)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_server) || (NULL == p_client))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Unregister file descriptor
+    if (STATUS_NOT_EXISTS == registry_remove(p_server->p_registry, p_client))
+    {
+        fprintf(stderr, "sockfd %d not found in registry\n", p_client->sockfd);
+    }
+
+    if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
+    {
+        perror("shutdown");
+    }
+
+    free(p_client);
+    p_client = NULL;
+
+    goto cleanup;
+
+cleanup:
+    return status;
 }
 
 static registry_t *

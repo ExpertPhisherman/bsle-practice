@@ -95,49 +95,7 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    // Accept loop
-    while (g_keep_running)
-    {
-        client_t * p_client = client_create(p_server);
-        if (NULL == p_client)
-        {
-            continue;
-        }
-
-        // TODO: Make into function session_create
-        session_t * p_session = NULL;
-        {
-            p_session = malloc(sizeof(*p_session));
-            if (NULL == p_session)
-            {
-                fprintf(stderr, "malloc failed\n");
-                status = STATUS_NULL_ARG;
-                goto cleanup;
-            }
-
-            *p_session = (session_t)
-            {
-                .p_server = p_server,
-                .p_client = p_client,
-            };
-        }
-
-        if (!tpool_add_work(p_server->p_tm, handle_session_wrapper, p_session))
-        {
-            fprintf(stderr, "tpool_add_work failed\n");
-            client_destroy(p_server, p_session->p_client);
-            free(p_session);
-            p_session = NULL;
-        }
-
-        // NOTE: Current function no longer has ownership
-        p_client = NULL;
-    }
-
-    if (p_server->b_verbose)
-    {
-        printf("\nGraceful shutdown on server (sockfd %d)\n", p_server->sockfd);
-    }
+    server_run(p_server);
 
 cleanup:
     server_destroy(p_server);

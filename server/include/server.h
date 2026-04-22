@@ -94,6 +94,15 @@ void handle_session_wrapper(void * p_arg);
 server_t * server_create(server_t * p_hints);
 
 /*!
+ * @brief Run server accept loop
+ *
+ * @param[in] p_server Pointer to server
+ *
+ * @return Status of operation
+ */
+status_t server_run(server_t * p_server);
+
+/*!
  * @brief Destroy server
  *
  * @param[in] p_server Pointer to server
@@ -101,25 +110,6 @@ server_t * server_create(server_t * p_hints);
  * @return Status of operation
  */
 status_t server_destroy(server_t * p_server);
-
-/*!
- * @brief Create client
- *
- * @param[in] p_server Pointer to server
- *
- * @return Pointer to client
- */
-client_t * client_create(server_t * p_server);
-
-/*!
- * @brief Destroy client
- *
- * @param[in] p_server Pointer to server
- * @param[in] p_client Pointer to client
- *
- * @return Status of operation
- */
-status_t client_destroy(server_t * p_server, client_t * p_client);
 
 /*!
  * @brief Send all data to socket
