@@ -33,6 +33,7 @@ jobs:
           cd gitlab-repo
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
+          git checkout -b github-sync        # push to a new unprotected branch
           git add bsle-practice/
           git diff --cached --quiet || git commit -m "Sync bsle-practice from GitHub ($(date '+%Y-%m-%d %H:%M:%S'))"
-          git push
+          git push origin github-sync
