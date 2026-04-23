@@ -36,4 +36,4 @@ jobs:
           git checkout -b github-sync
           git add bsle-practice/
           git diff --cached --quiet || git commit -m "$(git -C $GITHUB_WORKSPACE log -1 --pretty=%B) [synced from GitHub]"
-          git push origin github-sync
+          git push origin github-sync --force
