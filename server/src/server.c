@@ -221,7 +221,7 @@ server_create (server_t * p_hints)
     }
 
     p_server->sockfd = sockfd;
-    p_server->client_run = p_hints->client_run;
+    p_server->p_client_run = p_hints->p_client_run;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -347,13 +347,13 @@ client_run_wrapper (void * p_arg)
         goto cleanup;
     }
 
-    if (NULL == p_pair->p_server->client_run)
+    if (NULL == p_pair->p_server->p_client_run)
     {
         fprintf(stderr, "App not loaded\n");
         goto cleanup;
     }
 
-    (p_pair->p_server->client_run)(p_pair->p_server, p_pair->p_client);
+    (p_pair->p_server->p_client_run)(p_pair->p_server, p_pair->p_client);
 
 cleanup:
     client_destroy(p_pair->p_server, p_pair->p_client);

@@ -32,16 +32,17 @@ typedef struct server server_t;
 typedef struct client client_t;
 typedef struct server_client_pair server_client_pair_t;
 typedef struct registry registry_t;
+typedef status_t (*client_run_func_t)(server_t * p_server, client_t * p_client);
 
 typedef struct server
 {
-    uint16_t      lport;      // Local port
-    int           backlog;    // Number of connection requests to queue
-    bool          b_verbose;  // Verbosity
-    int           sockfd;     // Socket file descriptor
-    tpool_t     * p_tm;       // Pointer to thread pool
-    registry_t  * p_registry; // Pointer to client registry
-    status_t   (*client_run)(server_t * p_server, client_t * p_client);
+    uint16_t            lport;        // Local port
+    int                 backlog;      // Number of connection requests to queue
+    bool                b_verbose;    // Verbosity
+    int                 sockfd;       // Socket file descriptor
+    tpool_t           * p_tm;         // Pointer to thread pool
+    registry_t        * p_registry;   // Pointer to client registry
+    client_run_func_t   p_client_run; // Pointer to client_run function
 } server_t;
 
 typedef struct client

@@ -76,7 +76,7 @@ echo_load_app (server_t * p_server)
         goto cleanup;
     }
 
-    p_server->client_run = client_run;
+    p_server->p_client_run = client_run;
 
 cleanup:
     return status;
