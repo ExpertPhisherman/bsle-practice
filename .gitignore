@@ -6,8 +6,8 @@ build/
 .vscode/
 *.code-workspace
 
-# Token
-token.txt
+# KLEE
+klee/
 
 # GitHub C template
 # Prerequisites
