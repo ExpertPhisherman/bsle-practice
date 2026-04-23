@@ -60,7 +60,6 @@ typedef struct server_client_pair
 typedef struct registry
 {
     client_t        ** pp_clients; // Double pointer to clients
-    size_t             count;      // Current population of array
     pthread_mutex_t    lock;       // Mutex lock for read/write control
 } registry_t;
 

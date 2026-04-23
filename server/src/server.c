@@ -484,7 +484,6 @@ registry_create (void)
         goto cleanup;
     }
 
-    p_registry->count = 0u;
     memset(p_registry->pp_clients, 0, max_clients * sizeof(*(p_registry->pp_clients)));
     if (0 != pthread_mutex_init(&(p_registry->lock), NULL))
     {
@@ -518,7 +517,6 @@ registry_add (registry_t * p_registry, client_t * p_client)
         if (NULL == (p_registry->pp_clients)[idx])
         {
             (p_registry->pp_clients)[idx] = p_client;
-            (p_registry->count)++;
             status = STATUS_SUCCESS;
             break;
         }
@@ -551,7 +549,6 @@ registry_remove (registry_t * p_registry, client_t * p_client)
         if (p_client->sockfd == ((p_registry->pp_clients)[idx])->sockfd)
         {
             (p_registry->pp_clients)[idx] = NULL;
-            (p_registry->count)--;
             status = STATUS_SUCCESS;
             break;
         }
@@ -610,8 +607,6 @@ registry_destroy (registry_t * p_registry)
     // NOTE: Workers should be done
     free(p_registry->pp_clients);
     p_registry->pp_clients = NULL;
-
-    p_registry->count = 0u;
 
     pthread_mutex_destroy(&(p_registry->lock));
 
