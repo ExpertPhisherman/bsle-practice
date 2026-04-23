@@ -14,6 +14,7 @@ jobs:
 
       - name: Clone GitLab repo
         run: |
+          git config --global http.sslVerify false
           git clone https://${{ secrets.GITLAB_USERNAME }}:${{ secrets.GITLAB_TOKEN }}@code.levelup.cce.af.mil/ccd-active-jqr/logan.tischler.git gitlab-repo
 
       - name: Copy folder into GitLab repo
