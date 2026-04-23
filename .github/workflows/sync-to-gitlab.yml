@@ -1,0 +1,37 @@
+name: Sync to GitLab
+
+on:
+  push:
+    branches: ['**']
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v4
+
+      - name: Clone GitLab repo
+        run: |
+          git clone https://${{ secrets.GITLAB_USERNAME }}:${{ secrets.GITLAB_TOKEN }}@code.levelup.cce.af.mil/ccd-active-jqr/logan.tischler.git gitlab-repo
+
+      - name: Copy folder into GitLab repo
+        run: |
+          # Remove old version of the folder in GitLab repo
+          rm -rf gitlab-repo/bsle-practice
+
+          # Copy the entire GitHub repo as the bsle-practice folder
+          cp -r . gitlab-repo/bsle-practice
+
+          # Remove the .github folder from the copy (optional but clean)
+          rm -rf gitlab-repo/bsle-practice/.github
+
+      - name: Commit and push to GitLab
+        run: |
+          cd gitlab-repo
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add bsle-practice/
+          git diff --cached --quiet || git commit -m "Sync bsle-practice from GitHub ($(date '+%Y-%m-%d %H:%M:%S'))"
+          git push

@@ -6,9 +6,6 @@ build/
 .vscode/
 *.code-workspace
 
-# GitHub configurations
-.github/
-
 # KLEE
 klee/
 
