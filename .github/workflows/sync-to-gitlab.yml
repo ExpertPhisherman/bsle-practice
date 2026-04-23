@@ -22,8 +22,8 @@ jobs:
           # Remove old version of the folder in GitLab repo
           rm -rf gitlab-repo/bsle-practice
 
-          # Copy the entire GitHub repo as the bsle-practice folder
-          cp -r . gitlab-repo/bsle-practice
+          # Copy using rsync, excluding the gitlab-repo folder itself
+          rsync -av --exclude='.git' --exclude='.github' --exclude='gitlab-repo' . gitlab-repo/bsle-practice/
 
           # Remove the .github folder from the copy (optional but clean)
           rm -rf gitlab-repo/bsle-practice/.github
