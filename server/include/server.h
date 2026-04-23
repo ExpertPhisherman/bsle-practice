@@ -30,7 +30,7 @@
 
 typedef struct server server_t;
 typedef struct client client_t;
-typedef struct session session_t;
+typedef struct server_client_pair server_client_pair_t;
 typedef struct registry registry_t;
 
 typedef struct server
@@ -41,7 +41,7 @@ typedef struct server
     int           sockfd;     // Socket file descriptor
     tpool_t     * p_tm;       // Pointer to thread pool
     registry_t  * p_registry; // Pointer to client registry
-    status_t   (*handle_session)(session_t * p_session);
+    status_t   (*client_run)(server_client_pair_t * p_pair);
 } server_t;
 
 typedef struct client
@@ -50,11 +50,11 @@ typedef struct client
     int      sockfd; // Socket file descriptor
 } client_t;
 
-typedef struct session
+typedef struct server_client_pair
 {
     server_t * p_server; // Pointer to server
     client_t * p_client; // Pointer to client
-} session_t;
+} server_client_pair_t;
 
 typedef struct registry
 {

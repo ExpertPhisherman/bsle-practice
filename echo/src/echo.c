@@ -18,13 +18,13 @@ uint32_t const max_clients = 1000u;
 uint32_t const worker_threads = 8u;
 
 /*!
- * @brief Handle session
+ * @brief Run client data recv/send loop
  *
- * @param[in] p_session Pointer to session
+ * @param[in] p_pair Pointer to server/client pair
  *
  * @return Status of operation
  */
-static status_t handle_session(session_t * p_session);
+static status_t client_run(server_client_pair_t * p_pair);
 
 /*!
  * @brief Display request
@@ -75,29 +75,33 @@ echo_load_app (server_t * p_server)
         goto cleanup;
     }
 
-    p_server->handle_session = handle_session;
+    p_server->client_run = client_run;
 
 cleanup:
     return status;
 }
 
 static status_t
-handle_session (session_t * p_session)
+client_run (server_client_pair_t * p_pair)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_session)
+    request_t request;
+    response_t response;
+
+    request.p_payload = NULL;
+    response.p_payload = NULL;
+
+    if (NULL == p_pair)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    server_t * p_server = p_session->p_server;
-    client_t * p_client = p_session->p_client;
+    server_t * p_server = p_pair->p_server;
+    client_t * p_client = p_pair->p_client;
 
     int sockfd = p_client->sockfd;
-    request_t request;
-    response_t response;
 
     request.opcode = 0x00;
     request.size = 0u;

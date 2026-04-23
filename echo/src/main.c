@@ -32,7 +32,7 @@ main (int argc, char * argv[])
         .b_verbose = b_verbose,
         .p_tm = NULL,
         .p_registry = NULL,
-        .handle_session = NULL,
+        .client_run = NULL,
     };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
