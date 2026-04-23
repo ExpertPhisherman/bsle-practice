@@ -261,6 +261,9 @@ server_run (server_t * p_server)
             goto cleanup;
         }
 
+        p_pair->p_server = p_server;
+        p_pair->p_client = p_client;
+
         if (!tpool_add_work(p_server->p_tm, client_run_wrapper, p_pair))
         {
             fprintf(stderr, "tpool_add_work failed\n");
@@ -350,7 +353,7 @@ client_run_wrapper (void * p_arg)
         goto cleanup;
     }
 
-    (p_pair->p_server->client_run)(p_pair);
+    (p_pair->p_server->client_run)(p_pair->p_server, p_pair->p_client);
 
 cleanup:
     client_destroy(p_pair->p_server, p_pair->p_client);

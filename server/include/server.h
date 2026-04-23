@@ -41,7 +41,7 @@ typedef struct server
     int           sockfd;     // Socket file descriptor
     tpool_t     * p_tm;       // Pointer to thread pool
     registry_t  * p_registry; // Pointer to client registry
-    status_t   (*client_run)(server_client_pair_t * p_pair);
+    status_t   (*client_run)(server_t * p_server, client_t * p_client);
 } server_t;
 
 typedef struct client

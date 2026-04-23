@@ -20,11 +20,12 @@ uint32_t const worker_threads = 8u;
 /*!
  * @brief Run client data recv/send loop
  *
- * @param[in] p_pair Pointer to server/client pair
+ * @param[in] p_server Pointer to server
+ * @param[in] p_client Pointer to client
  *
  * @return Status of operation
  */
-static status_t client_run(server_client_pair_t * p_pair);
+static status_t client_run(server_t * p_server, client_t * p_client);
 
 /*!
  * @brief Display request
@@ -82,7 +83,7 @@ cleanup:
 }
 
 static status_t
-client_run (server_client_pair_t * p_pair)
+client_run (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -92,14 +93,11 @@ client_run (server_client_pair_t * p_pair)
     request.p_payload = NULL;
     response.p_payload = NULL;
 
-    if (NULL == p_pair)
+    if ((NULL == p_server) || (NULL == p_client))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
-
-    server_t * p_server = p_pair->p_server;
-    client_t * p_client = p_pair->p_client;
 
     int sockfd = p_client->sockfd;
 
