@@ -11,29 +11,11 @@ jobs:
     steps:
       - name: Checkout GitHub repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Clone GitLab repo
+      - name: Push full history to GitLab
         run: |
           git config --global http.sslVerify false
-          git clone https://${{ secrets.GITLAB_USERNAME }}:${{ secrets.GITLAB_TOKEN }}@code.levelup.cce.af.mil/ccd-active-jqr/logan.tischler.git gitlab-repo
-
-      - name: Copy folder into GitLab repo
-        run: |
-          # Remove old version of the folder in GitLab repo
-          rm -rf gitlab-repo/bsle-practice
-
-          # Copy using rsync, excluding the gitlab-repo folder itself
-          rsync -av --exclude='.git' --exclude='.github' --exclude='gitlab-repo' . gitlab-repo/bsle-practice/
-
-          # Remove the .github folder from the copy (optional but clean)
-          rm -rf gitlab-repo/bsle-practice/.github
-
-      - name: Commit and push to GitLab
-        run: |
-          cd gitlab-repo
-          git config user.email "github-actions@github.com"
-          git config user.name "GitHub Actions"
-          git checkout -b github-sync
-          git add bsle-practice/
-          git diff --cached --quiet || git commit -m "$(git -C $GITHUB_WORKSPACE log -1 --pretty=%B) [synced from GitHub]"
-          git push origin github-sync --force
+          git remote add gitlab https://${{ secrets.GITLAB_USERNAME }}:${{ secrets.GITLAB_TOKEN }}@code.levelup.cce.af.mil/ccd-active-jqr/logan.tischler.git
+          git push gitlab HEAD:github-sync --force
