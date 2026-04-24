@@ -154,6 +154,17 @@ client_run (server_t * p_server, client_t * p_client)
 
             continue;
         }
+        else if (STATUS_CLIENT_DISCONNECT == status)
+        {
+            fprintf(
+                stderr,
+                "Abrupt disconnect from client %s:%hu (sockfd %d)\n",
+                p_client->p_rhost,
+                p_client->rport,
+                sockfd
+            );
+            goto cleanup;
+        }
         else if (STATUS_SUCCESS != status)
         {
             goto cleanup;
@@ -217,6 +228,12 @@ client_run (server_t * p_server, client_t * p_client)
         if (OPCODE_QUIT == request.opcode)
         {
             // Close connection
+            printf(
+                "Graceful disconnect from client %s:%hu (sockfd %d)\n",
+                p_client->p_rhost,
+                p_client->rport,
+                sockfd
+            );
             status = STATUS_SUCCESS;
             goto cleanup;
         }

@@ -131,6 +131,15 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
+    p_server->lport = 0u;
+    p_server->p_lhost = NULL;
+    p_server->backlog = -1;
+    p_server->b_verbose = false;
+    p_server->sockfd = -1;
+    p_server->p_tm = NULL;
+    p_server->p_registry = NULL;
+    p_server->p_client_run = NULL;
+
     *p_server = *p_hints;
 
     p_server->p_registry = registry_create();
@@ -179,9 +188,11 @@ server_create (server_t * p_hints)
     // Catch privileged port as non-root user
     if ((1024u > (p_server->lport)) && (0 != geteuid()))
     {
-        fprintf(stderr,
+        fprintf(
+            stderr,
             "Cannot bind to privileged port %hu [1-1023] as non-root user\n",
-            p_server->lport);
+            p_server->lport
+        );
         if (-1 == close(sockfd))
         {
             perror("close");
@@ -191,8 +202,11 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    if (-1 == bind(sockfd, (struct sockaddr *)&server_addr,
-        sizeof(server_addr)))
+    if (-1 == bind(
+        sockfd,
+        (struct sockaddr *)&server_addr,
+        sizeof(server_addr)
+    ))
     {
         perror("bind");
         if (-1 == close(sockfd))
@@ -216,15 +230,31 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    if (p_server->b_verbose)
+    char * p_lhost = malloc(INET_ADDRSTRLEN);
+    if (NULL == p_lhost)
     {
-        char p_ipstr[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(server_addr.sin_addr.s_addr),
-            p_ipstr, sizeof(p_ipstr));
-        printf("Listening on %s:%hu (sockfd %d)\n",
-            p_ipstr, p_server->lport, sockfd);
+        status = STATUS_NULL_ARG;
+        goto cleanup;
     }
 
+    inet_ntop(
+        AF_INET,
+        &(server_addr.sin_addr.s_addr),
+        p_lhost,
+        INET_ADDRSTRLEN
+    );
+
+    if (p_server->b_verbose)
+    {
+        printf(
+            "Listening on server %s:%hu (sockfd %d)\n",
+            p_lhost,
+            p_server->lport,
+            sockfd
+        );
+    }
+
+    p_server->p_lhost = p_lhost;
     p_server->sockfd = sockfd;
     p_server->p_client_run = p_hints->p_client_run;
 
@@ -272,19 +302,24 @@ server_run (server_t * p_server)
         if (!tpool_add_work(p_server->p_tm, client_run_wrapper, p_pair))
         {
             fprintf(stderr, "tpool_add_work failed\n");
-            client_destroy(p_server, p_pair->p_client);
+            client_destroy(p_server, p_client);
             free(p_pair);
             p_pair = NULL;
         }
 
         // NOTE: Current function no longer has ownership
         p_client = NULL;
+        p_pair = NULL;
     }
 
     if (p_server->b_verbose)
     {
-        printf("\nGraceful shutdown on server (sockfd %d)\n",
-            p_server->sockfd);
+        printf(
+            "\nGraceful shutdown on server %s:%hu (sockfd %d)\n",
+            p_server->p_lhost,
+            p_server->lport,
+            p_server->sockfd
+        );
     }
 
 cleanup:
@@ -312,19 +347,18 @@ server_destroy (server_t * p_server)
     registry_destroy(p_server->p_registry);
     p_server->p_registry = NULL;
 
-    if (-1 != p_server->sockfd)
+    if ((-1 != p_server->sockfd) && (-1 == close(p_server->sockfd)))
     {
-        if (-1 == close(p_server->sockfd))
-        {
-            perror("close");
-            status = STATUS_SOCKET_FAILURE;
-        }
+        perror("close");
+        status = STATUS_SOCKET_FAILURE;
     }
 
-    free(p_server);
-    p_server = NULL;
+    free(p_server->p_lhost);
+    p_server->p_lhost = NULL;
 
 cleanup:
+    free(p_server);
+    p_server = NULL;
     return status;
 }
 
@@ -347,22 +381,24 @@ client_run_wrapper (void * p_arg)
     }
 
     p_pair = p_arg;
+    server_t * p_server = p_pair->p_server;
+    client_t * p_client = p_pair->p_client;
 
-    if (NULL == p_pair->p_server)
+    if (NULL == p_server)
     {
         goto cleanup;
     }
 
-    if (NULL == p_pair->p_server->p_client_run)
+    if (NULL == p_server->p_client_run)
     {
         fprintf(stderr, "App not loaded\n");
         goto cleanup;
     }
 
-    (p_pair->p_server->p_client_run)(p_pair->p_server, p_pair->p_client);
+    (p_server->p_client_run)(p_server, p_client);
 
 cleanup:
-    client_destroy(p_pair->p_server, p_pair->p_client);
+    client_destroy(p_server, p_client);
     free(p_pair);
     p_pair = NULL;
     return;
@@ -385,8 +421,11 @@ client_create (server_t * p_server)
     struct sockaddr_in client_addr;
 
     socklen_t sin_size = sizeof(client_addr);
-    sockfd = accept(p_server->sockfd, (struct sockaddr *)&client_addr,
-        &sin_size);
+    sockfd = accept(
+        p_server->sockfd,
+        (struct sockaddr *)&client_addr,
+        &sin_size
+    );
     if (-1 == sockfd)
     {
         if (EINTR == errno)
@@ -404,13 +443,26 @@ client_create (server_t * p_server)
 
     uint16_t rport = ntohs(client_addr.sin_port);
 
+    char * p_rhost = malloc(INET_ADDRSTRLEN);
+    if (NULL == p_rhost)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    inet_ntop(
+        AF_INET,
+        &(client_addr.sin_addr.s_addr),
+        p_rhost,
+        INET_ADDRSTRLEN
+    );
+
     if (p_server->b_verbose)
     {
-        char p_ipstr[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(client_addr.sin_addr.s_addr),
-            p_ipstr, sizeof(p_ipstr));
-        printf("Accepted connection from %s:%hu (sockfd %d)\n",
-            p_ipstr, rport, sockfd);
+        printf(
+            "Accepted connection from client %s:%hu (sockfd %d)\n",
+            p_rhost, rport, sockfd
+        );
     }
 
     p_client = malloc(sizeof(*p_client));
@@ -421,22 +473,12 @@ client_create (server_t * p_server)
         goto cleanup;
     }
 
+    p_client->p_rhost = p_rhost;
     p_client->rport = rport;
     p_client->sockfd = sockfd;
 
     // Register client file descriptor
-    if (STATUS_FULL == registry_add(p_server->p_registry, p_client))
-    {
-        fprintf(stderr, "max_clients reached, rejecting sockfd %d\n",
-            p_client->sockfd);
-        if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
-        {
-            perror("shutdown");
-        }
-
-        status = STATUS_FULL;
-        goto cleanup;
-    }
+    status = registry_add(p_server->p_registry, p_client);
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -459,46 +501,53 @@ client_destroy (server_t * p_server, client_t * p_client)
     }
 
     // Unregister file descriptor
-    if (STATUS_NOT_EXISTS == registry_remove(p_server->p_registry, p_client))
-    {
-        fprintf(stderr, "sockfd %d not found in registry\n", p_client->sockfd);
-    }
+    status = registry_remove(p_server->p_registry, p_client);
 
     if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
     {
         perror("shutdown");
     }
 
-    free(p_client);
-    p_client = NULL;
+    free(p_client->p_rhost);
+    p_client->p_rhost = NULL;
 
 cleanup:
+    free(p_client);
+    p_client = NULL;
     return status;
 }
 
 static registry_t *
 registry_create (void)
 {
+    status_t status = STATUS_SUCCESS;
+
     registry_t * p_registry = malloc(sizeof(*p_registry));
     if (NULL == p_registry)
     {
         fprintf(stderr, "malloc failed\n");
+        status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
     p_registry->pp_clients = malloc(
-        max_clients * sizeof(*(p_registry->pp_clients)));
+        max_clients * sizeof(*(p_registry->pp_clients))
+    );
     if (NULL == p_registry->pp_clients)
     {
         fprintf(stderr, "malloc failed\n");
+        status = STATUS_NULL_ARG;
         free(p_registry);
         p_registry = NULL;
-
         goto cleanup;
     }
 
-    memset(p_registry->pp_clients, 0,
-        max_clients * sizeof(*(p_registry->pp_clients)));
+    memset(
+        p_registry->pp_clients,
+        0,
+        max_clients * sizeof(*(p_registry->pp_clients))
+    );
+
     if (0 != pthread_mutex_init(&(p_registry->lock), NULL))
     {
         free(p_registry->pp_clients);
@@ -507,10 +556,16 @@ registry_create (void)
         p_registry = NULL;
 
         perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
         goto cleanup;
     }
 
 cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        registry_destroy(p_registry);
+        p_registry = NULL;
+    }
     return p_registry;
 }
 
@@ -522,6 +577,12 @@ registry_add (registry_t * p_registry, client_t * p_client)
     if ((NULL == p_registry) || (NULL == p_client))
     {
         status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    if (-1 == p_client->sockfd)
+    {
+        status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
 
@@ -537,6 +598,21 @@ registry_add (registry_t * p_registry, client_t * p_client)
     }
     pthread_mutex_unlock(&(p_registry->lock));
 
+    if (STATUS_FULL == status)
+    {
+        fprintf(
+            stderr,
+            "Registry is full, rejecting client %s:%hu (sockfd %d)\n",
+            p_client->p_rhost,
+            p_client->rport,
+            p_client->sockfd
+        );
+        if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
+        {
+            perror("shutdown");
+        }
+    }
+
 cleanup:
     return status;
 }
@@ -549,6 +625,12 @@ registry_remove (registry_t * p_registry, client_t * p_client)
     if ((NULL == p_registry) || (NULL == p_client))
     {
         status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    if (-1 == p_client->sockfd)
+    {
+        status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
 
@@ -568,6 +650,17 @@ registry_remove (registry_t * p_registry, client_t * p_client)
         }
     }
     pthread_mutex_unlock(&(p_registry->lock));
+
+    if (STATUS_NOT_EXISTS == status)
+    {
+        fprintf(
+            stderr,
+            "Registry does not contain client %s:%hu (sockfd %d)\n",
+            p_client->p_rhost,
+            p_client->rport,
+            p_client->sockfd
+        );
+    }
 
 cleanup:
     return status;
@@ -598,8 +691,6 @@ registry_shutdown (registry_t * p_registry)
         {
             perror("shutdown");
         }
-
-        (p_registry->pp_clients)[idx] = NULL;
     }
     pthread_mutex_unlock(&(p_registry->lock));
 

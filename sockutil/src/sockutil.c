@@ -102,14 +102,6 @@ cleanup:
     {
         perror("recvall");
     }
-    else if (STATUS_CLIENT_DISCONNECT == status)
-    {
-        fprintf(stderr, "Abrupt disconnect from client (sockfd %d)\n", sockfd);
-    }
-    else
-    {
-        // Pass
-    }
 
     return status;
 }

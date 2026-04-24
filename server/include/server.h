@@ -37,6 +37,7 @@ typedef status_t (*client_run_func_t)(server_t * p_server, client_t * p_client);
 typedef struct server
 {
     uint16_t            lport;        // Local port
+    char              * p_lhost;      // Pointer to local host IP address
     int                 backlog;      // Number of connection requests to queue
     bool                b_verbose;    // Verbosity
     int                 sockfd;       // Socket file descriptor
@@ -47,8 +48,9 @@ typedef struct server
 
 typedef struct client
 {
-    uint16_t rport;  // Remote port
-    int      sockfd; // Socket file descriptor
+    uint16_t   rport;   // Remote port
+    char     * p_rhost; // Pointer to remote host IP address
+    int        sockfd;  // Socket file descriptor
 } client_t;
 
 typedef struct server_client_pair
