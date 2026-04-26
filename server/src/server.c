@@ -505,7 +505,15 @@ client_destroy (server_t * p_server, client_t * p_client)
 
     if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
     {
-        perror("shutdown");
+        // Suppress error when shutdown already happened in registry_shutdown
+        if (ENOTCONN != errno)
+        {
+            perror("shutdown");
+        }
+    }
+    if (-1 == close(p_client->sockfd))
+    {
+        perror("close");
     }
 
     free(p_client->p_rhost);
@@ -607,10 +615,6 @@ registry_add (registry_t * p_registry, client_t * p_client)
             p_client->rport,
             p_client->sockfd
         );
-        if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
-        {
-            perror("shutdown");
-        }
     }
 
 cleanup:
