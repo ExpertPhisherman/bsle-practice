@@ -28,6 +28,16 @@ uint32_t const worker_threads = 8u;
 static status_t client_run(server_t * p_server, client_t * p_client);
 
 /*!
+ * @brief Handle request and generate response
+ *
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+static status_t handle_request(request_t * p_request, response_t * p_response);
+
+/*!
  * @brief Display request
  *
  * @param[in] p_request Pointer to request
@@ -183,32 +193,11 @@ client_run (server_t * p_server, client_t * p_client)
             display_request(&request);
         }
 
-        char const * p_response_payload = "";
-        response.status = 0x00;
-        switch (request.opcode)
+        status = handle_request(&request, &response);
+        if (STATUS_SUCCESS != status)
         {
-            case OPCODE_PING:
-                p_response_payload = "PONG";
-                break;
-
-            case OPCODE_ECHO:
-                p_response_payload = request.p_payload;
-                break;
-
-            case OPCODE_QUIT:
-                p_response_payload = "GOODBYE";
-                break;
-
-            default:
-                response.status = 0x01;
-                p_response_payload = "UNKNOWN OPCODE";
-                fprintf(stderr, "Unknown opcode from sockfd %d: 0x%02hhx\n", sockfd, request.opcode);
-                break;
+            goto cleanup;
         }
-
-        uint32_t host_response_size = strnlen(p_response_payload, max_payload_size);
-        response.size = htonl(host_response_size);
-        memcpy(response.p_payload, p_response_payload, host_response_size);
 
         if (p_server->b_verbose)
         {
@@ -247,6 +236,52 @@ cleanup:
     free(response.p_payload);
     response.p_payload = NULL;
 
+    return status;
+}
+
+static status_t
+handle_request (request_t * p_request, response_t * p_response)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_request) || (NULL == p_response))
+    {
+        goto cleanup;
+    }
+
+    char const * p_response_payload = "";
+    uint32_t host_response_size = 0u;
+    uint32_t host_request_size = ntohl(p_request->size);
+    p_response->status = 0x00;
+    switch (p_request->opcode)
+    {
+        case OPCODE_PING:
+            p_response_payload = "PONG";
+            host_response_size = 4u;
+            break;
+
+        case OPCODE_ECHO:
+            p_response_payload = p_request->p_payload;
+            host_response_size = host_request_size;
+            break;
+
+        case OPCODE_QUIT:
+            p_response_payload = "GOODBYE";
+            host_response_size = 7u;
+            break;
+
+        default:
+            p_response->status = 0x01;
+            p_response_payload = "UNKNOWN OPCODE";
+            host_response_size = 14u;
+            fprintf(stderr, "Unknown opcode: 0x%02hhx\n", p_request->opcode);
+            break;
+    }
+
+    p_response->size = htonl(host_response_size);
+    memcpy(p_response->p_payload, p_response_payload, host_response_size);
+
+cleanup:
     return status;
 }
 
