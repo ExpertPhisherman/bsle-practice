@@ -255,6 +255,16 @@ handle_request (request_t * p_request, response_t * p_response)
     p_response->status = 0x00;
     switch (p_request->opcode)
     {
+        case OPCODE_LOGIN:
+            // NOTE: Login success
+            p_response_payload = "WELCOME";
+            host_response_size = 7u;
+
+            // NOTE: Login failure
+            // p_response_payload = "GET OUT";
+            // host_response_size = 7u;
+            break;
+
         case OPCODE_PING:
             p_response_payload = "PONG";
             host_response_size = 4u;

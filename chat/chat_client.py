@@ -44,12 +44,21 @@ class ChatClient(Client):
             if len(payload) != size:
                 raise ConnectionError("Unexpected response length")
 
-            print(payload.decode('utf-8'))
+            print(payload.decode("utf-8"))
             return False
 
         except ConnectionError as e:
             print(f"[!] Error receiving data: {e}")
             return True
+
+    def do_login(self, line) -> bool:
+        """Login with credentials"""
+
+        self.opcode = 0x04
+        self.length = len(line)
+        self.payload = line.encode("utf-8")
+        self.send_request()
+        return self.recv_response()
 
     def do_ping(self, line) -> bool:
         """Health check"""
@@ -65,7 +74,7 @@ class ChatClient(Client):
 
         self.opcode = 0x02
         self.length = len(line)
-        self.payload = line.encode('utf-8')
+        self.payload = line.encode("utf-8")
         self.send_request()
         return self.recv_response()
 
