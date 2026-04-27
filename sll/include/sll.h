@@ -34,11 +34,11 @@ typedef struct sll
 /*!
  * @brief Create SLL
  *
- * @param[in] p_sll Pointer to SLL
+ * @param[in] void
  *
- * @return Status of operation
+ * @return Pointer to SLL
  */
-status_t sll_create(sll_t * p_sll);
+sll_t * sll_create(void);
 
 /*!
  * @brief Display SLL

@@ -13,9 +13,7 @@ main (int argc, char * argv[])
 {
     status_t status = STATUS_SUCCESS;
 
-    ht_t ht;
-
-    ht_create(&ht, 17u);
+    ht_t * p_ht = ht_create(17u);
 
     char const * p_keys[] =
     {
@@ -32,26 +30,27 @@ main (int argc, char * argv[])
     {
         char const * key = p_keys[idx];
         size_t key_size = strnlen(key, 256u);
-        ht_set(&ht, (void *)key, key_size, (void *)key, 4u);
+        ht_set(p_ht, (void *)key, key_size, (void *)key, 4u);
     }
 
     item_t * p_item = NULL;
 
-    ht_set(&ht, &(int){97}, 4u, (void *)"TEST", 4u);
-    ht_set(&ht, (void *)"dragbolt", 8u, (void *)"pluh", 4u);
-    ht_del(&ht, (void *)"femality", 8u);
+    ht_set(p_ht, &(int){97}, 4u, (void *)"TEST", 4u);
+    ht_set(p_ht, (void *)"dragbolt", 8u, (void *)"pluh", 4u);
+    ht_del(p_ht, (void *)"femality", 8u);
 
-    p_item = ht_get(&ht, &(int){97}, 4u);
-    (ht.p_display_item)(p_item);
+    p_item = ht_get(p_ht, &(int){97}, 4u);
+    (p_ht->p_display_item)(p_item);
     printf("\n");
 
-    p_item = ht_get(&ht, (void *)"dragbolt", 8u);
-    (ht.p_display_item)(p_item);
+    p_item = ht_get(p_ht, (void *)"dragbolt", 8u);
+    (p_ht->p_display_item)(p_item);
     printf("\n");
 
-    ht_display(&ht, ", ");
+    ht_display(p_ht, ", ");
 
-    ht_destroy(&ht);
+    ht_destroy(p_ht);
+    p_ht = NULL;
 
     goto cleanup;
 

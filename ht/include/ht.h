@@ -49,12 +49,11 @@ typedef struct ht
 /*!
  * @brief Create hash table
  *
- * @param[in] p_ht     Pointer to hash table
  * @param[in] capacity Maximum number of buckets
  *
- * @return Status of operation
+ * @return Pointer to hash table
  */
-status_t ht_create(ht_t * p_ht, size_t capacity);
+ht_t * ht_create(size_t capacity);
 
 /*!
  * @brief Display hash table buckets

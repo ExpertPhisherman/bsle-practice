@@ -54,20 +54,22 @@ static void display_item(void * p_data);
  */
 static bool cmp_item(void * p_data, void * p_data2);
 
-status_t
-ht_create (ht_t * p_ht, size_t capacity)
+ht_t *
+ht_create (size_t capacity)
 {
     status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_ht)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
+    ht_t * p_ht = NULL;
 
     if (0u == capacity)
     {
         status = STATUS_EMPTY;
+        goto cleanup;
+    }
+
+    p_ht = malloc(sizeof(*p_ht));
+    if (NULL == p_ht)
+    {
+        status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
@@ -86,14 +88,13 @@ ht_create (ht_t * p_ht, size_t capacity)
 
     for (size_t idx = 0u; idx < capacity; idx++)
     {
-        sll_t * p_sll = malloc(sizeof(*p_sll));
+        sll_t * p_sll = sll_create();
         if (NULL == p_sll)
         {
             status = STATUS_ALLOC_FAILURE;
             goto cleanup;
         }
 
-        sll_create(p_sll);
         p_sll->p_display_node = p_ht->p_display_item;
         p_sll->p_cmp_node = p_ht->p_cmp_item;
 
@@ -104,12 +105,13 @@ ht_create (ht_t * p_ht, size_t capacity)
     goto cleanup;
 
 cleanup:
-    if (STATUS_ALLOC_FAILURE == status)
+    if (STATUS_SUCCESS != status)
     {
         ht_destroy(p_ht);
+        p_ht = NULL;
     }
 
-    return status;
+    return p_ht;
 }
 
 status_t
@@ -242,6 +244,7 @@ cleanup:
     if (STATUS_ALLOC_FAILURE == status)
     {
         ht_destroy(p_ht);
+        p_ht = NULL;
     }
 
     return status;
@@ -320,19 +323,19 @@ ht_destroy (ht_t * p_ht)
         (p_ht->pp_buckets)[idx] = NULL;
 
         sll_destroy(p_sll);
-        free(p_sll);
         p_sll = NULL;
     }
 
     p_ht->capacity = 0u;
 
-    // Free all buckets
     free(p_ht->pp_buckets);
     p_ht->pp_buckets = NULL;
 
     goto cleanup;
 
 cleanup:
+    free(p_ht);
+    p_ht = NULL;
     return status;
 }
 

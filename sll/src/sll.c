@@ -8,14 +8,16 @@
 
 #include "sll.h"
 
-status_t
-sll_create (sll_t * p_sll)
+sll_t *
+sll_create (void)
 {
     status_t status = STATUS_SUCCESS;
+    sll_t * p_sll = NULL;
 
+    p_sll = malloc(sizeof(*p_sll));
     if (NULL == p_sll)
     {
-        status = STATUS_NULL_ARG;
+        status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
@@ -27,7 +29,12 @@ sll_create (sll_t * p_sll)
     goto cleanup;
 
 cleanup:
-    return status;
+    if (STATUS_SUCCESS != status)
+    {
+        sll_destroy(p_sll);
+        p_sll = NULL;
+    }
+    return p_sll;
 }
 
 status_t
@@ -165,6 +172,7 @@ cleanup:
     if (STATUS_ALLOC_FAILURE == status)
     {
         sll_destroy(p_sll);
+        p_sll = NULL;
     }
 
     return status;
@@ -277,6 +285,8 @@ sll_destroy (sll_t * p_sll)
     goto cleanup;
 
 cleanup:
+    free(p_sll);
+    p_sll = NULL;
     return status;
 }
 
