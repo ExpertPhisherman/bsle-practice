@@ -9,12 +9,12 @@
 #ifndef ECHO_H
 #define ECHO_H
 
-#include "server.h"
-#include "sockutil.h"
-#include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "common.h"
+#include "sockutil.h"
+#include "server.h"
 
 typedef enum opcode
 {

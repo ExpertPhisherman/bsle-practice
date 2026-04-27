@@ -7,12 +7,12 @@
 #ifndef TPOOL_H
 #define TPOOL_H
 
-#include "common.h"
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
+#include "common.h"
 
 typedef void (*thread_func_t)(void * p_arg);
 
