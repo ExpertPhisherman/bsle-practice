@@ -89,15 +89,15 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    client = EchoClient()
+    echo_client = EchoClient()
 
-    failed = client.connect(args.rhost, args.rport, args.lhost, args.lport)
+    failed = echo_client.connect(args.rhost, args.rport, args.lhost, args.lport)
 
     if failed:
         return 1
 
-    client.cmdloop()
-    client.sock.close()
+    echo_client.cmdloop()
+    echo_client.sock.close()
     return 0
 
 if __name__ == "__main__":
