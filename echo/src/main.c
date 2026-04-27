@@ -76,7 +76,11 @@ main (int argc, char * argv[])
                 break;
 
             default:
-                fprintf(stderr, "Usage: %s [-v] [-b backlog] [-p port]\n", argv[0]);
+                fprintf(
+                    stderr,
+                    "Usage: %s [-v] [-b backlog] [-p port]\n",
+                    argv[0]
+                );
                 status = STATUS_FAILURE;
                 goto cleanup;
         }

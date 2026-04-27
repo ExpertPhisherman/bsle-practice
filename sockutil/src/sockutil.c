@@ -85,7 +85,9 @@ sockutil_recvall (int sockfd, void * p_buf, size_t size)
         }
         else if (0 == recvd)
         {
-            status = g_keep_running ? STATUS_CLIENT_DISCONNECT : STATUS_SERVER_DISCONNECT;
+            status = g_keep_running ?
+                STATUS_CLIENT_DISCONNECT :
+                STATUS_SERVER_DISCONNECT;
             goto cleanup;
         }
         else
