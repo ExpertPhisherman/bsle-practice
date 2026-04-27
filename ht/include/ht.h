@@ -15,14 +15,14 @@
 #ifndef HT_H
 #define HT_H
 
-#include "sll.h"
-#include "common.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "common.h"
+#include "sll.h"
 
 typedef uint64_t (*hash_func_t)(void * p_key, size_t key_size);
 
