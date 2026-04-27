@@ -6,7 +6,10 @@ build/
 .vscode/
 *.code-workspace
 
-# KLEE
+# Python cache
+__pycache__/
+
+# KLEE Symbolic Execution Engine
 klee/
 
 # GitHub C template
