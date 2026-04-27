@@ -1,4 +1,3 @@
-import argparse
 import sys
 import struct
 from pathlib import Path
@@ -10,9 +9,11 @@ class EchoClient(Client):
 
     def __init__(self) -> None:
         super().__init__()
+        self.prompt = "echo> "
 
     def send_request(self) -> bool:
         """Send request to server"""
+
         if self.sock is None:
             return True
         try:
@@ -26,6 +27,7 @@ class EchoClient(Client):
 
     def recv_response(self) -> bool:
         """Receive response from server"""
+
         if self.sock is None:
             return True
         try:
@@ -51,6 +53,7 @@ class EchoClient(Client):
 
     def do_ping(self, line) -> bool:
         """Health check"""
+
         self.opcode = 0x01
         self.length = 1
         self.payload = b'\x00'
@@ -59,6 +62,7 @@ class EchoClient(Client):
 
     def do_echo(self, line) -> bool:
         """Echo message"""
+
         self.opcode = 0x02
         self.length = len(line)
         self.payload = line.encode('utf-8')
@@ -67,6 +71,7 @@ class EchoClient(Client):
 
     def do_quit(self, line) -> bool:
         """Close connection"""
+
         self.opcode = 0x03
         self.length = 1
         self.payload = b'\x00'
@@ -76,28 +81,22 @@ class EchoClient(Client):
 
     def do_EOF(self, line) -> bool:
         """Handle EOF (Ctrl+D)"""
+
         print()
         return self.do_quit(line)
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Echo client")
-
-    parser.add_argument("rhost", help="Remote host")
-    parser.add_argument("rport", type=int, help="Remote port")
-    parser.add_argument("-l", "--lhost", help="Local host")
-    parser.add_argument("-p", "--lport", type=int, help="Local port")
-
-    args = parser.parse_args()
-
     echo_client = EchoClient()
 
-    failed = echo_client.connect(args.rhost, args.rport, args.lhost, args.lport)
+    echo_client.parse_args()
+
+    failed = echo_client.connect()
 
     if failed:
         return 1
 
     echo_client.cmdloop()
-    echo_client.sock.close()
+    echo_client.disconnect()
     return 0
 
 if __name__ == "__main__":
