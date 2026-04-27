@@ -143,7 +143,7 @@ client_run (server_t * p_server, client_t * p_client)
                     "========================================\n"
                     "Response to sockfd %d:\n", p_client->sockfd
                 );
-                (display_response)(&response);
+                display_response(&response);
             }
 
             status = send_response(sockfd, &response);
