@@ -44,7 +44,7 @@ typedef struct response
  *
  * @return Status of operation
  */
-status_t echo_load_app(server_t * p_server);
+status_t chat_load_app(server_t * p_server);
 
 #endif /* CHAT_H */
 

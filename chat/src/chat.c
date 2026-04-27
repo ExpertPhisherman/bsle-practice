@@ -66,7 +66,7 @@ static status_t recv_request(int sockfd, request_t * p_request);
 static status_t send_response(int sockfd, response_t * p_response);
 
 status_t
-echo_load_app (server_t * p_server)
+chat_load_app (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -143,7 +143,7 @@ client_run (server_t * p_server, client_t * p_client)
                     "========================================\n"
                     "Response to sockfd %d:\n", p_client->sockfd
                 );
-                (display_response)(&response);
+                display_response(&response);
             }
 
             status = send_response(sockfd, &response);
