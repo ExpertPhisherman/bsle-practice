@@ -96,7 +96,7 @@ main (int argc, char * argv[])
     hints.lport = lport;
     hints.backlog = backlog;
     hints.b_verbose = b_verbose;
-    echo_load_app(&hints);
+    chat_load_app(&hints);
 
     p_server = server_create(&hints);
     if (NULL == p_server)
