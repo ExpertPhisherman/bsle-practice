@@ -76,7 +76,7 @@ class Client(cmd.Cmd):
         try:
             data = self.sock.recv(1, socket.MSG_PEEK)
             if len(data) == 0:
-                print("[!] max_clients reached")
+                print("[!] Rejected by server")
                 sys.exit(1)
         except BlockingIOError:
             # NOTE: Socket is open and empty
