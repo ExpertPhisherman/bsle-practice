@@ -13,7 +13,7 @@ extern _Atomic sig_atomic_t g_keep_running;
 status_t
 sockutil_sendall (int sockfd, void * p_buf, size_t size)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     size_t total = 0u;
 
@@ -61,7 +61,7 @@ cleanup:
 status_t
 sockutil_recvall (int sockfd, void * p_buf, size_t size)
 {
-    status_t status;
+    status_t status = STATUS_SUCCESS;
 
     size_t total = 0u;
 
