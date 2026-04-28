@@ -18,18 +18,19 @@
 
 typedef enum opcode
 {
-    OPCODE_PING   = 0x01, // Respond with PONG
-    OPCODE_ECHO   = 0x02, // Return the provided message
-    OPCODE_QUIT   = 0x03, // Close client connection
-    OPCODE_LOGIN  = 0x04, // Login with credentials
-    OPCODE_LOGOUT = 0x05, // Logout
+    OPCODE_PING  = 0x01, // Respond with PONG
+    OPCODE_ECHO  = 0x02, // Return the provided message
+    OPCODE_QUIT  = 0x03, // Close client connection
+    OPCODE_LOGIN = 0x04, // Login with credentials
 } opcode_t;
 
 typedef struct session
 {
-    char const * p_username; // Pointer to username
-    char const * p_password; // Pointer to password
-    uint64_t session_id;     // Unique session ID assigned after login
+    char     * p_username;    // Pointer to username
+    char     * p_password;    // Pointer to password
+    uint8_t    username_size; // Size of username in bytes
+    uint8_t    password_size; // Size of password in bytes
+    uint64_t   session_id;    // Unique session ID assigned after login
 } session_t;
 
 typedef struct request

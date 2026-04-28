@@ -51,12 +51,27 @@ class ChatClient(Client):
             print(f"[!] Error receiving data: {e}")
             return True
 
-    def do_login(self, line) -> bool:
+    def login(self, username, password) -> bool:
         """Login with credentials"""
 
+        # Length is 3-16
+        if not ((3 <= len(username) <= 16) and (3 <= len(password) <= 16)):
+            return True
+
+        # Characters are alphanumeric or underscore
+        if not all(c.isalnum() or c == "_" for c in username):
+            return True
+        if not all(c.isalnum() or c == "_" for c in password):
+            return True
+
         self.opcode = 0x04
-        self.length = len(line)
-        self.payload = line.encode("utf-8")
+        self.payload = b""
+        self.payload += len(username).to_bytes(1, "big")
+        self.payload += len(password).to_bytes(1, "big")
+        self.payload += f"{username}{password}".encode("utf-8")
+        print(f"Attempting login with {username=}, {password=}")
+
+        self.length = len(self.payload)
         self.send_request()
         return self.recv_response()
 
@@ -64,8 +79,9 @@ class ChatClient(Client):
         """Health check"""
 
         self.opcode = 0x01
-        self.length = 1
         self.payload = b'\x00'
+
+        self.length = len(self.payload)
         self.send_request()
         return self.recv_response()
 
@@ -73,8 +89,9 @@ class ChatClient(Client):
         """Echo message"""
 
         self.opcode = 0x02
-        self.length = len(line)
         self.payload = line.encode("utf-8")
+
+        self.length = len(self.payload)
         self.send_request()
         return self.recv_response()
 
@@ -82,8 +99,9 @@ class ChatClient(Client):
         """Close connection"""
 
         self.opcode = 0x03
-        self.length = 1
         self.payload = b'\x00'
+
+        self.length = len(self.payload)
         self.send_request()
         self.recv_response()
         return True
@@ -104,6 +122,13 @@ def main() -> int:
     if failed:
         return 1
 
+    # TODO: Get login from user input
+    #input()
+
+    username = "abc"
+    password = "def"
+
+    chat_client.login(username, password)
     chat_client.cmdloop()
     chat_client.disconnect()
     return 0
