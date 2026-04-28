@@ -47,6 +47,7 @@ typedef enum status
     STATUS_EXISTS            = 16,
     STATUS_NOT_EXISTS        = 17,
     STATUS_OUT_OF_BOUNDS     = 18,
+    STATUS_SIZE_MISMATCH     = 19,
 } status_t;
 
 /*!
