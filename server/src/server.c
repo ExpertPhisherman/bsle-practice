@@ -380,7 +380,7 @@ client_run_wrapper (void * p_arg)
         goto cleanup;
     }
 
-    p_pair = p_arg;
+    p_pair = (server_client_pair_t *)p_arg;
     server_t * p_server = p_pair->p_server;
     client_t * p_client = p_pair->p_client;
 
