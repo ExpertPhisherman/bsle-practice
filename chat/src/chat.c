@@ -184,34 +184,7 @@ client_run (server_t * p_server, client_t * p_client)
         memset(response.p_payload, 0, max_payload_size);
 
         status = recv_request(sockfd, &request);
-        if (STATUS_OVERFLOW == status)
-        {
-            response.status = 0x01;
-            response.size = htonl((uint32_t)snprintf(
-                response.p_payload, max_payload_size,
-                "Request payload size %u exceeds max_payload_size %u",
-                ntohl(request.size), max_payload_size
-            ));
-            fprintf(stderr, "%s\n", response.p_payload);
-
-            if (p_server->b_verbose)
-            {
-                printf(
-                    "========================================\n"
-                    "Response to sockfd %d:\n", p_client->sockfd
-                );
-                display_response(&response);
-            }
-
-            status = send_response(sockfd, &response);
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
-
-            continue;
-        }
-        else if (STATUS_CLIENT_DISCONNECT == status)
+        if (STATUS_CLIENT_DISCONNECT == status)
         {
             fprintf(
                 stderr,
@@ -231,19 +204,19 @@ client_run (server_t * p_server, client_t * p_client)
             // Pass
         }
 
-        if (p_server->b_verbose)
+        status = handle_request(p_session, &request, &response);
+        if (STATUS_SUCCESS != status)
+        {
+            goto cleanup;
+        }
+
+        if ((p_server->b_verbose) && (ntohl(request.size) <= max_payload_size))
         {
             printf(
                 "========================================\n"
                 "Request from sockfd %d:\n", p_client->sockfd
             );
             display_request(&request);
-        }
-
-        status = handle_request(p_session, &request, &response);
-        if (STATUS_SUCCESS != status)
-        {
-            goto cleanup;
         }
 
         if (p_server->b_verbose)
@@ -350,6 +323,18 @@ handle_request (session_t * p_session,
     char const * p_response_payload = "";
     uint32_t host_response_size = 0u;
     uint32_t host_request_size = ntohl(p_request->size);
+
+    if (host_request_size > max_payload_size)
+    {
+        p_response->status = 0x01;
+        p_response->size = htonl((uint32_t)snprintf(
+            p_response->p_payload, max_payload_size,
+            "Request payload size %u exceeds max_payload_size %u",
+            host_request_size, max_payload_size
+        ));
+        fprintf(stderr, "%s\n", p_response->p_payload);
+        goto cleanup;
+    }
 
     if ((0u == p_session->session_id) && (OPCODE_LOGIN != p_request->opcode))
     {
@@ -597,8 +582,6 @@ recv_request (int sockfd, request_t * p_request)
     if (payload_size > max_payload_size)
     {
         sockutil_drain(sockfd, payload_size, chunk_size);
-
-        status = STATUS_OVERFLOW;
         goto cleanup;
     }
 

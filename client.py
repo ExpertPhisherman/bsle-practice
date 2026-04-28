@@ -52,8 +52,10 @@ class Client(cmd.Cmd):
     def disconnect(self) -> None:
         """Disconnect from server"""
 
-        self.sock.close()
-        print(f"[-] Disconnected from server {self.rhost}:{self.rport}")
+        if self.sock is not None:
+            self.sock.close()
+            self.sock = None
+            print(f"[-] Disconnected from server {self.rhost}:{self.rport}")
 
     def recvall(self, size) -> bytes:
         """Receive all data from server"""
@@ -92,6 +94,7 @@ class Client(cmd.Cmd):
         except KeyboardInterrupt:
             print()
             self.do_quit("")
+            self.disconnect()
 
 def main() -> int:
     return 0

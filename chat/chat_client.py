@@ -21,7 +21,9 @@ class ChatClient(Client):
             request += self.payload
             self.sock.sendall(request)
             return False
-        except ConnectionError as e:
+        except (ConnectionError, KeyboardInterrupt) as e:
+            if isinstance(e, KeyboardInterrupt):
+                print()
             print(f"[!] Error sending data: {e}")
             return True
 
@@ -47,7 +49,9 @@ class ChatClient(Client):
             print(payload.decode("utf-8"))
             return False
 
-        except ConnectionError as e:
+        except (ConnectionError, KeyboardInterrupt) as e:
+            if isinstance(e, KeyboardInterrupt):
+                print()
             print(f"[!] Error receiving data: {e}")
             return True
 
