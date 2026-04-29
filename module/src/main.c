@@ -17,6 +17,8 @@ main (int argc, char * argv[])
 
     printf("Hello, World!\n");
 
+    goto cleanup;
+
 cleanup:
     return status;
 }
