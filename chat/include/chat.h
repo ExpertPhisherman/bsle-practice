@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "common.h"
+#include "opcode.h"
 #include "sockutil.h"
 #include "server.h"
 
