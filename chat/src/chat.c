@@ -129,6 +129,8 @@ chat_client_run (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
+    p_session->p_server = p_server;
+
     while (g_keep_running)
     {
         memset(request.p_payload, 0, max_payload_size);
@@ -287,7 +289,9 @@ handle_request (session_t * p_session,
         goto cleanup;
     }
 
-    if ((0u == p_session->session_id) && (OPCODE_LOGIN != p_request->opcode))
+    if ((0u == p_session->session_id) &&
+        (OPCODE_LOGIN != p_request->opcode) &&
+        (OPCODE_QUIT != p_request->opcode))
     {
         // NOTE: No user has authenticated yet
         p_response_payload = "NOT AUTHENTICATED";
@@ -320,21 +324,49 @@ handle_request (session_t * p_session,
                 host_response_size = 7u;
             }
 
+            p_response->size = htonl(host_response_size);
+            memcpy(
+                p_response->p_payload,
+                p_response_payload,
+                host_response_size
+            );
+
             break;
 
         case OPCODE_PING:
             p_response_payload = "PONG";
             host_response_size = 4u;
+
+            p_response->size = htonl(host_response_size);
+            memcpy(
+                p_response->p_payload,
+                p_response_payload,
+                host_response_size
+            );
             break;
 
         case OPCODE_ECHO:
             p_response_payload = p_request->p_payload;
             host_response_size = host_request_size;
+
+            p_response->size = htonl(host_response_size);
+            memcpy(
+                p_response->p_payload,
+                p_response_payload,
+                host_response_size
+            );
             break;
 
         case OPCODE_QUIT:
             p_response_payload = "GOODBYE";
             host_response_size = 7u;
+
+            p_response->size = htonl(host_response_size);
+            memcpy(
+                p_response->p_payload,
+                p_response_payload,
+                host_response_size
+            );
             break;
 
         default:
@@ -342,11 +374,15 @@ handle_request (session_t * p_session,
             p_response_payload = "UNKNOWN OPCODE";
             host_response_size = 14u;
             fprintf(stderr, "Unknown opcode: 0x%02hhx\n", p_request->opcode);
+
+            p_response->size = htonl(host_response_size);
+            memcpy(
+                p_response->p_payload,
+                p_response_payload,
+                host_response_size
+            );
             break;
     }
-
-    p_response->size = htonl(host_response_size);
-    memcpy(p_response->p_payload, p_response_payload, host_response_size);
 
 cleanup:
     return status;

@@ -28,6 +28,7 @@ typedef enum opcode
 
 typedef struct session
 {
+    server_t * p_server;      // Pointer to server
     char     * p_username;    // Pointer to username
     char     * p_password;    // Pointer to password
     uint8_t    username_size; // Size of username in bytes
