@@ -18,16 +18,6 @@ uint32_t const max_clients = 1000u;
 uint32_t const worker_threads = 8u;
 
 /*!
- * @brief Run client data recv/send loop
- *
- * @param[in] p_server Pointer to server
- * @param[in] p_client Pointer to client
- *
- * @return Status of operation
- */
-static status_t client_run(server_t * p_server, client_t * p_client);
-
-/*!
  * @brief Create session
  *
  * @param[in] void
@@ -97,24 +87,7 @@ static status_t recv_request(int sockfd, request_t * p_request);
 static status_t send_response(int sockfd, response_t * p_response);
 
 status_t
-chat_load_app (server_t * p_server)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_server)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_server->p_client_run = client_run;
-
-cleanup:
-    return status;
-}
-
-static status_t
-client_run (server_t * p_server, client_t * p_client)
+chat_client_run (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 

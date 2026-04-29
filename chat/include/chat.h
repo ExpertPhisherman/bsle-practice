@@ -49,13 +49,14 @@ typedef struct response
 } response_t;
 
 /*!
- * @brief Load application functions
+ * @brief Run client data recv/send loop
  *
  * @param[in] p_server Pointer to server
+ * @param[in] p_client Pointer to client
  *
  * @return Status of operation
  */
-status_t chat_load_app(server_t * p_server);
+status_t chat_client_run(server_t * p_server, client_t * p_client);
 
 #endif /* CHAT_H */
 
