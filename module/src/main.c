@@ -12,15 +12,12 @@ int
 main (int argc, char * argv[])
 {
     status_t status = STATUS_SUCCESS;
-
-    printf("Hello, World!\n");
-
-    goto cleanup;
-
-cleanup:
     UNUSED(argc);
     UNUSED(argv);
 
+    printf("Hello, World!\n");
+
+cleanup:
     return status;
 }
 
