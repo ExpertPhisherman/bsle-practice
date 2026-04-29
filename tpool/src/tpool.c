@@ -145,7 +145,7 @@ tpool_destroy (tpool_t * p_tm)
         goto cleanup;
     }
 
-    // Prevent new work from being processed and discard anything still queued
+    // Prevent new work from being added and discard anything still queued
     pthread_mutex_lock(&(p_tm->work_mutex));
 
     p_tm->stop = true;
@@ -338,7 +338,7 @@ tpool_worker (void * p_arg)
             pthread_cond_wait(&(p_tm->work_cond), &(p_tm->work_mutex));
         }
 
-        // Exit when stop is set and there is no more work to process
+        // Exit when stop is set
         if (p_tm->stop)
         {
             pthread_mutex_unlock(&(p_tm->work_mutex));
