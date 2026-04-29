@@ -23,6 +23,14 @@
 
 #define UNUSED(var) ((void)(var))
 
+#define MUTEX_CALL(p_func, lock, ...)  \
+    do                                 \
+    {                                  \
+        pthread_mutex_lock(&(lock));   \
+        (p_func)(__VA_ARGS__);         \
+        pthread_mutex_unlock(&(lock)); \
+    } while (0)
+
 typedef void (*display_func_t)(void * p_data);
 typedef bool (*cmp_func_t)(void * p_data, void * p_data2);
 
