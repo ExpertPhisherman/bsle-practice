@@ -47,6 +47,7 @@ opcode_login (session_t * p_session,
         goto cleanup;
     }
 
+    // Write username and password into session
     memcpy(
         p_session->p_username,
         p_request->p_payload + 2,
@@ -58,9 +59,12 @@ opcode_login (session_t * p_session,
         p_session->password_size
     );
 
+    DEBUG_PRINT("Username: %.*s\n", p_session->username_size, p_session->p_username);
+    DEBUG_PRINT("Password: %.*s\n", p_session->password_size, p_session->p_password);
+
+    // TODO: Validate username and password length and content
+
     // TODO: Validate login against hash table
-    printf("Username: %.*s\n", p_session->username_size, p_session->p_username);
-    printf("Password: %.*s\n", p_session->password_size, p_session->p_password);
 
     // TODO: Set random non-negative session ID
     p_session->session_id = 1234u;
