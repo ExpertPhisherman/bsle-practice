@@ -79,7 +79,7 @@ $(BUILD)/%.o: $(SRC)/%.c
 
 # Debug
 debug: CFLAGS += -ggdb3 -Og -DDEBUG
-debug: all
+debug: clean all
 
 # Clang-Tidy checks
 tidy:
