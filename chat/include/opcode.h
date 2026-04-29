@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include "common.h"
 #include "chat.h"
+#include "ht.h"
 
 typedef struct session session_t;
 typedef struct request request_t;

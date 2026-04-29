@@ -13,9 +13,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "common.h"
+#include "server.h"
 #include "opcode.h"
 #include "sockutil.h"
-#include "server.h"
+#include "ht.h"
 
 typedef enum opcode
 {
