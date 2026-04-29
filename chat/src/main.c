@@ -19,20 +19,22 @@ main (int argc, char * argv[])
     status_t status = STATUS_SUCCESS;
 
     int opt;
-    uint16_t lport = default_lport;
-    int backlog = default_backlog;
-    bool b_verbose = false;
+    uint16_t lport      = default_lport;
+    int backlog         = default_backlog;
+    bool b_verbose      = false;
     server_t * p_server = NULL;
+    ht_t * p_ht         = NULL;
 
     server_t hints =
     {
-        .lport = lport,
-        .sockfd = -1,
-        .backlog = backlog,
-        .b_verbose = b_verbose,
-        .p_tm = NULL,
-        .p_registry = NULL,
+        .lport        = lport,
+        .sockfd       = -1,
+        .backlog      = backlog,
+        .b_verbose    = b_verbose,
+        .p_tm         = NULL,
+        .p_registry   = NULL,
         .p_client_run = NULL,
+        .p_data       = NULL,
     };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
@@ -93,10 +95,18 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    hints.lport = lport;
-    hints.backlog = backlog;
-    hints.b_verbose = b_verbose;
-    chat_load_app(&hints);
+    p_ht = malloc(sizeof(*p_ht));
+    if (NULL == p_ht)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    hints.lport        = lport;
+    hints.backlog      = backlog;
+    hints.b_verbose    = b_verbose;
+    hints.p_client_run = chat_client_run;
+    hints.p_data       = p_ht;
 
     p_server = server_create(&hints);
     if (NULL == p_server)
@@ -109,6 +119,8 @@ main (int argc, char * argv[])
 
 cleanup:
     server_destroy(p_server);
+    free(p_ht);
+    p_ht = NULL;
 
     if ((STATUS_SUCCESS != status) && (0 != errno))
     {

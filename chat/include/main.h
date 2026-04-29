@@ -15,6 +15,7 @@
 #include "common.h"
 #include "server.h"
 #include "chat.h"
+#include "ht.h"
 
 #endif /* MAIN_H */
 

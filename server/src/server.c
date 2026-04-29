@@ -131,14 +131,15 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    p_server->lport = 0u;
-    p_server->p_lhost = NULL;
-    p_server->backlog = -1;
-    p_server->b_verbose = false;
-    p_server->sockfd = -1;
-    p_server->p_tm = NULL;
-    p_server->p_registry = NULL;
+    p_server->lport        = 0u;
+    p_server->p_lhost      = NULL;
+    p_server->backlog      = -1;
+    p_server->b_verbose    = false;
+    p_server->sockfd       = -1;
+    p_server->p_tm         = NULL;
+    p_server->p_registry   = NULL;
     p_server->p_client_run = NULL;
+    p_server->p_data       = NULL;
 
     *p_server = *p_hints;
 
@@ -257,6 +258,7 @@ server_create (server_t * p_hints)
     p_server->p_lhost = p_lhost;
     p_server->sockfd = sockfd;
     p_server->p_client_run = p_hints->p_client_run;
+    p_server->p_data = p_hints->p_data;
 
 cleanup:
     if (STATUS_SUCCESS != status)
