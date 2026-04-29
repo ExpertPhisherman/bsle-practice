@@ -58,14 +58,13 @@ class ChatClient(Client):
     def login(self, username, password) -> bool:
         """Login with credentials"""
 
-        # Length is 3-16
-        if not ((3 <= len(username) <= 16) and (3 <= len(password) <= 16)):
+        # Username: 3-16 alphanumeric characters or underscore
+        # Password: 8+ ASCII characters excluding space
+        if not ((3 <= len(username) <= 16) and (8 <= len(password))):
             return True
-
-        # Characters are alphanumeric or underscore
         if not all(c.isalnum() or c == "_" for c in username):
             return True
-        if not all(c.isalnum() or c == "_" for c in password):
+        if not (password.isascii() and (" " not in password)):
             return True
 
         self.opcode = 0x04
@@ -129,8 +128,8 @@ def main() -> int:
     # TODO: Get login from user input
     #input()
 
-    username = "abc"
-    password = "def"
+    username = "obama"
+    password = "secretsquirrel"
 
     chat_client.login(username, password)
     chat_client.cmdloop()
