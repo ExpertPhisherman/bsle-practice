@@ -99,7 +99,7 @@ main (int argc, char * argv[])
     hints.b_verbose    = b_verbose;
     hints.p_client_run = chat_client_run;
 
-    p_server = chat_server_create(&hints);
+    p_server = chat_server_create(&hints, 101u);
     if (NULL == p_server)
     {
         status = STATUS_ALLOC_FAILURE;

@@ -49,7 +49,7 @@ typedef struct ht
 /*!
  * @brief Create hash table
  *
- * @param[in] capacity Maximum number of buckets
+ * @param[in] capacity Current number of buckets
  *
  * @return Pointer to hash table
  */

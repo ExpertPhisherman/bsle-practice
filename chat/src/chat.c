@@ -87,7 +87,7 @@ static status_t recv_request(int sockfd, request_t * p_request);
 static status_t send_response(int sockfd, response_t * p_response);
 
 server_t *
-chat_server_create (server_t * p_hints)
+chat_server_create (server_t * p_hints, size_t capacity)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -124,7 +124,7 @@ chat_server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    p_safe_ht->p_ht = ht_create(101u);
+    p_safe_ht->p_ht = ht_create(capacity);
     if (NULL == p_safe_ht->p_ht)
     {
         status = STATUS_ALLOC_FAILURE;

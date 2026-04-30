@@ -61,11 +61,12 @@ typedef struct response
 /*!
  * @brief Create chat server
  *
- * @param[in] p_hints Pointer to server hints
+ * @param[in] p_hints  Pointer to server hints
+ * @param[in] capacity Current number of buckets
  *
  * @return Pointer to chat server
  */
-server_t * chat_server_create(server_t * p_hints);
+server_t * chat_server_create(server_t * p_hints, size_t capacity);
 
 /*!
  * @brief Destroy chat server
