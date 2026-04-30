@@ -330,13 +330,12 @@ cleanup:
 static uint64_t
 djb2_hash (void * p_key, size_t key_size)
 {
-    uint8_t chr;
     uint64_t hash = 5381u;
 
     DEBUG_PRINT("Current key: ");
     for (size_t idx = 0u; idx < key_size; idx++)
     {
-        chr = ((uint8_t *)p_key)[idx];
+        uint8_t chr = ((uint8_t *)p_key)[idx];
         DEBUG_PRINT("%c", chr);
         hash = ((hash << 5u) + hash) + chr; // (hash * 33) + chr
     }

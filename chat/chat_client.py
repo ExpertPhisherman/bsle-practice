@@ -60,12 +60,12 @@ class ChatClient(Client):
 
         # Username: 3-16 alphanumeric characters or underscore
         # Password: 8+ ASCII characters excluding space
-        if not ((3 <= len(username) <= 16) and (8 <= len(password))):
-            return True
-        if not all(c.isalnum() or c == "_" for c in username):
-            return True
-        if not (password.isascii() and (" " not in password)):
-            return True
+        if not (
+            (3 <= len(username) <= 16) and
+            (8 <= len(password)) and
+            all((c.isalnum() or (c == "_")) for c in username) and
+            all((c.isascii() and (c != " ")) for c in password)
+        ): return True
 
         self.opcode = 0x04
         self.payload = b""

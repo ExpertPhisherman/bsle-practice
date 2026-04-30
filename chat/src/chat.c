@@ -406,27 +406,6 @@ handle_request (session_t * p_session,
             {
                 goto cleanup;
             }
-
-            // NOTE: Login success
-            if (0u != p_session->session_id)
-            {
-                p_response_payload = "WELCOME";
-                host_response_size = 7u;
-            }
-            // NOTE: Login failure
-            else
-            {
-                p_response_payload = "GET OUT";
-                host_response_size = 7u;
-            }
-
-            p_response->size = htonl(host_response_size);
-            memcpy(
-                p_response->p_payload,
-                p_response_payload,
-                host_response_size
-            );
-
             break;
 
         case OPCODE_PING:
