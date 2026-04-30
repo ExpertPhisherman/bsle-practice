@@ -358,6 +358,8 @@ server_destroy (server_t * p_server)
     free(p_server->p_lhost);
     p_server->p_lhost = NULL;
 
+    p_server->p_data = NULL;
+
 cleanup:
     free(p_server);
     p_server = NULL;

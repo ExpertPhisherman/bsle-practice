@@ -156,7 +156,6 @@ chat_server_destroy (server_t * p_server)
     p_safe_ht = (safe_ht_t *)(p_server->p_data);
 
     server_destroy(p_server);
-    p_server->p_data = NULL;
     p_server = NULL;
 
     if (NULL == p_safe_ht)
