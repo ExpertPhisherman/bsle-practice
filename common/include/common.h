@@ -31,9 +31,6 @@
     _result;                                     \
 })
 
-typedef void (*display_func_t)(void * p_data);
-typedef bool (*cmp_func_t)(void * p_data, void * p_data2);
-
 typedef enum status
 {
     STATUS_SUCCESS           = EXIT_SUCCESS,
@@ -57,6 +54,9 @@ typedef enum status
     STATUS_OUT_OF_BOUNDS     = 18,
     STATUS_SIZE_MISMATCH     = 19,
 } status_t;
+
+typedef status_t (*display_func_t)(void * p_data);
+typedef bool (*cmp_func_t)(void * p_data, void * p_data2);
 
 /*!
  * @brief Display variable bytes in hex

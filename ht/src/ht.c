@@ -39,9 +39,9 @@ static sll_t * ht_select(ht_t * p_ht, item_t * p_item);
  *
  * @param[in] p_data Pointer to item
  *
- * @return void
+ * @return Status of operation
  */
-static void display_item(void * p_data);
+static status_t display_item(void * p_data);
 
 /*!
  * @brief Compare item
@@ -102,8 +102,6 @@ ht_create (size_t capacity)
         (p_ht->pp_buckets)[idx] = p_sll;
     }
 
-    goto cleanup;
-
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -149,8 +147,6 @@ ht_display (ht_t * p_ht, char const * p_sep)
     }
     printf("}\n");
 
-    goto cleanup;
-
 cleanup:
     return status;
 }
@@ -182,8 +178,6 @@ ht_get (ht_t * p_ht, void * p_key, size_t key_size)
     }
 
     p_item = p_node->p_data;
-
-    goto cleanup;
 
 cleanup:
     return p_item;
@@ -238,8 +232,6 @@ ht_set (ht_t * p_ht,
         (p_ht->len)++;
     }
 
-    goto cleanup;
-
 cleanup:
     if (STATUS_ALLOC_FAILURE == status)
     {
@@ -288,8 +280,6 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
         (p_ht->len)--;
     }
 
-    goto cleanup;
-
 cleanup:
     return status;
 }
@@ -331,8 +321,6 @@ ht_destroy (ht_t * p_ht)
     free(p_ht->pp_buckets);
     p_ht->pp_buckets = NULL;
 
-    goto cleanup;
-
 cleanup:
     free(p_ht);
     p_ht = NULL;
@@ -369,15 +357,15 @@ ht_select (ht_t * p_ht, item_t * p_item)
 
     p_sll = (p_ht->pp_buckets)[p_item->hash % p_ht->capacity];
 
-    goto cleanup;
-
 cleanup:
     return p_sll;
 }
 
-static void
+static status_t
 display_item (void * p_data)
 {
+    status_t status = STATUS_SUCCESS;
+
     if (NULL == p_data)
     {
         goto cleanup;
@@ -393,10 +381,8 @@ display_item (void * p_data)
     printf("%.*s", (int)(p_item->value_size), (char *)(p_item->p_value));
     printf("\"");
 
-    goto cleanup;
-
 cleanup:
-    return;
+    return status;
 }
 
 static bool
@@ -424,8 +410,6 @@ cmp_item (void * p_data, void * p_data2)
     b_result = (p_item->hash == p_item2->hash) &&
                (p_item->key_size == p_item2->key_size) &&
                (0 == memcmp(p_item->p_key, p_item2->p_key, p_item->key_size));
-
-    goto cleanup;
 
 cleanup:
     return b_result;
