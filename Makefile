@@ -2,7 +2,7 @@
 
 # Compiler and flags
 CC = cc
-CFLAGS = -std=c11 -Wall -Werror -Wextra -Wformat=2 -Wpedantic -Wstrict-prototypes -Wwrite-strings -Wvla -Wfloat-equal -pthread -D_POSIX_C_SOURCE=200809L
+CFLAGS = -std=gnu11 -Wall -Werror -Wextra -Wformat=2 -Wstrict-prototypes -Wwrite-strings -Wvla -Wfloat-equal -pthread -D_POSIX_C_SOURCE=200809L
 CPPFLAGS = -Iinclude $(patsubst %,-I%/include,$(LIB_DIRS))
 AR = ar
 ARFLAGS = rcs
