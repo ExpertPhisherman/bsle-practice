@@ -23,7 +23,6 @@ main (int argc, char * argv[])
     int backlog         = default_backlog;
     bool b_verbose      = false;
     server_t * p_server = NULL;
-    ht_t * p_ht         = NULL;
 
     server_t hints =
     {
@@ -95,20 +94,12 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    p_ht = malloc(sizeof(*p_ht));
-    if (NULL == p_ht)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
     hints.lport        = lport;
     hints.backlog      = backlog;
     hints.b_verbose    = b_verbose;
     hints.p_client_run = chat_client_run;
-    hints.p_data       = p_ht;
 
-    p_server = server_create(&hints);
+    p_server = chat_server_create(&hints);
     if (NULL == p_server)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -118,9 +109,7 @@ main (int argc, char * argv[])
     server_run(p_server);
 
 cleanup:
-    server_destroy(p_server);
-    free(p_ht);
-    p_ht = NULL;
+    chat_server_destroy(p_server);
 
     if ((STATUS_SUCCESS != status) && (0 != errno))
     {

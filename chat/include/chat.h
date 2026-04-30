@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <pthread.h>
 #include "common.h"
 #include "server.h"
 #include "opcode.h"
@@ -36,6 +38,12 @@ typedef struct session
     uint64_t   session_id;    // Unique session ID assigned after login
 } session_t;
 
+typedef struct safe_ht
+{
+    ht_t            * p_ht; // Pointer to hash table
+    pthread_mutex_t   lock; // Mutex lock for read/write control
+} safe_ht_t;
+
 typedef struct request
 {
     uint8_t    opcode;    // Opcode
@@ -49,6 +57,24 @@ typedef struct response
     uint32_t   size;      // Size of payload in network byte order
     char     * p_payload; // Pointer to payload
 } response_t;
+
+/*!
+ * @brief Create chat server
+ *
+ * @param[in] p_hints Pointer to server hints
+ *
+ * @return Pointer to chat server
+ */
+server_t * chat_server_create(server_t * p_hints);
+
+/*!
+ * @brief Destroy chat server
+ *
+ * @param[in] p_server Pointer to chat server
+ *
+ * @return Status of operation
+ */
+status_t chat_server_destroy(server_t * p_server);
 
 /*!
  * @brief Run client data recv/send loop

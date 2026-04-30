@@ -86,6 +86,97 @@ static status_t recv_request(int sockfd, request_t * p_request);
  */
 static status_t send_response(int sockfd, response_t * p_response);
 
+server_t *
+chat_server_create (server_t * p_hints)
+{
+    status_t status = STATUS_SUCCESS;
+
+    server_t * p_server   = NULL;
+    safe_ht_t * p_safe_ht = NULL;
+
+    if (NULL == p_hints)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_server = server_create(p_hints);
+    if (NULL == p_server)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_safe_ht = malloc(sizeof(*p_safe_ht));
+    if (NULL == p_safe_ht)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_safe_ht->p_ht = NULL;
+    p_server->p_data = p_safe_ht;
+
+    if (0 != pthread_mutex_init(&(p_safe_ht->lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
+        goto cleanup;
+    }
+
+    p_safe_ht->p_ht = ht_create(101u);
+    if (NULL == p_safe_ht->p_ht)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        chat_server_destroy(p_server);
+        p_server  = NULL;
+        p_safe_ht = NULL;
+    }
+    return p_server;
+}
+
+status_t
+chat_server_destroy (server_t * p_server)
+{
+    status_t status = STATUS_SUCCESS;
+    safe_ht_t * p_safe_ht = NULL;
+
+    if (NULL == p_server)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_safe_ht = (safe_ht_t *)(p_server->p_data);
+    p_server->p_data = NULL;
+
+    server_destroy(p_server);
+    p_server = NULL;
+
+    if (NULL == p_safe_ht)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    ht_destroy(p_safe_ht->p_ht);
+    p_safe_ht->p_ht = NULL;
+
+    pthread_mutex_destroy(&(p_safe_ht->lock));
+
+    free(p_safe_ht);
+    p_safe_ht = NULL;
+
+cleanup:
+    return status;
+}
+
 status_t
 chat_client_run (server_t * p_server, client_t * p_client)
 {
