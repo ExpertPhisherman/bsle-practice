@@ -15,6 +15,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include "common.h"
 #include "chat.h"
 #include "ht.h"
