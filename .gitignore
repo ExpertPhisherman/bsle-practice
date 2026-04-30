@@ -9,8 +9,9 @@ build/
 # Python cache
 __pycache__/
 
-# KLEE Symbolic Execution Engine
-klee/
+# Valgrind suppresion
+.valgrindrc
+*.supp
 
 # GitHub C template
 # Prerequisites
