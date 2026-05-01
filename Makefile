@@ -14,7 +14,7 @@ INCLUDE = include
 BUILD = build
 BIN = bin
 
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := debug
 
 # Local files
 SRCS = $(wildcard $(SRC)/*.c)
@@ -43,7 +43,7 @@ ALL_TARGETS = $(LIB)
 endif
 
 $(EXT_LIBS):
-	$(MAKE) -C $(patsubst %/bin/,%,$(dir $@)) all
+	$(MAKE) -C $(patsubst %/bin/,%,$(dir $@)) $(.DEFAULT_GOAL)
 
 # Clang-Tidy settings
 TIDY = clang-tidy
@@ -61,7 +61,7 @@ TIDY_CHECKS = -*, \
 
 .PHONY: all debug clean tidy tidy-fix
 
-# Default target
+# All
 all: $(ALL_TARGETS)
 
 # Static library for this project
@@ -79,7 +79,7 @@ $(BUILD)/%.o: $(SRC)/%.c
 
 # Debug
 debug: CFLAGS += -ggdb3 -Og -DDEBUG
-debug: clean all
+debug: all
 
 # Clang-Tidy checks
 tidy:
