@@ -378,6 +378,8 @@ static void
 client_run_wrapper (void * p_arg)
 {
     server_client_pair_t * p_pair = NULL;
+    server_t * p_server = NULL;
+    client_t * p_client = NULL;
 
     if (NULL == p_arg)
     {
@@ -385,8 +387,8 @@ client_run_wrapper (void * p_arg)
     }
 
     p_pair = (server_client_pair_t *)p_arg;
-    server_t * p_server = p_pair->p_server;
-    client_t * p_client = p_pair->p_client;
+    p_server = p_pair->p_server;
+    p_client = p_pair->p_client;
 
     if (NULL == p_server)
     {
