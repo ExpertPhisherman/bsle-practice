@@ -57,7 +57,7 @@ typedef enum status
 } status_t;
 
 typedef status_t (*display_func_t)(void * p_data);
-typedef bool (*cmp_func_t)(void * p_data, void * p_data2);
+typedef bool     (*cmp_func_t)(void * p_data1, void * p_data2);
 
 /*!
  * @brief Display variable bytes in hex
