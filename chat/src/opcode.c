@@ -15,6 +15,10 @@ opcode_login (session_t * p_session,
 {
     status_t status = STATUS_SUCCESS;
 
+    appdata_t * p_appdata = NULL;
+    safe_ht_t * p_safe_ht = NULL;
+    item_t * p_item       = NULL;
+
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
         status = STATUS_NULL_ARG;
@@ -78,8 +82,13 @@ opcode_login (session_t * p_session,
 
     if (p_server->b_verbose)
     {
-        printf("Username: %.*s\n", username_size, p_username);
-        printf("Password: %.*s\n", password_size, p_password);
+        printf(
+            "Attempting login with username=\"%.*s\", password=\"%.*s\"\n",
+            username_size,
+            p_username,
+            password_size,
+            p_password
+        );
     }
 
     /*
@@ -126,25 +135,66 @@ opcode_login (session_t * p_session,
         }
     }
 
-    // TODO: Validate login against hash table
+    p_appdata = p_session->p_server->p_appdata;
+    p_safe_ht = p_appdata->p_safe_ht;
 
-    // TODO: Set random non-negative session ID
-    p_session->session_id = 1234u;
+    // TODO: Authenticate login against hash table
+    p_item = MUTEX_CALL(ht_get, p_safe_ht->lock, p_safe_ht->p_ht, p_username, username_size);
+    if (NULL == p_item)
+    {
+        // NOTE: User doesn't exist
+        // Create new user
+        MUTEX_CALL(
+            ht_set,
+            p_safe_ht->lock,
+            p_safe_ht->p_ht,
+            p_username,
+            username_size,
+            p_password,
+            password_size
+        );
 
-    p_response_payload = "Successful login!";
-    host_response_size = 17u;
+        p_response_payload = "Created new user";
+        host_response_size = 16u;
 
-    p_response->size = htonl(host_response_size);
-    memcpy(
-        p_response->p_payload,
-        p_response_payload,
-        host_response_size
-    );
+        // TODO: Set random positive session ID
+        p_session->session_id = 1234u;
+    }
+    else
+    {
+        // NOTE: User already exists
+        // Check if password matches
+        MUTEX_CALL(p_safe_ht->p_ht->p_display_item, p_safe_ht->lock, p_item);
+        printf("\n");
+        if ((p_item->value_size == password_size) &&
+            (0 == memcmp(p_item->p_value, p_password, password_size)))
+        {
+            p_response_payload = "Successful login";
+            host_response_size = 16u;
+
+            // TODO: Set random positive session ID
+            p_session->session_id = 1234u;
+        }
+        else
+        {
+            p_response_payload = "GET OUT!!1!1!";
+            host_response_size = 13u;
+        }
+    }
 
 cleanup:
     if (STATUS_SUCCESS != status)
     {
         opcode_logout(p_session, p_request, p_response);
+    }
+    else
+    {
+        p_response->size = htonl(host_response_size);
+        memcpy(
+            p_response->p_payload,
+            p_response_payload,
+            host_response_size
+        );
     }
 
     return status;

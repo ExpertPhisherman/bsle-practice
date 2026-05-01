@@ -145,17 +145,21 @@ chat_server_destroy (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
+    appdata_t * p_appdata = NULL;
+
     if (NULL == p_server)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    appdata_destroy(p_server->p_appdata);
-    p_server->p_appdata = NULL;
+    p_appdata = p_server->p_appdata;
 
     server_destroy(p_server);
     p_server = NULL;
+
+    appdata_destroy(p_appdata);
+    p_appdata = NULL;
 
 cleanup:
     return status;
@@ -167,10 +171,10 @@ chat_client_run (server_t * p_server, client_t * p_client)
     status_t status = STATUS_SUCCESS;
 
     session_t * p_session = NULL;
-    request_t request = {0};
-    response_t response = {0};
+    request_t request     = {0};
+    response_t response   = {0};
 
-    request.p_payload = NULL;
+    request.p_payload  = NULL;
     response.p_payload = NULL;
 
     if ((NULL == p_server) || (NULL == p_client))
@@ -178,13 +182,6 @@ chat_client_run (server_t * p_server, client_t * p_client)
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
-
-    appdata_t * p_appdata = p_server->p_appdata;
-    safe_ht_t * p_safe_ht = p_appdata->p_safe_ht;
-    MUTEX_CALL(ht_set, p_safe_ht->lock, p_safe_ht->p_ht, (void *)"obama", 5u, (void *)"pyramid", 7u);
-    item_t * p_item = MUTEX_CALL(ht_get, p_safe_ht->lock, p_safe_ht->p_ht, (void *)"obama", 5u);
-    MUTEX_CALL(p_safe_ht->p_ht->p_display_item, p_safe_ht->lock, p_item);
-    printf("\n");
 
     int sockfd = p_client->sockfd;
 
