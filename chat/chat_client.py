@@ -72,7 +72,7 @@ class ChatClient(Client):
         self.payload += len(username).to_bytes(1, "big")
         self.payload += len(password).to_bytes(1, "big")
         self.payload += f"{username}{password}".encode("utf-8")
-        print(f"Attempting login with {username=}, {password=}")
+        print(f"Attempting login with {username=!r}, {password=!r}".replace("'", '"'))
 
         self.length = len(self.payload)
         self.send_request()
@@ -129,7 +129,7 @@ def main() -> int:
     #input()
 
     username = "obama"
-    password = "secretsquirrel"
+    password = "pyramid1"
 
     chat_client.login(username, password)
     chat_client.cmdloop()
