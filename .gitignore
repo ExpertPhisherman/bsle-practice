@@ -9,7 +9,7 @@ build/
 # Python cache
 __pycache__/
 
-# Valgrind suppresion
+# Valgrind configurations
 .valgrindrc
 *.supp
 
