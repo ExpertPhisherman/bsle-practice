@@ -139,7 +139,7 @@ server_create (server_t * p_hints)
     p_server->p_tm         = NULL;
     p_server->p_registry   = NULL;
     p_server->p_client_run = NULL;
-    p_server->p_data       = NULL;
+    p_server->p_appdata       = NULL;
 
     *p_server = *p_hints;
 
@@ -258,7 +258,7 @@ server_create (server_t * p_hints)
     p_server->p_lhost = p_lhost;
     p_server->sockfd = sockfd;
     p_server->p_client_run = p_hints->p_client_run;
-    p_server->p_data = p_hints->p_data;
+    p_server->p_appdata = p_hints->p_appdata;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -358,7 +358,7 @@ server_destroy (server_t * p_server)
     free(p_server->p_lhost);
     p_server->p_lhost = NULL;
 
-    p_server->p_data = NULL;
+    p_server->p_appdata = NULL;
 
 cleanup:
     free(p_server);

@@ -18,6 +18,24 @@ uint32_t const max_clients = 1000u;
 uint32_t const worker_threads = 8u;
 
 /*!
+ * @brief Create application data
+ *
+ * @param[in] capacity Current number of buckets
+ *
+ * @return Pointer to application data
+ */
+static appdata_t * appdata_create(size_t capacity);
+
+/*!
+ * @brief Destroy application data
+ *
+ * @param[in] p_appdata Pointer to application data
+ *
+ * @return Status of operation
+ */
+static status_t appdata_destroy(appdata_t * p_appdata);
+
+/*!
  * @brief Create session
  *
  * @param[in] void
@@ -91,8 +109,7 @@ chat_server_create (server_t * p_hints, size_t capacity)
 {
     status_t status = STATUS_SUCCESS;
 
-    server_t * p_server   = NULL;
-    safe_ht_t * p_safe_ht = NULL;
+    server_t * p_server = NULL;
 
     if (NULL == p_hints)
     {
@@ -107,25 +124,8 @@ chat_server_create (server_t * p_hints, size_t capacity)
         goto cleanup;
     }
 
-    p_safe_ht = malloc(sizeof(*p_safe_ht));
-    if (NULL == p_safe_ht)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    p_safe_ht->p_ht = NULL;
-    p_server->p_data = p_safe_ht;
-
-    if (0 != pthread_mutex_init(&(p_safe_ht->lock), NULL))
-    {
-        perror("pthread_mutex_init");
-        status = STATUS_MUTEX_FAILURE;
-        goto cleanup;
-    }
-
-    p_safe_ht->p_ht = ht_create(capacity);
-    if (NULL == p_safe_ht->p_ht)
+    p_server->p_appdata = appdata_create(capacity);
+    if (NULL == p_server->p_appdata)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
@@ -136,7 +136,6 @@ cleanup:
     {
         chat_server_destroy(p_server);
         p_server  = NULL;
-        p_safe_ht = NULL;
     }
     return p_server;
 }
@@ -145,7 +144,6 @@ status_t
 chat_server_destroy (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
-    safe_ht_t * p_safe_ht = NULL;
 
     if (NULL == p_server)
     {
@@ -153,24 +151,11 @@ chat_server_destroy (server_t * p_server)
         goto cleanup;
     }
 
-    p_safe_ht = (safe_ht_t *)(p_server->p_data);
+    appdata_destroy(p_server->p_appdata);
+    p_server->p_appdata = NULL;
 
     server_destroy(p_server);
     p_server = NULL;
-
-    if (NULL == p_safe_ht)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    ht_destroy(p_safe_ht->p_ht);
-    p_safe_ht->p_ht = NULL;
-
-    pthread_mutex_destroy(&(p_safe_ht->lock));
-
-    free(p_safe_ht);
-    p_safe_ht = NULL;
 
 cleanup:
     return status;
@@ -180,12 +165,6 @@ status_t
 chat_client_run (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
-
-    safe_ht_t * p_safe_ht = p_server->p_data;
-    MUTEX_CALL(ht_set, p_safe_ht->lock, p_safe_ht->p_ht, (void *)"obama", 5u, (void *)"pyramid", 7u);
-    item_t * p_item = MUTEX_CALL(ht_get, p_safe_ht->lock, p_safe_ht->p_ht, (void *)"obama", 5u);
-    MUTEX_CALL(p_safe_ht->p_ht->p_display_item, p_safe_ht->lock, p_item);
-    printf("\n");
 
     session_t * p_session = NULL;
     request_t request = {0};
@@ -199,6 +178,13 @@ chat_client_run (server_t * p_server, client_t * p_client)
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    appdata_t * p_appdata = p_server->p_appdata;
+    safe_ht_t * p_safe_ht = p_appdata->p_safe_ht;
+    MUTEX_CALL(ht_set, p_safe_ht->lock, p_safe_ht->p_ht, (void *)"obama", 5u, (void *)"pyramid", 7u);
+    item_t * p_item = MUTEX_CALL(ht_get, p_safe_ht->lock, p_safe_ht->p_ht, (void *)"obama", 5u);
+    MUTEX_CALL(p_safe_ht->p_ht->p_display_item, p_safe_ht->lock, p_item);
+    printf("\n");
 
     int sockfd = p_client->sockfd;
 
@@ -310,6 +296,93 @@ cleanup:
     free(response.p_payload);
     response.p_payload = NULL;
 
+    return status;
+}
+
+static appdata_t *
+appdata_create (size_t capacity)
+{
+    status_t status = STATUS_SUCCESS;
+
+    appdata_t * p_appdata = NULL;
+    safe_ht_t * p_safe_ht = NULL;
+
+    p_appdata = malloc(sizeof(*p_appdata));
+    if (NULL == p_appdata)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_appdata->p_safe_ht = NULL;;
+
+    p_safe_ht = malloc(sizeof(*p_safe_ht));
+    if (NULL == p_safe_ht)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_appdata->p_safe_ht = p_safe_ht;
+    p_safe_ht->p_ht = NULL;
+
+    if (0 != pthread_mutex_init(&(p_safe_ht->lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
+        goto cleanup;
+    }
+
+    p_safe_ht->p_ht = ht_create(capacity);
+    if (NULL == p_safe_ht->p_ht)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        appdata_destroy(p_appdata);
+        p_appdata = NULL;
+    }
+
+    return p_appdata;
+}
+
+static status_t
+appdata_destroy (appdata_t * p_appdata)
+{
+    status_t status = STATUS_SUCCESS;
+
+    safe_ht_t * p_safe_ht = NULL;
+
+    if (NULL == p_appdata)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_safe_ht = p_appdata->p_safe_ht;
+
+    free(p_appdata);
+    p_appdata = NULL;
+
+    if (NULL == p_safe_ht)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    ht_destroy(p_safe_ht->p_ht);
+    p_safe_ht->p_ht = NULL;
+
+    pthread_mutex_destroy(&(p_safe_ht->lock));
+
+    free(p_safe_ht);
+    p_safe_ht = NULL;
+
+cleanup:
     return status;
 }
 

@@ -44,7 +44,7 @@ typedef struct server
     tpool_t           * p_tm;         // Pointer to thread pool
     registry_t        * p_registry;   // Pointer to client registry
     client_run_func_t   p_client_run; // Pointer to client_run function
-    void              * p_data;       // Pointer to arbitrary data
+    void              * p_appdata;    // Pointer to application data
 } server_t;
 
 typedef struct client

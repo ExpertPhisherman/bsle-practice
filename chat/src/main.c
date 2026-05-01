@@ -33,7 +33,7 @@ main (int argc, char * argv[])
         .p_tm         = NULL,
         .p_registry   = NULL,
         .p_client_run = NULL,
-        .p_data       = NULL,
+        .p_appdata       = NULL,
     };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
