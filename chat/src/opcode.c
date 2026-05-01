@@ -87,10 +87,10 @@ opcode_login (session_t * p_session,
     Username: 3-16 alphanumeric or underscore characters
     Password: 8+ ASCII characters excluding space
     */
-    char * p_username_msg = "Username must be 3-16 alphanumeric or underscore characters";
-    char * p_password_msg = "Password must be 8+ ASCII characters excluding space";
+    char const * p_username_msg = "Username must be 3-16 alphanumeric or underscore characters";
+    char const * p_password_msg = "Password must be 8+ ASCII characters excluding space";
 
-    if (!(3u <= username_size <= 16u))
+    if (!((3u <= username_size) && (16u >= username_size)))
     {
         p_response_payload = p_username_msg;
         host_response_size = 59u;
@@ -130,6 +130,9 @@ opcode_login (session_t * p_session,
 
     // TODO: Set random non-negative session ID
     p_session->session_id = 1234u;
+
+    p_response_payload = "Successful login!";
+    host_response_size = 17u;
 
     p_response->size = htonl(host_response_size);
     memcpy(
