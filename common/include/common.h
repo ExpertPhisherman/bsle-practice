@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #ifdef DEBUG
     #define DEBUG_PRINT(...) (fprintf(stderr, __VA_ARGS__))
