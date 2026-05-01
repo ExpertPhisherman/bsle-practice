@@ -35,11 +35,12 @@ main (int argc, char * argv[])
 
     item_t * p_item = NULL;
 
-    ht_set(p_ht, &(int){97}, 4u, (void *)"TEST", 4u);
+    ht_set(p_ht, (void *)"obama", 5u, (void *)"TEST", 4u);
+    ht_set(p_ht, (void *)"obama", 5u, (void *)"pyramid", 7u);
     ht_set(p_ht, (void *)"dragbolt", 8u, (void *)"pluh", 4u);
     ht_del(p_ht, (void *)"femality", 8u);
 
-    p_item = ht_get(p_ht, &(int){97}, 4u);
+    p_item = ht_get(p_ht, (void *)"obama", 5u);
     (p_ht->p_display_item)(p_item);
     printf("\n");
 

@@ -44,15 +44,14 @@ static sll_t * ht_select(ht_t * p_ht, item_t * p_item);
 static status_t display_item(void * p_data);
 
 /*!
- * @brief Compare item
+ * @brief Compare items
  *
- * @param[in] p_data   Pointer to item
- * @param[in] p_key    Pointer to key to compare
- * @param[in] key_size Size of key in bytes
+ * @param[in] p_data1 Pointer to first item
+ * @param[in] p_data2 Pointer to second item
  *
  * @return void
  */
-static bool cmp_item(void * p_data, void * p_data2);
+static bool cmp_item(void * p_data1, void * p_data2);
 
 ht_t *
 ht_create (size_t capacity)
@@ -73,11 +72,11 @@ ht_create (size_t capacity)
         goto cleanup;
     }
 
-    p_ht->capacity = capacity;
-    p_ht->len = 0u;
-    p_ht->p_hash = djb2_hash;
+    p_ht->capacity       = capacity;
+    p_ht->len            = 0u;
+    p_ht->p_hash_func    = djb2_hash;
     p_ht->p_display_item = display_item;
-    p_ht->p_cmp_item = cmp_item;
+    p_ht->p_cmp_item     = cmp_item;
 
     p_ht->pp_buckets = calloc(capacity, sizeof(*(p_ht->pp_buckets)));
     if (NULL == p_ht->pp_buckets)
@@ -156,17 +155,17 @@ ht_get (ht_t * p_ht, void * p_key, size_t key_size)
 {
     item_t * p_item = NULL;
 
-    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash))
+    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash_func))
     {
         goto cleanup;
     }
 
     item_t item =
     {
-        .p_hash    = p_ht->p_hash,
-        .hash      = (p_ht->p_hash)(p_key, key_size),
-        .p_key     = p_key,
-        .key_size  = key_size,
+        .p_hash_func = p_ht->p_hash_func,
+        .hash        = (p_ht->p_hash_func)(p_key, key_size),
+        .p_key       = p_key,
+        .key_size    = key_size,
     };
 
     sll_t * p_sll = ht_select(p_ht, &item);
@@ -190,21 +189,40 @@ ht_set (ht_t * p_ht,
 {
     status_t status = STATUS_SUCCESS;
 
+    item_t item =
+    {
+        .p_hash_func = p_ht->p_hash_func,
+        .hash        = (p_ht->p_hash_func)(p_key, key_size),
+        .p_key       = NULL,
+        .key_size    = key_size,
+        .p_value     = NULL,
+        .value_size  = value_size,
+    };
+
     if ((NULL == p_ht) ||
         (NULL == p_key) || (NULL == p_value) ||
-        (NULL == p_ht->p_hash))
+        (NULL == p_ht->p_hash_func))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    item_t item =
+    // Allocate hash table owned key and value
+    item.p_key = malloc(key_size);
+    if (NULL == item.p_key)
     {
-        .p_hash    = p_ht->p_hash,
-        .hash      = (p_ht->p_hash)(p_key, key_size),
-        .p_key     = p_key,
-        .key_size  = key_size,
-    };
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    memcpy(item.p_key, p_key, key_size);
+
+    item.p_value = malloc(value_size);
+    if (NULL == item.p_value)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    memcpy(item.p_value, p_value, value_size);
 
     sll_t * p_sll = ht_select(p_ht, &item);
     node_t * p_node = sll_get(p_sll, &item);
@@ -214,16 +232,23 @@ ht_set (ht_t * p_ht,
     {
         // NOTE: Key exists in SLL
         item_t * p_item = p_node->p_data;
-        p_item->p_value = p_value;
-        p_item->value_size = value_size;
+
+        // Free old value
+        free(p_item->p_value);
+        p_item->p_value = NULL;
+
+        p_item->p_value    = item.p_value;
+        p_item->value_size = item.value_size;
+
+        // Free key copy
+        free(item.p_key);
+        item.p_key = NULL;
 
         status = STATUS_EXISTS;
         goto cleanup;
     }
 
     // Append item if key does not exist in SLL
-    item.p_value = p_value;
-    item.value_size = value_size;
     status = sll_append(p_sll, &item, sizeof(item));
 
     // Increment length if first node inserted
@@ -235,6 +260,12 @@ ht_set (ht_t * p_ht,
 cleanup:
     if (STATUS_ALLOC_FAILURE == status)
     {
+        free(item.p_key);
+        item.p_key = NULL;
+
+        free(item.p_value);
+        item.p_value = NULL;
+
         ht_destroy(p_ht);
         p_ht = NULL;
     }
@@ -247,7 +278,7 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash))
+    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash_func))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -255,10 +286,10 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
 
     item_t item =
     {
-        .p_hash    = p_ht->p_hash,
-        .hash      = (p_ht->p_hash)(p_key, key_size),
-        .p_key     = p_key,
-        .key_size  = key_size,
+        .p_hash_func = p_ht->p_hash_func,
+        .hash        = (p_ht->p_hash_func)(p_key, key_size),
+        .p_key       = p_key,
+        .key_size    = key_size,
     };
 
     sll_t * p_sll = ht_select(p_ht, &item);
@@ -272,12 +303,25 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
         goto cleanup;
     }
 
+    // Free heap allocated key and value
+    item_t * p_item = p_node->p_data;
+    void * p_key_cpy = p_item->p_key;
+    void * p_val_cpy = p_item->p_value;
+
     status = sll_remove(p_sll, &item);
 
-    // Decrement length if last node removed
-    if ((STATUS_SUCCESS == status) && (0u == p_sll->len))
+    if (STATUS_SUCCESS == status)
     {
-        (p_ht->len)--;
+        free(p_key_cpy);
+        p_key_cpy = NULL;
+        free(p_val_cpy);
+        p_val_cpy = NULL;
+
+        // Decrement length if last node removed
+        if (0u == p_sll->len)
+        {
+            (p_ht->len)--;
+        }
     }
 
 cleanup:
@@ -295,10 +339,10 @@ ht_destroy (ht_t * p_ht)
         goto cleanup;
     }
 
-    p_ht->len = 0u;
-    p_ht->p_hash = NULL;
+    p_ht->len            = 0u;
+    p_ht->p_hash_func    = NULL;
     p_ht->p_display_item = NULL;
-    p_ht->p_cmp_item = NULL;
+    p_ht->p_cmp_item     = NULL;
 
     if (NULL == p_ht->pp_buckets)
     {
@@ -311,6 +355,24 @@ ht_destroy (ht_t * p_ht)
     {
         sll_t * p_sll = (p_ht->pp_buckets)[idx];
         (p_ht->pp_buckets)[idx] = NULL;
+
+        if (NULL != p_sll)
+        {
+            // Free heap allocated key and value
+            node_t * p_curr = p_sll->p_head;
+            while (NULL != p_curr)
+            {
+                item_t * p_item = p_curr->p_data;
+                if (NULL != p_item)
+                {
+                    free(p_item->p_key);
+                    p_item->p_key = NULL;
+                    free(p_item->p_value);
+                    p_item->p_value = NULL;
+                }
+                p_curr = p_curr->p_next;
+            }
+        }
 
         sll_destroy(p_sll);
         p_sll = NULL;
@@ -385,17 +447,17 @@ cleanup:
 }
 
 static bool
-cmp_item (void * p_data, void * p_data2)
+cmp_item (void * p_data1, void * p_data2)
 {
     bool b_result = false;
 
-    if ((NULL == p_data) || (NULL == p_data2))
+    if ((NULL == p_data1) || (NULL == p_data2))
     {
         goto cleanup;
     }
 
-    item_t * p_item = p_data;
-    if (NULL == p_item->p_key)
+    item_t * p_item1 = p_data1;
+    if (NULL == p_item1->p_key)
     {
         goto cleanup;
     }
@@ -406,9 +468,9 @@ cmp_item (void * p_data, void * p_data2)
         goto cleanup;
     }
 
-    b_result = (p_item->hash == p_item2->hash) &&
-               (p_item->key_size == p_item2->key_size) &&
-               (0 == memcmp(p_item->p_key, p_item2->p_key, p_item->key_size));
+    b_result = (p_item1->hash == p_item2->hash) &&
+               (p_item1->key_size == p_item2->key_size) &&
+               (0 == memcmp(p_item1->p_key, p_item2->p_key, p_item1->key_size));
 
 cleanup:
     return b_result;

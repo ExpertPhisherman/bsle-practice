@@ -28,12 +28,12 @@ typedef uint64_t (*hash_func_t)(void * p_key, size_t key_size);
 
 typedef struct item
 {
-    hash_func_t   p_hash;     // Pointer to hash function
-    uint64_t      hash;       // Hash digest of key
-    void        * p_key;      // Pointer to key
-    size_t        key_size;   // Size of key in bytes
-    void        * p_value;    // Pointer to value
-    size_t        value_size; // Size of value in bytes
+    hash_func_t   p_hash_func; // Pointer to hash function
+    uint64_t      hash;        // Hash digest of key
+    void        * p_key;       // Pointer to key
+    size_t        key_size;    // Size of key in bytes
+    void        * p_value;     // Pointer to value
+    size_t        value_size;  // Size of value in bytes
 } item_t;
 
 typedef struct ht
@@ -41,7 +41,7 @@ typedef struct ht
     sll_t          ** pp_buckets;     // Double pointer to buckets
     size_t            capacity;       // Current number of buckets
     size_t            len;            // Current occupied buckets
-    hash_func_t       p_hash;         // Pointer to hash function
+    hash_func_t       p_hash_func;    // Pointer to hash function
     display_func_t    p_display_item; // Pointer to display function
     cmp_func_t        p_cmp_item;     // Pointer to compare function
 } ht_t;
