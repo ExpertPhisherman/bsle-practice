@@ -24,13 +24,16 @@
 
 #define UNUSED(var) ((void)(var))
 
-#define MUTEX_CALL(p_func, lock, ...)            \
-({                                               \
-    pthread_mutex_lock(&(lock));                 \
-    __auto_type _result = (p_func)(__VA_ARGS__); \
-    pthread_mutex_unlock(&(lock));               \
-    _result;                                     \
-})
+#define MUTEX_CALL(p_func, lock, ...)                \
+(                                                    \
+    ({                                               \
+        pthread_mutex_t * _p_lock = &(lock);         \
+        pthread_mutex_lock(_p_lock);                 \
+        __auto_type _result = (p_func)(__VA_ARGS__); \
+        pthread_mutex_unlock(_p_lock);               \
+        _result;                                     \
+    })                                               \
+)
 
 typedef enum status
 {
