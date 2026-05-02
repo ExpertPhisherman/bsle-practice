@@ -137,7 +137,7 @@ cleanup:
 void
 tpool_destroy (tpool_t * p_tm)
 {
-    tpool_work_t * p_work = NULL;
+    tpool_work_t * p_work  = NULL;
     tpool_work_t * p_work2 = NULL;
 
     if (NULL == p_tm)
@@ -188,7 +188,7 @@ cleanup:
 bool
 tpool_add_work (tpool_t * p_tm, thread_func_t p_func, void * p_arg)
 {
-    bool b_added = false;
+    bool b_added          = false;
     tpool_work_t * p_work = NULL;
 
     if ((NULL == p_tm) || (NULL == p_func))
@@ -317,7 +317,7 @@ cleanup:
 static void *
 tpool_worker (void * p_arg)
 {
-    tpool_t      * p_tm = p_arg;
+    tpool_t      * p_tm   = p_arg;
     tpool_work_t * p_work = NULL;
 
     if (NULL == p_tm)

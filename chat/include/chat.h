@@ -21,8 +21,6 @@
 #include "sockutil.h"
 #include "ht.h"
 
-typedef struct safe_ht safe_ht_t;
-
 typedef enum opcode
 {
     OPCODE_PING  = 0x01, // Respond with PONG
@@ -30,11 +28,6 @@ typedef enum opcode
     OPCODE_QUIT  = 0x03, // Close client connection
     OPCODE_LOGIN = 0x04, // Login with credentials
 } opcode_t;
-
-typedef struct appdata
-{
-    safe_ht_t * p_safe_ht; // Pointer to safe hash table
-} appdata_t;
 
 typedef struct session
 {
@@ -51,6 +44,11 @@ typedef struct safe_ht
     ht_t            * p_ht; // Pointer to hash table
     pthread_mutex_t   lock; // Mutex lock for read/write control
 } safe_ht_t;
+
+typedef struct appdata
+{
+    safe_ht_t * p_safe_ht; // Pointer to safe hash table
+} appdata_t;
 
 typedef struct request
 {

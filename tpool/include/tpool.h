@@ -28,7 +28,7 @@ typedef struct tpool
     tpool_work_t    * p_work_first; // Head of work queue
     tpool_work_t    * p_work_last;  // Tail of work queue
     pthread_t       * p_threads;    // Array of worker thread IDs
-    pthread_mutex_t   work_mutex;   // Used for all locking
+    pthread_mutex_t   work_mutex;   // Mutex lock for all locking
     pthread_cond_t    work_cond;    // Signal when there is work to be processed
     pthread_cond_t    working_cond; // Signal when all queued work is done
     size_t            working_cnt;  // Number of threads actively processing work
@@ -49,7 +49,7 @@ tpool_t * tpool_create(size_t num);
  * @brief Add work to the queue for processing
  *
  * @param[in] p_tm   Pointer to thread pool
- * @param[in] p_func Function pointer
+ * @param[in] p_func Pointer to function
  * @param[in] p_arg  Pointer to argument
  *
  * @return Boolean

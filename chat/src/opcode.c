@@ -138,7 +138,7 @@ opcode_login (session_t * p_session,
     p_appdata = p_session->p_server->p_appdata;
     p_safe_ht = p_appdata->p_safe_ht;
 
-    // TODO: Authenticate login against hash table
+    // Authenticate login against hash table
     p_item = MUTEX_CALL(ht_get, p_safe_ht->lock, p_safe_ht->p_ht, p_username, username_size);
     if (NULL == p_item)
     {
@@ -156,31 +156,30 @@ opcode_login (session_t * p_session,
 
         p_response_payload = "Created new user";
         host_response_size = 16u;
-
-        // TODO: Set random positive session ID
-        p_session->session_id = 1234u;
     }
     else
     {
         // NOTE: User already exists
-        // Check if password matches
         MUTEX_CALL(p_safe_ht->p_ht->p_display_item, p_safe_ht->lock, p_item);
         printf("\n");
-        if ((p_item->value_size == password_size) &&
-            (0 == memcmp(p_item->p_value, p_password, password_size)))
-        {
-            p_response_payload = "Successful login";
-            host_response_size = 16u;
 
-            // TODO: Set random positive session ID
-            p_session->session_id = 1234u;
-        }
-        else
+        // Check if password doesn't match
+        if (!(
+            (p_item->value_size == password_size) &&
+            (0 == memcmp(p_item->p_value, p_password, password_size))
+        ))
         {
             p_response_payload = "GET OUT!!1!1!";
             host_response_size = 13u;
+            goto cleanup;
         }
+
+        p_response_payload = "Successful login";
+        host_response_size = 16u;
     }
+
+    // TODO: Set random positive session ID
+    p_session->session_id = 1234u;
 
 cleanup:
     if (STATUS_SUCCESS != status)
