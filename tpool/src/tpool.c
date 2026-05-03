@@ -105,29 +105,31 @@ tpool_create (size_t num)
 
     for (size_t idx = 0u; idx < num; idx++)
     {
-        if (0 != pthread_create(&((p_tm->p_threads)[idx]), NULL, tpool_worker, p_tm))
+        if (0 == pthread_create(&((p_tm->p_threads)[idx]), NULL, tpool_worker, p_tm))
         {
-            // Stop and join any threads that were already created
-            pthread_mutex_lock(&(p_tm->work_mutex));
-            p_tm->stop = true;
-            pthread_cond_broadcast(&(p_tm->work_cond));
-            pthread_mutex_unlock(&(p_tm->work_mutex));
-
-            for (size_t jdx = 0u; jdx < idx; jdx++)
-            {
-                pthread_join((p_tm->p_threads)[jdx], NULL);
-            }
-
-            pthread_cond_destroy(&(p_tm->working_cond));
-            pthread_cond_destroy(&(p_tm->work_cond));
-            pthread_mutex_destroy(&(p_tm->work_mutex));
-
-            free(p_tm->p_threads);
-            p_tm->p_threads = NULL;
-            free(p_tm);
-            p_tm = NULL;
-            goto cleanup;
+            continue;
         }
+
+        // Stop and join any threads that were already created
+        pthread_mutex_lock(&(p_tm->work_mutex));
+        p_tm->stop = true;
+        pthread_cond_broadcast(&(p_tm->work_cond));
+        pthread_mutex_unlock(&(p_tm->work_mutex));
+
+        for (size_t jdx = 0u; jdx < idx; jdx++)
+        {
+            pthread_join((p_tm->p_threads)[jdx], NULL);
+        }
+
+        pthread_cond_destroy(&(p_tm->working_cond));
+        pthread_cond_destroy(&(p_tm->work_cond));
+        pthread_mutex_destroy(&(p_tm->work_mutex));
+
+        free(p_tm->p_threads);
+        p_tm->p_threads = NULL;
+        free(p_tm);
+        p_tm = NULL;
+        goto cleanup;
     }
 
 cleanup:
