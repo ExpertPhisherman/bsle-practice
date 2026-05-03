@@ -1,4 +1,4 @@
-/** @file common.h
+/** @file common.c
  *
  * @brief Common definitions source
  *
