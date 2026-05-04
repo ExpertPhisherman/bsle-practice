@@ -26,4 +26,19 @@ display_bytes (void * p_var, size_t size, char const * p_sep)
     }
 }
 
+void
+display_printable (char * p_buf, size_t size)
+{
+    uint8_t chr;
+
+    for (size_t idx = 0u; idx < size; idx++)
+    {
+        chr = ((uint8_t *)p_buf)[idx];
+        if (isprint(chr))
+        {
+            printf("%c", chr);
+        }
+    }
+}
+
 /*** end of file ***/

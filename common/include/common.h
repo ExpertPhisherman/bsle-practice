@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <ctype.h>
 
 #ifdef DEBUG
     #define DEBUG_PRINT(...) (fprintf(stderr, __VA_ARGS__))
@@ -72,6 +73,16 @@ typedef bool     (*cmp_func_t)(void * p_data1, void * p_data2);
  * @return void
  */
 void display_bytes(void * p_var, size_t size, char const * p_sep);
+
+/*!
+ * @brief Display printable characters in string
+ *
+ * @param[in] p_buf Pointer to string buffer
+ * @param[in] size  Size of string in bytes
+ *
+ * @return void
+ */
+void display_printable(char * p_buf, size_t size);
 
 #endif /* COMMON_H */
 
