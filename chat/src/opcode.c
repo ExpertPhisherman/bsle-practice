@@ -8,6 +8,41 @@
 
 #include "opcode.h"
 
+extern uint32_t const max_payload_size;
+
+status_t
+write_response (response_t * p_response,
+                size_t size,
+                char const * p_fmt,
+                ...)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_response) || (NULL == p_fmt))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    va_list args;
+    va_start(args, p_fmt);
+
+    int written = vsnprintf(p_response->p_payload, size, p_fmt, args);
+
+    va_end(args);
+
+    if (0 > written)
+    {
+        status = STATUS_FAILURE;
+        goto cleanup;
+    }
+
+    p_response->size = htonl((uint32_t)written);
+
+cleanup:
+    return status;
+}
+
 status_t
 opcode_login (session_t * p_session,
               request_t * p_request,
@@ -24,9 +59,6 @@ opcode_login (session_t * p_session,
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
-
-    char const * p_response_payload = "";
-    uint32_t host_response_size = 0u;
 
     server_t * p_server = p_session->p_server;
     if (NULL == p_server)
@@ -101,15 +133,13 @@ opcode_login (session_t * p_session,
 
     if (!((3u <= username_size) && (16u >= username_size)))
     {
-        p_response_payload = p_username_msg;
-        host_response_size = 59u;
+        status = write_response(p_response, max_payload_size, p_username_msg);
         goto cleanup;
     }
 
     if (!(8u <= password_size))
     {
-        p_response_payload = p_password_msg;
-        host_response_size = 52u;
+        status = write_response(p_response, max_payload_size, p_password_msg);
         goto cleanup;
     }
 
@@ -118,8 +148,7 @@ opcode_login (session_t * p_session,
         char chr = p_username[idx];
         if (!(isalnum(chr) || ('_' == chr)))
         {
-            p_response_payload = p_username_msg;
-            host_response_size = 59u;
+            status = write_response(p_response, max_payload_size, p_username_msg);
             goto cleanup;
         }
     }
@@ -127,10 +156,9 @@ opcode_login (session_t * p_session,
     for (size_t idx = 0u; idx < password_size; idx++)
     {
         char chr = p_password[idx];
-        if (!(isascii(chr) && (' ' != chr)))
+        if (!(isprint(chr) && (' ' != chr)))
         {
-            p_response_payload = p_password_msg;
-            host_response_size = 52u;
+            status = write_response(p_response, max_payload_size, p_password_msg);
             goto cleanup;
         }
     }
@@ -154,8 +182,17 @@ opcode_login (session_t * p_session,
             password_size
         );
 
-        p_response_payload = "Created new user";
-        host_response_size = 16u;
+        status = write_response(
+            p_response,
+            max_payload_size,
+            "Created new user: %.*s",
+            username_size,
+            p_username
+        );
+        if (STATUS_SUCCESS != status)
+        {
+            goto cleanup;
+        }
     }
     else
     {
@@ -169,13 +206,22 @@ opcode_login (session_t * p_session,
             (0 == memcmp(p_item->p_value, p_password, password_size))
         ))
         {
-            p_response_payload = "GET OUT!!1!1!";
-            host_response_size = 13u;
+            p_response->status = 0x01;
+            status = write_response(p_response, max_payload_size, "GET OUT!!1!1!");
             goto cleanup;
         }
 
-        p_response_payload = "Successful login";
-        host_response_size = 16u;
+        status = write_response(
+            p_response,
+            max_payload_size,
+            "Successful login from user: %.*s",
+            username_size,
+            p_username
+        );
+        if (STATUS_SUCCESS != status)
+        {
+            goto cleanup;
+        }
     }
 
     // TODO: Set random positive session ID
@@ -184,16 +230,9 @@ opcode_login (session_t * p_session,
 cleanup:
     if (STATUS_SUCCESS != status)
     {
+        p_response->status = 0x01;
+        write_response(p_response, max_payload_size, "Unexpected error encountered");
         opcode_logout(p_session, p_request, p_response);
-    }
-    else
-    {
-        p_response->size = htonl(host_response_size);
-        memcpy(
-            p_response->p_payload,
-            p_response_payload,
-            host_response_size
-        );
     }
 
     return status;

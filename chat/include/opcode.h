@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -23,6 +24,20 @@
 typedef struct session session_t;
 typedef struct request request_t;
 typedef struct response response_t;
+
+/*!
+ * @brief djb2 hash function
+ *
+ * @param[in] p_response Pointer to response
+ * @param[in] size       Size of payload buffer in bytes
+ * @param[in] p_fmt      Pointer to format string to populate
+ *
+ * @return 64-bit hash digest
+ */
+status_t write_response(response_t * p_response,
+                        size_t size,
+                        char const * p_fmt,
+                        ...);
 
 /*!
  * @brief Logic for login

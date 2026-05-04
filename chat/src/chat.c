@@ -439,8 +439,6 @@ handle_request (session_t * p_session,
         goto cleanup;
     }
 
-    char const * p_response_payload = "";
-    uint32_t host_response_size = 0u;
     uint32_t host_request_size = ntohl(p_request->size);
 
     if (host_request_size > max_payload_size)
@@ -460,10 +458,8 @@ handle_request (session_t * p_session,
         (OPCODE_QUIT != p_request->opcode))
     {
         // NOTE: No user has authenticated yet
-        p_response_payload = "NOT AUTHENTICATED";
-        host_response_size = 17u;
-        p_response->size = htonl(host_response_size);
-        memcpy(p_response->p_payload, p_response_payload, host_response_size);
+        p_response->status = 0x01;
+        status = write_response(p_response, max_payload_size, "NOT AUTHENTICATED");
         goto cleanup;
     }
 
@@ -479,53 +475,47 @@ handle_request (session_t * p_session,
             break;
 
         case OPCODE_PING:
-            p_response_payload = "PONG";
-            host_response_size = 4u;
-
-            p_response->size = htonl(host_response_size);
-            memcpy(
-                p_response->p_payload,
-                p_response_payload,
-                host_response_size
-            );
+            status = write_response(p_response, max_payload_size, "PONG");
+            if (STATUS_SUCCESS != status)
+            {
+                goto cleanup;
+            }
             break;
 
         case OPCODE_ECHO:
-            p_response_payload = p_request->p_payload;
-            host_response_size = host_request_size;
-
-            p_response->size = htonl(host_response_size);
-            memcpy(
-                p_response->p_payload,
-                p_response_payload,
-                host_response_size
+            status = write_response(
+                p_response,
+                max_payload_size,
+                "%.*s",
+                host_request_size,
+                p_request->p_payload
             );
+            if (STATUS_SUCCESS != status)
+            {
+                goto cleanup;
+            }
             break;
 
         case OPCODE_QUIT:
-            p_response_payload = "GOODBYE";
-            host_response_size = 7u;
-
-            p_response->size = htonl(host_response_size);
-            memcpy(
-                p_response->p_payload,
-                p_response_payload,
-                host_response_size
-            );
+            status = write_response(p_response, max_payload_size, "Goodbye!");
+            if (STATUS_SUCCESS != status)
+            {
+                goto cleanup;
+            }
             break;
 
         default:
             p_response->status = 0x01;
-            p_response_payload = "UNKNOWN OPCODE";
-            host_response_size = 14u;
-            fprintf(stderr, "Unknown opcode: 0x%02hhx\n", p_request->opcode);
-
-            p_response->size = htonl(host_response_size);
-            memcpy(
-                p_response->p_payload,
-                p_response_payload,
-                host_response_size
+            status = write_response(
+                p_response,
+                max_payload_size,
+                "Unknown opcode: 0x%02hhx\n",
+                p_request->opcode
             );
+            if (STATUS_SUCCESS != status)
+            {
+                goto cleanup;
+            }
             break;
     }
 
@@ -553,6 +543,8 @@ display_request (request_t * p_request)
     );
 
     display_bytes(p_request->p_payload, host_request_size, " ");
+    printf("\n    string : ");
+    display_printable(p_request->p_payload, host_request_size);
     printf("\n}\n");
 
 cleanup:
@@ -579,6 +571,8 @@ display_response (response_t * p_response)
     );
 
     display_bytes(p_response->p_payload, host_response_size, " ");
+    printf("\n    string : ");
+    display_printable(p_response->p_payload, host_response_size);
     printf("\n}\n");
 
 cleanup:
