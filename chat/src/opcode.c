@@ -26,9 +26,7 @@ write_response (response_t * p_response,
 
     va_list args;
     va_start(args, p_fmt);
-
     int written = vsnprintf(p_response->p_payload, size, p_fmt, args);
-
     va_end(args);
 
     if (0 > written)
