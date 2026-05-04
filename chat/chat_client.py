@@ -64,7 +64,7 @@ class ChatClient(Client):
             (3 <= len(username) <= 16) and
             (8 <= len(password)) and
             all((c.isalnum() or (c == "_")) for c in username) and
-            all((c.isascii() and (c != " ")) for c in password)
+            all((c.isprintable() and (c != " ")) for c in password)
         ): return True
 
         self.opcode = 0x04
