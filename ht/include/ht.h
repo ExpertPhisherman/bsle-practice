@@ -43,7 +43,7 @@ typedef struct ht
     size_t            len;            // Current occupied buckets
     hash_func_t       p_hash_func;    // Pointer to hash function
     display_func_t    p_display_item; // Pointer to display function
-    cmp_func_t        p_cmp_item;     // Pointer to compare function
+    compare_func_t    p_compare_item; // Pointer to compare function
 } ht_t;
 
 /*!
@@ -87,9 +87,13 @@ item_t * ht_get(ht_t * p_ht, void * p_key, size_t key_size);
  *
  * @return Status of operation
  */
-status_t ht_set(ht_t * p_ht,
-                void * p_key, size_t key_size,
-                void * p_value, size_t value_size);
+status_t ht_set(
+    ht_t * p_ht,
+    void * p_key,
+    size_t key_size,
+    void * p_value,
+    size_t value_size
+);
 
 /*!
  * @brief Delete item at key in hash table

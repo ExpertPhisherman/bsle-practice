@@ -61,7 +61,7 @@ typedef enum status
 } status_t;
 
 typedef status_t (*display_func_t)(void * p_data);
-typedef bool     (*cmp_func_t)(void * p_data1, void * p_data2);
+typedef int      (*compare_func_t)(void * p_data1, void * p_data2);
 
 /*!
  * @brief Display variable bytes in hex
@@ -70,9 +70,9 @@ typedef bool     (*cmp_func_t)(void * p_data1, void * p_data2);
  * @param[in] size  Size of variable in bytes
  * @param[in] p_sep Pointer to separator between each byte
  *
- * @return void
+ * @return Status of operation
  */
-void display_bytes(void * p_var, size_t size, char const * p_sep);
+status_t display_hex(void * p_var, size_t size, char const * p_sep);
 
 /*!
  * @brief Display printable characters in string
@@ -80,9 +80,9 @@ void display_bytes(void * p_var, size_t size, char const * p_sep);
  * @param[in] p_buf Pointer to string buffer
  * @param[in] size  Size of string in bytes
  *
- * @return void
+ * @return Status of operation
  */
-void display_printable(char * p_buf, size_t size);
+status_t display_printable(char * p_buf, size_t size);
 
 #endif /* COMMON_H */
 

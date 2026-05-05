@@ -49,9 +49,9 @@ static status_t display_item(void * p_data);
  * @param[in] p_data1 Pointer to first item
  * @param[in] p_data2 Pointer to second item
  *
- * @return void
+ * @return Difference between first and second item
  */
-static bool cmp_item(void * p_data1, void * p_data2);
+static int compare_item(void * p_data1, void * p_data2);
 
 ht_t *
 ht_create (size_t capacity)
@@ -76,7 +76,7 @@ ht_create (size_t capacity)
     p_ht->len            = 0u;
     p_ht->p_hash_func    = djb2_hash;
     p_ht->p_display_item = display_item;
-    p_ht->p_cmp_item     = cmp_item;
+    p_ht->p_compare_item = compare_item;
 
     p_ht->pp_buckets = calloc(capacity, sizeof(*(p_ht->pp_buckets)));
     if (NULL == p_ht->pp_buckets)
@@ -95,7 +95,7 @@ ht_create (size_t capacity)
         }
 
         p_sll->p_display_node = p_ht->p_display_item;
-        p_sll->p_cmp_node = p_ht->p_cmp_item;
+        p_sll->p_compare_node = p_ht->p_compare_item;
 
         // Set bucket to empty SLL
         (p_ht->pp_buckets)[idx] = p_sll;
@@ -183,9 +183,13 @@ cleanup:
 }
 
 status_t
-ht_set (ht_t * p_ht,
-        void * p_key, size_t key_size,
-        void * p_value, size_t value_size)
+ht_set (
+    ht_t * p_ht,
+    void * p_key,
+    size_t key_size,
+    void * p_value,
+    size_t value_size
+)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -342,7 +346,7 @@ ht_destroy (ht_t * p_ht)
     p_ht->len            = 0u;
     p_ht->p_hash_func    = NULL;
     p_ht->p_display_item = NULL;
-    p_ht->p_cmp_item     = NULL;
+    p_ht->p_compare_item = NULL;
 
     if (NULL == p_ht->pp_buckets)
     {
@@ -446,34 +450,64 @@ cleanup:
     return status;
 }
 
-static bool
-cmp_item (void * p_data1, void * p_data2)
+static int
+compare_item (void * p_data1, void * p_data2)
 {
-    bool b_result = false;
+    int result = 0;
 
-    if ((NULL == p_data1) || (NULL == p_data2))
+    if ((NULL == p_data1) && (NULL == p_data2))
     {
+        goto cleanup;
+    }
+
+    if (NULL == p_data1)
+    {
+        result = -1;
+        goto cleanup;
+    }
+
+    if (NULL == p_data2)
+    {
+        result = 1;
         goto cleanup;
     }
 
     item_t * p_item1 = p_data1;
+    item_t * p_item2 = p_data2;
+
+    if ((NULL == p_item1->p_key) && (NULL == p_item2->p_key))
+    {
+        goto cleanup;
+    }
+
     if (NULL == p_item1->p_key)
     {
+        result = -1;
         goto cleanup;
     }
 
-    item_t * p_item2 = p_data2;
     if (NULL == p_item2->p_key)
     {
+        result = 1;
         goto cleanup;
     }
 
-    b_result = (p_item1->hash == p_item2->hash) &&
-               (p_item1->key_size == p_item2->key_size) &&
-               (0 == memcmp(p_item1->p_key, p_item2->p_key, p_item1->key_size));
+    if (p_item1->hash != p_item2->hash)
+    {
+        result = (p_item1->hash > p_item2->hash) ? 1 : -1;
+        goto cleanup;
+    }
+
+    if (p_item1->key_size != p_item2->key_size)
+    {
+        result = (p_item1->key_size > p_item2->key_size) ? 1 : -1;
+        goto cleanup;
+    }
+
+    result = memcmp(p_item1->p_key, p_item2->p_key, p_item1->key_size);
 
 cleanup:
-    return b_result;
+    return result;
 }
 
 /*** end of file ***/

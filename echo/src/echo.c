@@ -272,7 +272,7 @@ display_request (request_t * p_request)
         host_request_size
     );
 
-    display_bytes(p_request->p_payload, host_request_size, " ");
+    display_hex(p_request->p_payload, host_request_size, " ");
     printf("\n}\n");
 
 cleanup:
@@ -298,7 +298,7 @@ display_response (response_t * p_response)
         host_response_size
     );
 
-    display_bytes(p_response->p_payload, host_response_size, " ");
+    display_hex(p_response->p_payload, host_response_size, " ");
     printf("\n}\n");
 
 cleanup:

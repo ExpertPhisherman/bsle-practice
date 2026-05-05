@@ -28,7 +28,7 @@ typedef struct sll
     node_t         * p_head;         // Pointer to head node
     size_t           len;            // Current length
     display_func_t   p_display_node; // Pointer to display function
-    cmp_func_t       p_cmp_node;     // Pointer to compare function
+    compare_func_t   p_compare_node; // Pointer to compare function
 } sll_t;
 
 /*!
