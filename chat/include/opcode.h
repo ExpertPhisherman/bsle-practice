@@ -34,13 +34,15 @@ typedef struct response response_t;
  *
  * @return 64-bit hash digest
  */
-status_t write_response(response_t * p_response,
-                        size_t size,
-                        char const * p_fmt,
-                        ...);
+status_t write_response(
+    response_t * p_response,
+    size_t size,
+    char const * p_fmt,
+    ...
+);
 
 /*!
- * @brief Logic for login
+ * @brief Default opcode in case of unknown
  *
  * @param[in] p_session  Pointer to session
  * @param[in] p_request  Pointer to request
@@ -48,12 +50,14 @@ status_t write_response(response_t * p_response,
  *
  * @return Status of operation
  */
-status_t opcode_login(session_t * p_session,
-                      request_t * p_request,
-                      response_t * p_response);
+status_t opcode_default(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
 
 /*!
- * @brief Logic for logout
+ * @brief Respond with PONG
  *
  * @param[in] p_session  Pointer to session
  * @param[in] p_request  Pointer to request
@@ -61,9 +65,71 @@ status_t opcode_login(session_t * p_session,
  *
  * @return Status of operation
  */
-status_t opcode_logout(session_t * p_session,
-                       request_t * p_request,
-                       response_t * p_response);
+status_t opcode_ping(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Return the provided message
+ *
+ * @param[in] p_session  Pointer to session
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_echo(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Close client connection
+ *
+ * @param[in] p_session  Pointer to session
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_quit(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Log in with credentials
+ *
+ * @param[in] p_session  Pointer to session
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_login(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Log out
+ *
+ * @param[in] p_session  Pointer to session
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_logout(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
 
 #endif /* OPCODE_H */
 

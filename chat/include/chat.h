@@ -21,12 +21,24 @@
 #include "sockutil.h"
 #include "ht.h"
 
+typedef struct session session_t;
+typedef struct request request_t;
+typedef struct response response_t;
+
+typedef status_t (*opcode_func_t)(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
+
 typedef enum opcode
 {
-    OPCODE_PING  = 0x01, // Respond with PONG
-    OPCODE_ECHO  = 0x02, // Return the provided message
-    OPCODE_QUIT  = 0x03, // Close client connection
-    OPCODE_LOGIN = 0x04, // Login with credentials
+    OPCODE_DEFAULT = 0x00, // Default opcode in case of unknown
+    OPCODE_PING    = 0x01, // Respond with PONG
+    OPCODE_ECHO    = 0x02, // Return the provided message
+    OPCODE_QUIT    = 0x03, // Close client connection
+    OPCODE_LOGIN   = 0x04, // Log in with credentials
+    OPCODE_LOGOUT  = 0x05, // Log out
 } opcode_t;
 
 typedef struct session
@@ -47,7 +59,8 @@ typedef struct safe_ht
 
 typedef struct appdata
 {
-    safe_ht_t * p_safe_ht; // Pointer to safe hash table
+    safe_ht_t     * p_safe_ht;       // Pointer to safe hash table
+    opcode_func_t * pp_opcode_funcs; // Double pointer to opcode function array
 } appdata_t;
 
 typedef struct request

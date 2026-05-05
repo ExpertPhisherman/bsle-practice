@@ -62,9 +62,11 @@ static status_t session_destroy(session_t * p_session);
  *
  * @return Status of operation
  */
-static status_t handle_request(session_t * p_session,
-                               request_t * p_request,
-                               response_t * p_response);
+static status_t handle_request(
+    session_t * p_session,
+    request_t * p_request,
+    response_t * p_response
+);
 
 /*!
  * @brief Display request
@@ -170,9 +172,11 @@ chat_client_run (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    session_t * p_session = NULL;
-    request_t request     = {0};
-    response_t response   = {0};
+    appdata_t     * p_appdata       = NULL;
+    opcode_func_t * pp_opcode_funcs = NULL;
+    session_t     * p_session       = NULL;
+    request_t       request         = {0};
+    response_t      response        = {0};
 
     request.p_payload  = NULL;
     response.p_payload = NULL;
@@ -182,6 +186,16 @@ chat_client_run (server_t * p_server, client_t * p_client)
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    p_appdata       = p_server->p_appdata;
+    pp_opcode_funcs = p_appdata->pp_opcode_funcs;
+
+    pp_opcode_funcs[OPCODE_DEFAULT] = opcode_default;
+    pp_opcode_funcs[OPCODE_PING]    = opcode_ping;
+    pp_opcode_funcs[OPCODE_ECHO]    = opcode_echo;
+    pp_opcode_funcs[OPCODE_QUIT]    = opcode_quit;
+    pp_opcode_funcs[OPCODE_LOGIN]   = opcode_login;
+    pp_opcode_funcs[OPCODE_LOGOUT]  = opcode_logout;
 
     int sockfd = p_client->sockfd;
 
@@ -301,8 +315,9 @@ appdata_create (size_t capacity)
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t * p_appdata = NULL;
-    safe_ht_t * p_safe_ht = NULL;
+    appdata_t     * p_appdata       = NULL;
+    safe_ht_t     * p_safe_ht       = NULL;
+    opcode_func_t * pp_opcode_funcs = NULL;
 
     p_appdata = malloc(sizeof(*p_appdata));
     if (NULL == p_appdata)
@@ -311,7 +326,8 @@ appdata_create (size_t capacity)
         goto cleanup;
     }
 
-    p_appdata->p_safe_ht = NULL;;
+    p_appdata->p_safe_ht       = NULL;
+    p_appdata->pp_opcode_funcs = NULL;
 
     p_safe_ht = malloc(sizeof(*p_safe_ht));
     if (NULL == p_safe_ht)
@@ -337,6 +353,16 @@ appdata_create (size_t capacity)
         goto cleanup;
     }
 
+    // NOTE: Possible number of values for uint8_t is 256
+    pp_opcode_funcs = calloc(256u, sizeof(*pp_opcode_funcs));
+    if (NULL == pp_opcode_funcs)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_appdata->pp_opcode_funcs = pp_opcode_funcs;
+
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -352,7 +378,8 @@ appdata_destroy (appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    safe_ht_t * p_safe_ht = NULL;
+    safe_ht_t     * p_safe_ht       = NULL;
+    opcode_func_t * pp_opcode_funcs = NULL;
 
     if (NULL == p_appdata)
     {
@@ -360,7 +387,8 @@ appdata_destroy (appdata_t * p_appdata)
         goto cleanup;
     }
 
-    p_safe_ht = p_appdata->p_safe_ht;
+    p_safe_ht       = p_appdata->p_safe_ht;
+    pp_opcode_funcs = p_appdata->pp_opcode_funcs;
 
     free(p_appdata);
     p_appdata = NULL;
@@ -378,6 +406,9 @@ appdata_destroy (appdata_t * p_appdata)
 
     free(p_safe_ht);
     p_safe_ht = NULL;
+
+    free(pp_opcode_funcs);
+    pp_opcode_funcs = NULL;
 
 cleanup:
     return status;
@@ -434,6 +465,10 @@ handle_request (session_t * p_session,
 {
     status_t status = STATUS_SUCCESS;
 
+    appdata_t     * p_appdata       = NULL;
+    opcode_func_t * pp_opcode_funcs = NULL;
+    opcode_func_t   p_opcode_func   = NULL;
+
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
         goto cleanup;
@@ -459,65 +494,37 @@ handle_request (session_t * p_session,
     {
         // NOTE: No user has authenticated yet
         p_response->status = 0x01;
-        status = write_response(p_response, max_payload_size, "NOT AUTHENTICATED");
+        status = write_response(
+            p_response,
+            max_payload_size,
+            "NOT AUTHENTICATED"
+        );
         goto cleanup;
     }
 
-    p_response->status = 0x00;
-    switch (p_request->opcode)
+    p_appdata       = p_session->p_server->p_appdata;
+    pp_opcode_funcs = p_appdata->pp_opcode_funcs;
+
+    // Choose opcode function from array
+    p_opcode_func = pp_opcode_funcs[p_request->opcode];
+    if (NULL == p_opcode_func)
     {
-        case OPCODE_LOGIN:
-            status = opcode_login(p_session, p_request, p_response);
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
-            break;
+        // Choose default opcode function if NULL at index
+        p_opcode_func = pp_opcode_funcs[OPCODE_DEFAULT];
 
-        case OPCODE_PING:
-            status = write_response(p_response, max_payload_size, "PONG");
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
-            break;
-
-        case OPCODE_ECHO:
-            status = write_response(
-                p_response,
-                max_payload_size,
-                "%.*s",
-                host_request_size,
-                p_request->p_payload
-            );
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
-            break;
-
-        case OPCODE_QUIT:
-            status = write_response(p_response, max_payload_size, "Goodbye!");
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
-            break;
-
-        default:
-            p_response->status = 0x01;
-            status = write_response(
-                p_response,
-                max_payload_size,
-                "Unknown opcode: 0x%02hhx\n",
-                p_request->opcode
-            );
-            if (STATUS_SUCCESS != status)
-            {
-                goto cleanup;
-            }
-            break;
+        if (NULL == p_opcode_func)
+        {
+            fprintf(stderr, "Default opcode function doesn't exist\n");
+            status = STATUS_NULL_ARG;
+            goto cleanup;
+        }
     }
+
+    status = p_opcode_func(
+        p_session,
+        p_request,
+        p_response
+    );
 
 cleanup:
     return status;
@@ -542,7 +549,7 @@ display_request (request_t * p_request)
         host_request_size
     );
 
-    display_bytes(p_request->p_payload, host_request_size, " ");
+    display_hex(p_request->p_payload, host_request_size, " ");
     printf("\n    string : ");
     display_printable(p_request->p_payload, host_request_size);
     printf("\n}\n");
@@ -570,7 +577,7 @@ display_response (response_t * p_response)
         host_response_size
     );
 
-    display_bytes(p_response->p_payload, host_response_size, " ");
+    display_hex(p_response->p_payload, host_response_size, " ");
     printf("\n    string : ");
     display_printable(p_response->p_payload, host_response_size);
     printf("\n}\n");
