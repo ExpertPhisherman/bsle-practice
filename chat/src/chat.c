@@ -251,12 +251,13 @@ chat_client_run (server_t * p_server, client_t * p_client)
         }
 
         status = handle_request(p_session, &request, &response);
-        if (STATUS_SUCCESS != status)
+        if ((STATUS_SUCCESS != status) && (STATUS_OVERFLOW != status))
         {
+            fprintf(stderr, "Unexpected error encountered in handle_request\n");
             goto cleanup;
         }
 
-        if ((p_server->b_verbose) && (ntohl(request.size) <= max_payload_size))
+        if ((p_server->b_verbose) && (STATUS_OVERFLOW != status))
         {
             printf(
                 "========================================\n"
@@ -479,12 +480,14 @@ handle_request (session_t * p_session,
     if (host_request_size > max_payload_size)
     {
         p_response->status = 0x01;
-        p_response->size = htonl((uint32_t)snprintf(
-            p_response->p_payload, max_payload_size,
+        write_response(
+            p_response,
             "Request payload size %u exceeds max_payload_size %u",
-            host_request_size, max_payload_size
-        ));
+            host_request_size,
+            max_payload_size
+        );
         fprintf(stderr, "%s\n", p_response->p_payload);
+        status = STATUS_OVERFLOW;
         goto cleanup;
     }
 
@@ -494,11 +497,7 @@ handle_request (session_t * p_session,
     {
         // NOTE: No user has authenticated yet
         p_response->status = 0x01;
-        status = write_response(
-            p_response,
-            max_payload_size,
-            "NOT AUTHENTICATED"
-        );
+        status = write_response(p_response, "NOT AUTHENTICATED");
         goto cleanup;
     }
 

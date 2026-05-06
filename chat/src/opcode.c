@@ -13,7 +13,6 @@ extern uint32_t const max_payload_size;
 status_t
 write_response (
     response_t * p_response,
-    size_t size,
     char const * p_fmt,
     ...
 )
@@ -28,7 +27,14 @@ write_response (
 
     va_list args;
     va_start(args, p_fmt);
-    int written = vsnprintf(p_response->p_payload, size, p_fmt, args);
+
+    int written = vsnprintf(
+        p_response->p_payload,
+        max_payload_size,
+        p_fmt,
+        args
+    );
+
     va_end(args);
 
     if (0 > written)
@@ -62,7 +68,6 @@ opcode_default (
     p_response->status = 0x01;
     status = write_response(
         p_response,
-        max_payload_size,
         "Unknown opcode: 0x%02hhx",
         p_request->opcode
     );
@@ -88,7 +93,7 @@ opcode_ping (
     }
 
     p_response->status = 0x00;
-    status = write_response(p_response, max_payload_size, "PONG");
+    status = write_response(p_response, "PONG");
 
 cleanup:
     return status;
@@ -109,14 +114,11 @@ opcode_echo (
         goto cleanup;
     }
 
-    uint32_t host_request_size = ntohl(p_request->size);
-
     p_response->status = 0x00;
     status = write_response(
         p_response,
-        max_payload_size,
         "%.*s",
-        host_request_size,
+        ntohl(p_request->size),
         p_request->p_payload
     );
 
@@ -141,7 +143,7 @@ opcode_quit (
     }
 
     p_response->status = 0x00;
-    status = write_response(p_response, max_payload_size, "Goodbye!");
+    status = write_response(p_response, "Goodbye!");
 
 cleanup:
     return status;
@@ -167,7 +169,7 @@ opcode_login (
     }
 
     // Free any existing session credentials before re-allocating
-    opcode_logout(p_session, NULL, NULL);
+    opcode_logout(p_session, p_request, p_response);
 
     server_t * p_server = p_session->p_server;
     if (NULL == p_server)
@@ -243,14 +245,14 @@ opcode_login (
     if (!((3u <= username_size) && (16u >= username_size)))
     {
         p_response->status = 0x01;
-        status = write_response(p_response, max_payload_size, p_username_msg);
+        status = write_response(p_response, p_username_msg);
         goto cleanup;
     }
 
     if (!(8u <= password_size))
     {
         p_response->status = 0x01;
-        status = write_response(p_response, max_payload_size, p_password_msg);
+        status = write_response(p_response, p_password_msg);
         goto cleanup;
     }
 
@@ -260,7 +262,7 @@ opcode_login (
         if (!(isalnum(chr) || ('_' == chr)))
         {
             p_response->status = 0x01;
-            status = write_response(p_response, max_payload_size, p_username_msg);
+            status = write_response(p_response, p_username_msg);
             goto cleanup;
         }
     }
@@ -271,7 +273,7 @@ opcode_login (
         if (!(isprint(chr) && (' ' != chr)))
         {
             p_response->status = 0x01;
-            status = write_response(p_response, max_payload_size, p_password_msg);
+            status = write_response(p_response, p_password_msg);
             goto cleanup;
         }
     }
@@ -298,7 +300,6 @@ opcode_login (
         p_response->status = 0x00;
         status = write_response(
             p_response,
-            max_payload_size,
             "Created new user: %.*s",
             username_size,
             p_username
@@ -321,15 +322,14 @@ opcode_login (
         ))
         {
             p_response->status = 0x01;
-            status = write_response(p_response, max_payload_size, "GET OUT!!1!1!");
+            status = write_response(p_response, "GET OUT!!1!1!");
             goto cleanup;
         }
 
         p_response->status = 0x00;
         status = write_response(
             p_response,
-            max_payload_size,
-            "Successful login from user: %.*s",
+            "Successful login to user: %.*s",
             username_size,
             p_username
         );
@@ -344,17 +344,6 @@ opcode_login (
     p_session->session_id = 1234u;
 
 cleanup:
-    if (STATUS_SUCCESS != status)
-    {
-        p_response->status = 0x01;
-        write_response(
-            p_response,
-            max_payload_size,
-            "Unexpected error encountered"
-        );
-        opcode_logout(p_session, p_request, p_response);
-    }
-
     return status;
 }
 
@@ -367,7 +356,6 @@ opcode_logout (
 {
     status_t status = STATUS_SUCCESS;
     UNUSED(p_request);
-    UNUSED(p_response);
 
     if (NULL == p_session)
     {
@@ -375,7 +363,16 @@ opcode_logout (
         goto cleanup;
     }
 
-    // TODO: Send logout message
+    if (NULL != p_response)
+    {
+        p_response->status = 0x00;
+        status = write_response(
+            p_response,
+            "Successful logout from user: %.*s",
+            p_session->username_size,
+            p_session->p_username
+        );
+    }
 
     free(p_session->p_username);
     p_session->p_username = NULL;
