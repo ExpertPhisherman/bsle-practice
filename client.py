@@ -9,11 +9,12 @@ class Client(cmd.Cmd):
 
     def __init__(self) -> None:
         super().__init__()
+        self.description = "Basic TCP client"
 
     def parse_args(self) -> None:
         """Parse command-line options"""
 
-        parser = argparse.ArgumentParser(description="Echo client")
+        parser = argparse.ArgumentParser(description=self.description)
         parser.add_argument("rhost", nargs="?", default="127.0.0.1", help="Remote host")
         parser.add_argument("rport", type=int, help="Remote port")
         parser.add_argument("-l", "--lhost", default="0.0.0.0", help="Local host")
@@ -60,7 +61,7 @@ class Client(cmd.Cmd):
     def recvall(self, size) -> bytes:
         """Receive all data from server"""
 
-        packet = b''
+        packet = b""
         while len(packet) < size:
             data = self.sock.recv(size - len(packet))
             if not data:
@@ -69,8 +70,6 @@ class Client(cmd.Cmd):
         return packet
 
     def preloop(self) -> bool:
-        """Executed once before the cmdloop starts."""
-
         # Wait to receive a potential shutdown
         time.sleep(0.01)
 
@@ -86,15 +85,16 @@ class Client(cmd.Cmd):
 
         return False
 
-    def cmdloop(self, intro=None) -> None:
-        """Handle Ctrl+C gracefully"""
+    preloop.__doc__ = cmd.Cmd.preloop.__doc__
 
+    def cmdloop(self, intro=None) -> None:
         try:
             super().cmdloop(intro)
         except KeyboardInterrupt:
             print()
             self.do_quit("")
-            self.disconnect()
+
+    cmdloop.__doc__ = cmd.Cmd.cmdloop.__doc__
 
 def main() -> int:
     return 0
