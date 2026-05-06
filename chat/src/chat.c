@@ -318,7 +318,6 @@ appdata_create (size_t capacity)
     status_t status = STATUS_SUCCESS;
 
     appdata_t     * p_appdata       = NULL;
-    safe_ht_t     * p_cred_store    = NULL;
     opcode_func_t * pp_opcode_funcs = NULL;
 
     p_appdata = malloc(sizeof(*p_appdata));
@@ -328,28 +327,10 @@ appdata_create (size_t capacity)
         goto cleanup;
     }
 
-    p_appdata->p_cred_store    = NULL;
-    p_appdata->pp_opcode_funcs = NULL;
+    memset(p_appdata, 0, sizeof(*p_appdata));
 
-    p_cred_store = malloc(sizeof(*p_cred_store));
-    if (NULL == p_cred_store)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    p_appdata->p_cred_store = p_cred_store;
-    p_cred_store->p_ht      = NULL;
-
-    if (0 != pthread_mutex_init(&(p_cred_store->lock), NULL))
-    {
-        perror("pthread_mutex_init");
-        status = STATUS_MUTEX_FAILURE;
-        goto cleanup;
-    }
-
-    p_cred_store->p_ht = ht_create(capacity);
-    if (NULL == p_cred_store->p_ht)
+    p_appdata->p_cred_store = safe_ht_create(capacity);
+    if (NULL == p_appdata->p_cred_store)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
@@ -395,18 +376,7 @@ appdata_destroy (appdata_t * p_appdata)
     free(p_appdata);
     p_appdata = NULL;
 
-    if (NULL == p_cred_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    ht_destroy(p_cred_store->p_ht);
-    p_cred_store->p_ht = NULL;
-
-    pthread_mutex_destroy(&(p_cred_store->lock));
-
-    free(p_cred_store);
+    safe_ht_destroy(p_cred_store);
     p_cred_store = NULL;
 
     free(pp_opcode_funcs);

@@ -19,6 +19,7 @@
 #include "server.h"
 #include "chat_opcode.h"
 #include "sockutil.h"
+#include "safe.h"
 #include "ht.h"
 #include "sll.h"
 
@@ -65,18 +66,6 @@ typedef struct response
     uint32_t   size;      // Size of payload in network byte order
     char     * p_payload; // Pointer to payload
 } response_t;
-
-typedef struct safe_ht
-{
-    ht_t            * p_ht; // Pointer to hash table
-    pthread_mutex_t   lock; // Mutex lock for read/write control
-} safe_ht_t;
-
-typedef struct safe_sll
-{
-    sll_t           * p_sll; // Pointer to SLL
-    pthread_mutex_t   lock;  // Mutex lock for read/write control
-} safe_sll_t;
 
 typedef struct appdata
 {

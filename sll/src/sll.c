@@ -26,8 +26,6 @@ sll_create (void)
     p_sll->p_display_node = NULL;
     p_sll->p_compare_node = NULL;
 
-    goto cleanup;
-
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -67,8 +65,6 @@ sll_destroy (sll_t * p_sll)
     p_sll->p_display_node = NULL;
     p_sll->p_compare_node = NULL;
 
-    goto cleanup;
-
 cleanup:
     free(p_sll);
     p_sll = NULL;
@@ -106,8 +102,6 @@ sll_display (sll_t * p_sll, char const * p_sep)
         p_curr = p_curr->p_next;
     }
 
-    goto cleanup;
-
 cleanup:
     return status;
 }
@@ -135,8 +129,6 @@ sll_get (sll_t * p_sll, void * p_data)
 
         p_curr = p_curr->p_next;
     }
-
-    goto cleanup;
 
 cleanup:
     return p_node;
@@ -204,8 +196,6 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
 
     (p_sll->len)++;
 
-    goto cleanup;
-
 cleanup:
     if (STATUS_ALLOC_FAILURE == status)
     {
@@ -228,7 +218,6 @@ sll_append (sll_t * p_sll, void * p_data, size_t size)
     }
 
     status = sll_insert(p_sll, p_data, size, p_sll->len);
-    goto cleanup;
 
 cleanup:
     return status;
@@ -284,7 +273,6 @@ sll_remove (sll_t * p_sll, void * p_data)
 
     // NOTE: Data not found in SLL
     status = STATUS_NOT_EXISTS;
-    goto cleanup;
 
 cleanup:
     return status;

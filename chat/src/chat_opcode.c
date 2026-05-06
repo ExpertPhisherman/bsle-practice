@@ -234,13 +234,9 @@ opcode_login (
         );
     }
 
-    /*
-    Validate username and password length and content
-    Username: 3-16 alphanumeric or underscore characters
-    Password: 8+ ASCII characters excluding space
-    */
-    char const * p_username_msg = "Username must be 3-16 alphanumeric or underscore characters";
-    char const * p_password_msg = "Password must be 8+ ASCII characters excluding space";
+    // Validate username and password length and content
+    char const * p_username_msg = "Username: 3-16 alphanumeric or underscore characters";
+    char const * p_password_msg = "Password: 8+ ASCII characters excluding space";
 
     if (!((3u <= username_size) && (16u >= username_size)))
     {
@@ -318,12 +314,6 @@ opcode_login (
     else
     {
         // NOTE: User already exists
-        MUTEX_CALL(
-            p_cred_store->p_ht->p_display_item,
-            p_cred_store->lock,
-            p_item
-        );
-        printf("\n");
 
         // Check if password doesn't match
         if (!(
@@ -350,6 +340,7 @@ opcode_login (
     }
 
     // NOTE: Successful login
+
     // TODO: Set random positive session ID
     p_session->session_id = 1234u;
 
