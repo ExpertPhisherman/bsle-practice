@@ -38,6 +38,8 @@ class ChatClient(Client):
         self.opcode = 0x00
         self.length = 0
         self.payload = b""
+        self.username = None
+        self.password = None
 
     def send_request(self) -> bool:
         """Send request to server"""
@@ -84,7 +86,7 @@ class ChatClient(Client):
             return True
 
     @with_parser(
-        description="Login with credentials",
+        description="Log in with credentials",
         args={
             "username": {"help": "username"},
             "password": {"help": "password"}
@@ -117,7 +119,10 @@ class ChatClient(Client):
         self.payload += len(username).to_bytes(1, "big")
         self.payload += len(password).to_bytes(1, "big")
         self.payload += f"{username}{password}".encode("utf-8")
-        print(f"Attempting login with {username=!r}, {password=!r}".replace("'", '"'))
+
+        print(f"Attempting login to user: {username}")
+        self.username = username
+        self.password = password
 
         self.length = len(self.payload)
         self.send_request()
@@ -154,6 +159,19 @@ class ChatClient(Client):
         self.recv_response()
         return True
 
+    @with_parser(description="Log out")
+    def do_logout(self, line: str) -> bool:
+        self.opcode = 0x05
+        self.payload = b""
+
+        print(f"Attempting logout from user: {self.username}")
+        self.username = None
+        self.password = None
+
+        self.length = len(self.payload)
+        self.send_request()
+        return self.recv_response()
+
     @with_parser(description="Handle EOF (Ctrl+D)")
     def do_EOF(self, line: str) -> bool:
         print()
@@ -168,10 +186,7 @@ def main() -> int:
     if failed:
         return 1
 
-    username = "obama"
-    password = "pyramid1"
-
-    chat_client.do_login(f"{username} {password}")
+    chat_client.do_login("obama pyramid1")
     chat_client.cmdloop()
     chat_client.disconnect()
     return 0

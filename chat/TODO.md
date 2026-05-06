@@ -7,5 +7,4 @@
 
 ## Client
 
-- Make login and logout options inside cmdloop
 - Receive banner on client connect
