@@ -25,17 +25,17 @@ write_response (
         goto cleanup;
     }
 
-    va_list args;
-    va_start(args, p_fmt);
+    va_list p_args;
+    va_start(p_args, p_fmt);
 
     int written = vsnprintf(
         p_response->p_payload,
         max_payload_size,
         p_fmt,
-        args
+        p_args
     );
 
-    va_end(args);
+    va_end(p_args);
 
     if (0 > written)
     {
