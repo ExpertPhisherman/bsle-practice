@@ -1,14 +1,42 @@
+import argparse
+import cmd
 import sys
 import struct
+import textwrap
+from typing import Callable
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parent.parent))
 from client import Client
+
+def with_parser(
+    description: str,
+    args: dict[str, dict] | None = None,
+    epilog: str | None = None
+) -> Callable[[Callable[..., bool]], Callable[..., bool]]:
+    parser = argparse.ArgumentParser(
+        description=description,
+        epilog=epilog,
+        add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    for name, kwargs in (args or {}).items():
+        parser.add_argument(name, **kwargs)
+
+    def decorator(func: Callable[..., bool]) -> Callable[..., bool]:
+        parser.prog = func.__name__.removeprefix("do_")
+        func.__doc__ = parser.format_help() # Set cmd help message to argparse help message
+        func.parser = parser
+        return func
+
+    return decorator
 
 class ChatClient(Client):
     """Chat client"""
 
     def __init__(self) -> None:
         super().__init__()
+        self.description = "Chat client"
         self.prompt = "chat> "
 
     def send_request(self) -> bool:
@@ -38,7 +66,7 @@ class ChatClient(Client):
             status = response[0]
             if (status != 0x00) and (status != 0x01):
                 raise ConnectionError("Unknown status received from server")
-            size = struct.unpack('!I', response[1:5])[0]
+            size = struct.unpack("!I", response[1:5])[0]
 
             # Receive payload
             response += self.recvall(size)
@@ -55,17 +83,34 @@ class ChatClient(Client):
             print(f"[!] Error receiving data: {e}")
             return True
 
-    def login(self, username, password) -> bool:
-        """Login with credentials"""
+    @with_parser(
+        description="Login with credentials",
+        args={
+            "username": {"help": "username"},
+            "password": {"help": "password"}
+        },
+        epilog=(
+            "Username: 3-16 alphanumeric characters or underscore\n"
+            "Password: 8+ printable characters excluding space"
+        )
+    )
+    def do_login(self, line: str) -> bool:
+        try:
+            args = self.do_login.parser.parse_args(line.split())
+        except SystemExit:
+            return False
 
-        # Username: 3-16 alphanumeric characters or underscore
-        # Password: 8+ ASCII characters excluding space
+        username = args.username
+        password = args.password
+
         if not (
             (3 <= len(username) <= 16) and
             (8 <= len(password)) and
             all((c.isalnum() or (c == "_")) for c in username) and
             all((c.isprintable() and (c != " ")) for c in password)
-        ): return True
+        ):
+            self.do_help("login")
+            return False
 
         self.opcode = 0x04
         self.payload = b""
@@ -78,19 +123,20 @@ class ChatClient(Client):
         self.send_request()
         return self.recv_response()
 
-    def do_ping(self, line) -> bool:
-        """Health check"""
-
+    @with_parser(description="Respond with PONG")
+    def do_ping(self, line: str) -> bool:
         self.opcode = 0x01
-        self.payload = b'\x00'
+        self.payload = b"\x00"
 
         self.length = len(self.payload)
         self.send_request()
         return self.recv_response()
 
-    def do_echo(self, line) -> bool:
-        """Echo message"""
-
+    @with_parser(
+        description="Return the provided message",
+        args={"message": {"help": "message to echo"}}
+    )
+    def do_echo(self, line: str) -> bool:
         self.opcode = 0x02
         self.payload = line.encode("utf-8")
 
@@ -98,20 +144,18 @@ class ChatClient(Client):
         self.send_request()
         return self.recv_response()
 
-    def do_quit(self, line) -> bool:
-        """Close connection"""
-
+    @with_parser(description="Close client connection")
+    def do_quit(self, line: str) -> bool:
         self.opcode = 0x03
-        self.payload = b'\x00'
+        self.payload = b"\x00"
 
         self.length = len(self.payload)
         self.send_request()
         self.recv_response()
         return True
 
-    def do_EOF(self, line) -> bool:
-        """Handle EOF (Ctrl+D)"""
-
+    @with_parser(description="Handle EOF (Ctrl+D)")
+    def do_EOF(self, line: str) -> bool:
         print()
         return self.do_quit(line)
 
@@ -121,7 +165,6 @@ def main() -> int:
     chat_client.parse_args()
 
     failed = chat_client.connect()
-
     if failed:
         return 1
 
@@ -131,7 +174,7 @@ def main() -> int:
     username = "obama"
     password = "pyramid1"
 
-    chat_client.login(username, password)
+    chat_client.do_login(f"{username} {password}")
     chat_client.cmdloop()
     chat_client.disconnect()
     return 0
