@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include "common.h"
 
 typedef struct node
@@ -39,6 +40,15 @@ typedef struct sll
  * @return Pointer to SLL
  */
 sll_t * sll_create(void);
+
+/*!
+ * @brief Destroy SLL
+ *
+ * @param[in] p_sll Pointer to SLL
+ *
+ * @return Status of operation
+ */
+status_t sll_destroy(sll_t * p_sll);
 
 /*!
  * @brief Display SLL
@@ -90,15 +100,6 @@ status_t sll_append(sll_t * p_sll, void * p_data, size_t size);
  * @return Status of operation
  */
 status_t sll_remove(sll_t * p_sll, void * p_data);
-
-/*!
- * @brief Destroy SLL
- *
- * @param[in] p_sll Pointer to SLL
- *
- * @return Status of operation
- */
-status_t sll_destroy(sll_t * p_sll);
 
 #endif /* SLL_H */
 

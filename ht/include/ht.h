@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include "common.h"
 #include "sll.h"
 
@@ -54,6 +55,15 @@ typedef struct ht
  * @return Pointer to hash table
  */
 ht_t * ht_create(size_t capacity);
+
+/*!
+ * @brief Destroy hash table
+ *
+ * @param[in] p_ht Pointer to hash table
+ *
+ * @return Status of operation
+ */
+status_t ht_destroy(ht_t * p_ht);
 
 /*!
  * @brief Display hash table buckets
@@ -105,15 +115,6 @@ status_t ht_set(
  * @return Status of operation
  */
 status_t ht_del(ht_t * p_ht, void * p_key, size_t key_size);
-
-/*!
- * @brief Destroy hash table
- *
- * @param[in] p_ht Pointer to hash table
- *
- * @return Status of operation
- */
-status_t ht_destroy(ht_t * p_ht);
 
 #endif /* HT_H */
 

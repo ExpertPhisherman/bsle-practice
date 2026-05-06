@@ -112,6 +112,67 @@ cleanup:
 }
 
 status_t
+ht_destroy (ht_t * p_ht)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_ht)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_ht->len            = 0u;
+    p_ht->p_hash_func    = NULL;
+    p_ht->p_display_item = NULL;
+    p_ht->p_compare_item = NULL;
+
+    if (NULL == p_ht->pp_buckets)
+    {
+        p_ht->capacity = 0u;
+        goto cleanup;
+    }
+
+    // Free each bucket
+    for (size_t idx = 0u; idx < p_ht->capacity; idx++)
+    {
+        sll_t * p_sll = (p_ht->pp_buckets)[idx];
+        (p_ht->pp_buckets)[idx] = NULL;
+
+        if (NULL != p_sll)
+        {
+            // Free heap allocated key and value
+            node_t * p_curr = p_sll->p_head;
+            while (NULL != p_curr)
+            {
+                item_t * p_item = p_curr->p_data;
+                if (NULL != p_item)
+                {
+                    free(p_item->p_key);
+                    p_item->p_key = NULL;
+                    free(p_item->p_value);
+                    p_item->p_value = NULL;
+                }
+                p_curr = p_curr->p_next;
+            }
+        }
+
+        sll_destroy(p_sll);
+        p_sll = NULL;
+    }
+
+    p_ht->capacity = 0u;
+
+    free(p_ht->pp_buckets);
+    p_ht->pp_buckets = NULL;
+
+cleanup:
+    free(p_ht);
+    p_ht = NULL;
+    return status;
+}
+
+status_t
 ht_display (ht_t * p_ht, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
@@ -329,67 +390,6 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
     }
 
 cleanup:
-    return status;
-}
-
-status_t
-ht_destroy (ht_t * p_ht)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_ht)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_ht->len            = 0u;
-    p_ht->p_hash_func    = NULL;
-    p_ht->p_display_item = NULL;
-    p_ht->p_compare_item = NULL;
-
-    if (NULL == p_ht->pp_buckets)
-    {
-        p_ht->capacity = 0u;
-        goto cleanup;
-    }
-
-    // Free each bucket
-    for (size_t idx = 0u; idx < p_ht->capacity; idx++)
-    {
-        sll_t * p_sll = (p_ht->pp_buckets)[idx];
-        (p_ht->pp_buckets)[idx] = NULL;
-
-        if (NULL != p_sll)
-        {
-            // Free heap allocated key and value
-            node_t * p_curr = p_sll->p_head;
-            while (NULL != p_curr)
-            {
-                item_t * p_item = p_curr->p_data;
-                if (NULL != p_item)
-                {
-                    free(p_item->p_key);
-                    p_item->p_key = NULL;
-                    free(p_item->p_value);
-                    p_item->p_value = NULL;
-                }
-                p_curr = p_curr->p_next;
-            }
-        }
-
-        sll_destroy(p_sll);
-        p_sll = NULL;
-    }
-
-    p_ht->capacity = 0u;
-
-    free(p_ht->pp_buckets);
-    p_ht->pp_buckets = NULL;
-
-cleanup:
-    free(p_ht);
-    p_ht = NULL;
     return status;
 }
 

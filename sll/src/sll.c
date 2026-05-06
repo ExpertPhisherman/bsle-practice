@@ -38,6 +38,44 @@ cleanup:
 }
 
 status_t
+sll_destroy (sll_t * p_sll)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_sll)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Traverse nodes
+    node_t * p_curr = p_sll->p_head;
+    while (NULL != p_curr)
+    {
+        node_t * p_next = p_curr->p_next;
+
+        free(p_curr->p_data);
+        p_curr->p_data = NULL;
+        free(p_curr);
+        p_curr = NULL;
+
+        p_curr = p_next;
+    }
+
+    p_sll->p_head = NULL;
+    p_sll->len = 0u;
+    p_sll->p_display_node = NULL;
+    p_sll->p_compare_node = NULL;
+
+    goto cleanup;
+
+cleanup:
+    free(p_sll);
+    p_sll = NULL;
+    return status;
+}
+
+status_t
 sll_display (sll_t * p_sll, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
@@ -249,44 +287,6 @@ sll_remove (sll_t * p_sll, void * p_data)
     goto cleanup;
 
 cleanup:
-    return status;
-}
-
-status_t
-sll_destroy (sll_t * p_sll)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_sll)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    // Traverse nodes
-    node_t * p_curr = p_sll->p_head;
-    while (NULL != p_curr)
-    {
-        node_t * p_next = p_curr->p_next;
-
-        free(p_curr->p_data);
-        p_curr->p_data = NULL;
-        free(p_curr);
-        p_curr = NULL;
-
-        p_curr = p_next;
-    }
-
-    p_sll->p_head = NULL;
-    p_sll->len = 0u;
-    p_sll->p_display_node = NULL;
-    p_sll->p_compare_node = NULL;
-
-    goto cleanup;
-
-cleanup:
-    free(p_sll);
-    p_sll = NULL;
     return status;
 }
 
