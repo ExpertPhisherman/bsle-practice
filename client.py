@@ -1,7 +1,7 @@
 import argparse
 import cmd
-import sys
 import socket
+import sys
 import time
 
 class Client(cmd.Cmd):
@@ -9,7 +9,8 @@ class Client(cmd.Cmd):
 
     def __init__(self) -> None:
         super().__init__()
-        self.description = "Basic TCP client"
+        self.description = self.__doc__
+        self.sock = None
 
     def parse_args(self) -> None:
         """Parse command-line options"""
@@ -69,7 +70,7 @@ class Client(cmd.Cmd):
             packet += data
         return packet
 
-    def preloop(self) -> bool:
+    def preloop(self) -> None:
         # Wait to receive a potential shutdown
         time.sleep(0.01)
 
@@ -82,8 +83,6 @@ class Client(cmd.Cmd):
         except BlockingIOError:
             # NOTE: Socket is open and empty
             self.sock.setblocking(True)
-
-        return False
 
     preloop.__doc__ = cmd.Cmd.preloop.__doc__
 

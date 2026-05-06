@@ -1,16 +1,14 @@
 import argparse
-import cmd
-import sys
 import struct
-import textwrap
-from typing import Callable
+import sys
+from typing import Any, Callable
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parent.parent))
 from client import Client
 
 def with_parser(
     description: str,
-    args: dict[str, dict] | None = None,
+    args: dict[str, dict[str, Any]] | None = None,
     epilog: str | None = None
 ) -> Callable[[Callable[..., bool]], Callable[..., bool]]:
     parser = argparse.ArgumentParser(
@@ -25,7 +23,7 @@ def with_parser(
 
     def decorator(func: Callable[..., bool]) -> Callable[..., bool]:
         parser.prog = func.__name__.removeprefix("do_")
-        func.__doc__ = parser.format_help() # Set cmd help message to argparse help message
+        func.__doc__ = parser.format_help()
         func.parser = parser
         return func
 
@@ -36,8 +34,10 @@ class ChatClient(Client):
 
     def __init__(self) -> None:
         super().__init__()
-        self.description = "Chat client"
         self.prompt = "chat> "
+        self.opcode = 0x00
+        self.length = 0
+        self.payload = b""
 
     def send_request(self) -> bool:
         """Send request to server"""
@@ -167,9 +167,6 @@ def main() -> int:
     failed = chat_client.connect()
     if failed:
         return 1
-
-    # TODO: Get login from user input
-    #input()
 
     username = "obama"
     password = "pyramid1"
