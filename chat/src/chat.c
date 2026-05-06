@@ -243,6 +243,7 @@ chat_client_run (server_t * p_server, client_t * p_client)
         }
         else if (STATUS_SUCCESS != status)
         {
+            fprintf(stderr, "Unexpected error encountered in recv_request\n");
             goto cleanup;
         }
         else
@@ -251,13 +252,13 @@ chat_client_run (server_t * p_server, client_t * p_client)
         }
 
         status = handle_request(p_session, &request, &response);
-        if ((STATUS_SUCCESS != status) && (STATUS_OVERFLOW != status))
+        if (STATUS_SUCCESS != status)
         {
             fprintf(stderr, "Unexpected error encountered in handle_request\n");
             goto cleanup;
         }
 
-        if ((p_server->b_verbose) && (STATUS_OVERFLOW != status))
+        if (p_server->b_verbose)
         {
             printf(
                 "========================================\n"
@@ -479,14 +480,12 @@ handle_request (session_t * p_session,
 
     if (host_request_size > max_payload_size)
     {
-        p_response->status = 0x01;
-        write_response(
-            p_response,
-            "Request payload size %u exceeds max_payload_size %u",
+        fprintf(
+            stderr,
+            "Request payload size %u exceeds max_payload_size %u\n",
             host_request_size,
             max_payload_size
         );
-        fprintf(stderr, "%s\n", p_response->p_payload);
         status = STATUS_OVERFLOW;
         goto cleanup;
     }
@@ -619,13 +618,6 @@ recv_request (int sockfd, request_t * p_request)
 
     uint32_t payload_size = ntohl(p_request->size);
     uint32_t packet_size = header_size + payload_size;
-
-    // Reject oversized payloads
-    if (payload_size > max_payload_size)
-    {
-        sockutil_drain(sockfd, payload_size, chunk_size);
-        goto cleanup;
-    }
 
     p_recv_buf = realloc(p_recv_buf, packet_size);
     if (NULL == p_recv_buf)
