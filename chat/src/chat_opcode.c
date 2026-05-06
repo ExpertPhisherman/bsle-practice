@@ -1,12 +1,12 @@
-/** @file opcode.c
+/** @file chat_opcode.c
  *
- * @brief Opcode source
+ * @brief Chat opcode source
  *
  * @par
  *
  */
 
-#include "opcode.h"
+#include "chat_opcode.h"
 
 extern uint32_t const max_payload_size;
 
@@ -158,9 +158,9 @@ opcode_login (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t * p_appdata = NULL;
-    safe_ht_t * p_safe_ht = NULL;
-    item_t    * p_item    = NULL;
+    appdata_t * p_appdata    = NULL;
+    safe_ht_t * p_cred_store = NULL;
+    item_t    * p_item       = NULL;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -278,19 +278,25 @@ opcode_login (
         }
     }
 
-    p_appdata = p_session->p_server->p_appdata;
-    p_safe_ht = p_appdata->p_safe_ht;
+    p_appdata    = p_session->p_server->p_appdata;
+    p_cred_store = p_appdata->p_cred_store;
 
     // Authenticate login against hash table
-    p_item = MUTEX_CALL(ht_get, p_safe_ht->lock, p_safe_ht->p_ht, p_username, username_size);
+    p_item = MUTEX_CALL(
+        ht_get,
+        p_cred_store->lock,
+        p_cred_store->p_ht,
+        p_username,
+        username_size
+    );
     if (NULL == p_item)
     {
         // NOTE: User doesn't exist
         // Create new user
         MUTEX_CALL(
             ht_set,
-            p_safe_ht->lock,
-            p_safe_ht->p_ht,
+            p_cred_store->lock,
+            p_cred_store->p_ht,
             p_username,
             username_size,
             p_password,
@@ -312,7 +318,11 @@ opcode_login (
     else
     {
         // NOTE: User already exists
-        MUTEX_CALL(p_safe_ht->p_ht->p_display_item, p_safe_ht->lock, p_item);
+        MUTEX_CALL(
+            p_cred_store->p_ht->p_display_item,
+            p_cred_store->lock,
+            p_item
+        );
         printf("\n");
 
         // Check if password doesn't match

@@ -17,9 +17,10 @@
 #include <pthread.h>
 #include "common.h"
 #include "server.h"
-#include "opcode.h"
+#include "chat_opcode.h"
 #include "sockutil.h"
 #include "ht.h"
+#include "sll.h"
 
 typedef struct session  session_t;
 typedef struct request  request_t;
@@ -71,9 +72,15 @@ typedef struct safe_ht
     pthread_mutex_t   lock; // Mutex lock for read/write control
 } safe_ht_t;
 
+typedef struct safe_sll
+{
+    sll_t           * p_sll; // Pointer to SLL
+    pthread_mutex_t   lock;  // Mutex lock for read/write control
+} safe_sll_t;
+
 typedef struct appdata
 {
-    safe_ht_t     * p_safe_ht;       // Pointer to safe hash table
+    safe_ht_t     * p_cred_store;    // Pointer to credential store
     opcode_func_t * pp_opcode_funcs; // Double pointer to opcode function array
 } appdata_t;
 

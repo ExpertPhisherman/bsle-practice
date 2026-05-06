@@ -1,13 +1,13 @@
-/** @file opcode.h
+/** @file chat_opcode.h
  *
- * @brief Opcode header
+ * @brief Chat opcode header
  *
  * @par
  *
  */
 
-#ifndef OPCODE_H
-#define OPCODE_H
+#ifndef CHAT_OPCODE_H
+#define CHAT_OPCODE_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +20,7 @@
 #include "common.h"
 #include "chat.h"
 #include "ht.h"
+#include "sll.h"
 
 typedef struct session  session_t;
 typedef struct request  request_t;
@@ -129,6 +130,6 @@ status_t opcode_logout(
     response_t * p_response
 );
 
-#endif /* OPCODE_H */
+#endif /* CHAT_OPCODE_H */
 
 /*** end of file ***/
