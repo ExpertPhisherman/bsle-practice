@@ -172,11 +172,9 @@ chat_client_run (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t     * p_appdata       = NULL;
-    opcode_func_t * pp_opcode_funcs = NULL;
-    session_t     * p_session       = NULL;
-    request_t       request         = {0};
-    response_t      response        = {0};
+    session_t  * p_session = NULL;
+    request_t    request   = {0};
+    response_t   response  = {0};
 
     request.p_payload  = NULL;
     response.p_payload = NULL;
@@ -186,16 +184,6 @@ chat_client_run (server_t * p_server, client_t * p_client)
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
-
-    p_appdata       = p_server->p_appdata;
-    pp_opcode_funcs = p_appdata->pp_opcode_funcs;
-
-    pp_opcode_funcs[OPCODE_DEFAULT] = opcode_default;
-    pp_opcode_funcs[OPCODE_PING]    = opcode_ping;
-    pp_opcode_funcs[OPCODE_ECHO]    = opcode_echo;
-    pp_opcode_funcs[OPCODE_QUIT]    = opcode_quit;
-    pp_opcode_funcs[OPCODE_LOGIN]   = opcode_login;
-    pp_opcode_funcs[OPCODE_LOGOUT]  = opcode_logout;
 
     int sockfd = p_client->sockfd;
 
@@ -343,6 +331,13 @@ appdata_create (size_t capacity)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+
+    pp_opcode_funcs[OPCODE_DEFAULT] = opcode_default;
+    pp_opcode_funcs[OPCODE_PING]    = opcode_ping;
+    pp_opcode_funcs[OPCODE_ECHO]    = opcode_echo;
+    pp_opcode_funcs[OPCODE_QUIT]    = opcode_quit;
+    pp_opcode_funcs[OPCODE_LOGIN]   = opcode_login;
+    pp_opcode_funcs[OPCODE_LOGOUT]  = opcode_logout;
 
     p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
