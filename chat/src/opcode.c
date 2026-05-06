@@ -166,6 +166,9 @@ opcode_login (
         goto cleanup;
     }
 
+    // Free any existing session credentials before re-allocating
+    opcode_logout(p_session, NULL, NULL);
+
     server_t * p_server = p_session->p_server;
     if (NULL == p_server)
     {
