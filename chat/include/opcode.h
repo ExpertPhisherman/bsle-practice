@@ -21,17 +21,17 @@
 #include "chat.h"
 #include "ht.h"
 
-typedef struct session session_t;
-typedef struct request request_t;
+typedef struct session  session_t;
+typedef struct request  request_t;
 typedef struct response response_t;
 
 /*!
- * @brief djb2 hash function
+ * @brief Write format string into response payload and set size
  *
  * @param[in] p_response Pointer to response
  * @param[in] p_fmt      Pointer to format string to populate
  *
- * @return 64-bit hash digest
+ * @return Status of operation
  */
 status_t write_response(
     response_t * p_response,

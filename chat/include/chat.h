@@ -21,13 +21,13 @@
 #include "sockutil.h"
 #include "ht.h"
 
-typedef struct session session_t;
-typedef struct request request_t;
+typedef struct session  session_t;
+typedef struct request  request_t;
 typedef struct response response_t;
 
 typedef status_t (*opcode_func_t)(
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 );
 
@@ -51,6 +51,20 @@ typedef struct session
     uint64_t   session_id;    // Unique session ID assigned after login
 } session_t;
 
+typedef struct request
+{
+    uint8_t    opcode;    // Opcode
+    uint32_t   size;      // Size of payload in network byte order
+    char     * p_payload; // Pointer to payload
+} request_t;
+
+typedef struct response
+{
+    uint8_t    status;    // Status 0x00 for success, 0x01 for failure
+    uint32_t   size;      // Size of payload in network byte order
+    char     * p_payload; // Pointer to payload
+} response_t;
+
 typedef struct safe_ht
 {
     ht_t            * p_ht; // Pointer to hash table
@@ -62,20 +76,6 @@ typedef struct appdata
     safe_ht_t     * p_safe_ht;       // Pointer to safe hash table
     opcode_func_t * pp_opcode_funcs; // Double pointer to opcode function array
 } appdata_t;
-
-typedef struct request
-{
-    uint8_t    opcode;    // Opcode
-    uint32_t   size;      // Size of payload in network byte order
-    char     * p_payload; // Pointer to payload
-} request_t;
-
-typedef struct response
-{
-    uint8_t    status;    // Opcode
-    uint32_t   size;      // Size of payload in network byte order
-    char     * p_payload; // Pointer to payload
-} response_t;
 
 /*!
  * @brief Create chat server
