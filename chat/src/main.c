@@ -26,14 +26,17 @@ main (int argc, char * argv[])
 
     server_t hints =
     {
-        .lport        = lport,
-        .sockfd       = -1,
-        .backlog      = backlog,
-        .b_verbose    = b_verbose,
-        .p_tm         = NULL,
-        .p_registry   = NULL,
-        .p_client_run = NULL,
-        .p_appdata    = NULL,
+        .lport         = lport,
+        .sockfd        = -1,
+        .epollfd       = -1,
+        .backlog       = backlog,
+        .b_verbose     = b_verbose,
+        .p_tm          = NULL,
+        .p_registry    = NULL,
+        .p_client_run  = NULL,
+        .p_client_init = NULL,
+        .p_client_free = NULL,
+        .p_appdata     = NULL,
     };
 
     while (-1 != (opt = getopt(argc, argv, "vp:b:")))
@@ -94,10 +97,12 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    hints.lport        = lport;
-    hints.backlog      = backlog;
-    hints.b_verbose    = b_verbose;
-    hints.p_client_run = chat_client_run;
+    hints.lport         = lport;
+    hints.backlog       = backlog;
+    hints.b_verbose     = b_verbose;
+    hints.p_client_run  = chat_client_run;
+    hints.p_client_init = chat_client_init;
+    hints.p_client_free = chat_client_free;
 
     p_server = chat_server_create(&hints, 101u);
     if (NULL == p_server)
