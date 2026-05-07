@@ -73,6 +73,13 @@ typedef struct appdata
     opcode_func_t * pp_opcode_funcs; // Double pointer to opcode function array
 } appdata_t;
 
+typedef struct chat_client_state
+{
+    session_t  session;  // Session
+    request_t  request;  // Request reused across iterations
+    response_t response; // Respose reused across iterations
+} chat_client_state_t;
+
 /*!
  * @brief Create chat server
  *
@@ -93,7 +100,7 @@ server_t * chat_server_create(server_t * p_hints, size_t capacity);
 status_t chat_server_destroy(server_t * p_server);
 
 /*!
- * @brief Run client data recv/send loop
+ * @brief Single recv/handle/send iteration
  *
  * @param[in] p_server Pointer to server
  * @param[in] p_client Pointer to client
@@ -101,6 +108,26 @@ status_t chat_server_destroy(server_t * p_server);
  * @return Status of operation
  */
 status_t chat_client_run(server_t * p_server, client_t * p_client);
+
+/*!
+ * @brief Initialize per-client state into p_clientdata
+ *
+ * @param[in] p_server Pointer to server
+ * @param[in] p_client Pointer to client
+ *
+ * @return Status of operation
+ */
+status_t chat_client_init(server_t * p_server, client_t * p_client);
+
+/*!
+ * @brief Free per-client state from p_clientdata
+ *
+ * @param[in] p_server Pointer to server
+ * @param[in] p_client Pointer to client
+ *
+ * @return Status of operation
+ */
+status_t chat_client_free(server_t * p_server, client_t * p_client);
 
 #endif /* CHAT_H */
 
