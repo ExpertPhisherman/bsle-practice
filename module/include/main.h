@@ -14,8 +14,6 @@
 #include <unistd.h>
 #include "common.h"
 
-
-
 #endif /* MAIN_H */
 
 /*** end of file ***/
