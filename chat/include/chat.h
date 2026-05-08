@@ -23,9 +23,11 @@
 #include "ht.h"
 #include "sll.h"
 
-typedef struct session  session_t;
-typedef struct request  request_t;
-typedef struct response response_t;
+typedef struct session           session_t;
+typedef struct request           request_t;
+typedef struct response          response_t;
+typedef struct appdata           appdata_t;
+typedef struct chat_client_state chat_client_state_t;
 
 typedef status_t (*opcode_func_t)(
     session_t  * p_session,
