@@ -334,7 +334,7 @@ server_run (server_t * p_server)
 
         for (size_t idx = 0u; idx < (size_t)nfds; idx++)
         {
-            if (p_events[idx].data.ptr == (void *)p_server)
+            if (p_events[idx].data.ptr == p_server)
             {
                 // NOTE: Server socket is readable
 
@@ -366,7 +366,7 @@ server_run (server_t * p_server)
             }
 
             // NOTE: Client socket is readable
-            client_t * p_client = (client_t *)(p_events[idx].data.ptr);
+            client_t * p_client = p_events[idx].data.ptr;
 
             uint32_t const err_events =
                 (uint32_t)(EPOLLHUP | EPOLLERR | EPOLLRDHUP);
@@ -510,7 +510,7 @@ client_run_wrapper (void * p_arg)
         goto cleanup;
     }
 
-    server_client_pair_t * p_pair   = (server_client_pair_t *)p_arg;
+    server_client_pair_t * p_pair   = p_arg;
     server_t             * p_server = p_pair->p_server;
     client_t             * p_client = p_pair->p_client;
 
