@@ -158,6 +158,18 @@ server_create (server_t * p_hints)
 
     *p_server = *p_hints;
 
+    // Catch privileged port as non-root user
+    if ((1024u > (p_server->lport)) && (0 != geteuid()))
+    {
+        fprintf(
+            stderr,
+            "Cannot bind to privileged port %hu [1-1023] as non-root user\n",
+            p_server->lport
+        );
+        status = STATUS_SOCKET_FAILURE;
+        goto cleanup;
+    }
+
     // Reset resource fields that must be created fresh regardless of hints
     p_server->sockfd     = -1;
     p_server->epollfd    = -1;
@@ -179,26 +191,21 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    int sockfd;
     struct sockaddr_in server_addr;
     int yes = 1;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == sockfd)
     {
         perror("socket");
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
+    p_server->sockfd = sockfd;
 
     if (-1 == setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)))
     {
         perror("setsockopt");
-        if (-1 == close(sockfd))
-        {
-            perror("close sockfd");
-        }
-
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
@@ -208,23 +215,6 @@ server_create (server_t * p_hints)
     server_addr.sin_port        = htons(p_server->lport);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    // Catch privileged port as non-root user
-    if ((1024u > (p_server->lport)) && (0 != geteuid()))
-    {
-        fprintf(
-            stderr,
-            "Cannot bind to privileged port %hu [1-1023] as non-root user\n",
-            p_server->lport
-        );
-        if (-1 == close(sockfd))
-        {
-            perror("close sockfd");
-        }
-
-        status = STATUS_SOCKET_FAILURE;
-        goto cleanup;
-    }
-
     if (-1 == bind(
         sockfd,
         (struct sockaddr *)&server_addr,
@@ -232,11 +222,6 @@ server_create (server_t * p_hints)
     ))
     {
         perror("bind");
-        if (-1 == close(sockfd))
-        {
-            perror("close sockfd");
-        }
-
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
@@ -244,11 +229,6 @@ server_create (server_t * p_hints)
     if (-1 == listen(sockfd, p_server->backlog))
     {
         perror("listen");
-        if (-1 == close(sockfd))
-        {
-            perror("close sockfd");
-        }
-
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
@@ -257,14 +237,10 @@ server_create (server_t * p_hints)
     if (-1 == epollfd)
     {
         perror("epoll_create1");
-        if (-1 == close(sockfd))
-        {
-            perror("close sockfd");
-        }
-
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
+    p_server->epollfd = epollfd;
 
     // Add server socket to epoll
     struct epoll_event server_ev;
@@ -275,15 +251,6 @@ server_create (server_t * p_hints)
     if (-1 == epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &server_ev))
     {
         perror("epoll_ctl ADD server sockfd");
-        if (-1 == close(epollfd))
-        {
-            perror("close epollfd");
-        }
-        if (-1 == close(sockfd))
-        {
-            perror("close sockfd");
-        }
-
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
@@ -292,18 +259,10 @@ server_create (server_t * p_hints)
     if (NULL == p_lhost)
     {
         fprintf(stderr, "malloc failed\n");
-        if (-1 == close(epollfd))
-        {
-            perror("close epollfd");
-        }
-        if (-1 == close(sockfd))
-        {
-            perror("close sockfd");
-        }
-
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_server->p_lhost = p_lhost;
 
     inet_ntop(
         AF_INET,
@@ -321,10 +280,6 @@ server_create (server_t * p_hints)
             sockfd
         );
     }
-
-    p_server->p_lhost = p_lhost;
-    p_server->sockfd  = sockfd;
-    p_server->epollfd = epollfd;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -626,9 +581,23 @@ client_create (server_t * p_server)
         goto cleanup;
     }
 
-    struct sockaddr_in client_addr;
+    p_client = malloc(sizeof(*p_client));
+    if (NULL == p_client)
+    {
+        fprintf(stderr, "malloc failed\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
 
+    // Initialise to safe sentinel values
+    p_client->rport        = 0u;
+    p_client->p_rhost      = NULL;
+    p_client->sockfd       = -1;
+    p_client->p_clientdata = NULL;
+
+    struct sockaddr_in client_addr;
     socklen_t sin_size = sizeof(client_addr);
+
     int sockfd = accept(
         p_server->sockfd,
         (struct sockaddr *)&client_addr,
@@ -649,8 +618,10 @@ client_create (server_t * p_server)
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
+    p_client->sockfd = sockfd;
 
     uint16_t rport = ntohs(client_addr.sin_port);
+    p_client->rport = rport;
 
     p_rhost = malloc(INET_ADDRSTRLEN);
     if (NULL == p_rhost)
@@ -659,6 +630,7 @@ client_create (server_t * p_server)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_client->p_rhost = p_rhost;
 
     inet_ntop(
         AF_INET,
@@ -676,25 +648,6 @@ client_create (server_t * p_server)
             sockfd
         );
     }
-
-    p_client = malloc(sizeof(*p_client));
-    if (NULL == p_client)
-    {
-        fprintf(stderr, "malloc failed\n");
-        free(p_rhost);
-        p_rhost = NULL;
-        if (-1 == close(sockfd))
-        {
-            perror("close client sockfd");
-        }
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    p_client->p_rhost      = p_rhost;
-    p_client->rport        = rport;
-    p_client->sockfd       = sockfd;
-    p_client->p_clientdata = NULL;
 
     status = registry_add(p_server->p_registry, p_client);
     if (STATUS_SUCCESS != status)
@@ -742,6 +695,14 @@ client_destroy (server_t * p_server, client_t * p_client)
 
     registry_remove(p_server->p_registry, p_client);
 
+    free(p_client->p_rhost);
+    p_client->p_rhost = NULL;
+
+    if (-1 == p_client->sockfd)
+    {
+        goto cleanup;
+    }
+
     if (-1 == epoll_ctl(
         p_server->epollfd,
         EPOLL_CTL_DEL,
@@ -767,9 +728,7 @@ client_destroy (server_t * p_server, client_t * p_client)
     {
         perror("close client sockfd");
     }
-
-    free(p_client->p_rhost);
-    p_client->p_rhost = NULL;
+    p_client->sockfd = -1;
 
 cleanup:
     free(p_client);
@@ -862,7 +821,7 @@ registry_add (registry_t * p_registry, client_t * p_client)
         fprintf(
             stderr,
             "Registry is full, rejecting client %s:%hu (sockfd %d)\n",
-            p_client->p_rhost,
+            (NULL != p_client->p_rhost) ? p_client->p_rhost : "<unknown>",
             p_client->rport,
             p_client->sockfd
         );
@@ -911,7 +870,7 @@ registry_remove (registry_t * p_registry, client_t * p_client)
         fprintf(
             stderr,
             "Registry does not contain client %s:%hu (sockfd %d)\n",
-            p_client->p_rhost,
+            (NULL != p_client->p_rhost) ? p_client->p_rhost : "<unknown>",
             p_client->rport,
             p_client->sockfd
         );
