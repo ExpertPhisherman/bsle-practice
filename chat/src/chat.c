@@ -241,6 +241,7 @@ chat_client_init (server_t * p_server, client_t * p_client)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_client->p_clientdata = p_state;
 
     memset(p_state, 0, sizeof(*p_state));
 
@@ -261,21 +262,11 @@ chat_client_init (server_t * p_server, client_t * p_client)
     }
 
     p_state->session.p_server = p_server;
-    p_client->p_clientdata = p_state;
 
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        if (NULL != p_state)
-        {
-            free(p_state->request.p_payload);
-            p_state->request.p_payload = NULL;
-            free(p_state->response.p_payload);
-            p_state->response.p_payload = NULL;
-            free(p_state);
-            p_state = NULL;
-        }
-        p_client->p_clientdata = NULL;
+        chat_client_free(p_server, p_client);
     }
     return status;
 }
