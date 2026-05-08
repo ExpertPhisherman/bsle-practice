@@ -9,7 +9,7 @@
 #include "common.h"
 
 status_t
-display_hex (void * p_var, size_t size, char const * p_sep)
+display_hex (void * p_buf, size_t size, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -23,7 +23,7 @@ display_hex (void * p_var, size_t size, char const * p_sep)
             printf("%s", p_sep);
         }
 
-        chr = ((uint8_t *)p_var)[idx];
+        chr = ((uint8_t *)p_buf)[idx];
         printf("%02hhx", chr);
     }
 
@@ -31,7 +31,7 @@ display_hex (void * p_var, size_t size, char const * p_sep)
 }
 
 status_t
-display_printable (char * p_buf, size_t size)
+display_printable (void * p_buf, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 

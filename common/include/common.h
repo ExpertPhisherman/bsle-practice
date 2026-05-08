@@ -64,25 +64,25 @@ typedef status_t (*display_func_t)(void * p_data);
 typedef int      (*compare_func_t)(void * p_data1, void * p_data2);
 
 /*!
- * @brief Display variable bytes in hex
+ * @brief Display bytes in hex
  *
- * @param[in] p_var Pointer to variable
- * @param[in] size  Size of variable in bytes
+ * @param[in] p_buf Pointer to buffer
+ * @param[in] size  Size of buffer in bytes
  * @param[in] p_sep Pointer to separator between each byte
  *
  * @return Status of operation
  */
-status_t display_hex(void * p_var, size_t size, char const * p_sep);
+status_t display_hex(void * p_buf, size_t size, char const * p_sep);
 
 /*!
- * @brief Display printable characters in string
+ * @brief Display printable characters
  *
- * @param[in] p_buf Pointer to string buffer
- * @param[in] size  Size of string in bytes
+ * @param[in] p_buf Pointer to buffer
+ * @param[in] size  Size of buffer in bytes
  *
  * @return Status of operation
  */
-status_t display_printable(char * p_buf, size_t size);
+status_t display_printable(void * p_buf, size_t size);
 
 #endif /* COMMON_H */
 
