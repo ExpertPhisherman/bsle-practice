@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdatomic.h>
+#include <signal.h>
 #include <errno.h>
 #include "common.h"
 #include "server.h"
