@@ -278,26 +278,22 @@ opcode_login (
     p_cred_store = p_appdata->p_cred_store;
 
     // Authenticate login against hash table
-    p_item = MUTEX_CALL(
-        ht_get,
-        p_cred_store->lock,
-        p_cred_store->p_ht,
-        p_username,
-        username_size
-    );
+    pthread_mutex_lock(&(p_cred_store->lock));
+    p_item = ht_get(p_cred_store->p_ht, p_username, username_size);
+    pthread_mutex_unlock(&(p_cred_store->lock));
     if (NULL == p_item)
     {
         // NOTE: User doesn't exist
         // Create new user
-        MUTEX_CALL(
-            ht_set,
-            p_cred_store->lock,
+        pthread_mutex_lock(&(p_cred_store->lock));
+        ht_set(
             p_cred_store->p_ht,
             p_username,
             username_size,
             p_password,
             password_size
         );
+        pthread_mutex_unlock(&(p_cred_store->lock));
 
         p_response->status = 0x00;
         status = write_response(

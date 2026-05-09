@@ -9,11 +9,13 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdarg.h>
 #include <unistd.h>
+#include <string.h>
 #include <pthread.h>
 #include <ctype.h>
 
@@ -24,17 +26,6 @@
 #endif
 
 #define UNUSED(var) ((void)(var))
-
-#define MUTEX_CALL(p_func, lock, ...)                \
-(                                                    \
-    ({                                               \
-        pthread_mutex_t * _p_lock = &(lock);         \
-        pthread_mutex_lock(_p_lock);                 \
-        __auto_type _result = (p_func)(__VA_ARGS__); \
-        pthread_mutex_unlock(_p_lock);               \
-        _result;                                     \
-    })                                               \
-)
 
 typedef enum status
 {
@@ -62,27 +53,101 @@ typedef enum status
 
 typedef status_t (*display_func_t)(void * p_data);
 typedef int      (*compare_func_t)(void * p_data1, void * p_data2);
+typedef int      (*ischartype_func_t)(int chr);
+
+/*!
+ * @brief Set default value
+ *
+ * @param[in] p_var  Pointer to variable
+ * @param[in] size   Size of variable in bytes
+ * @param[in] p_sval Pointer to sentinel value for variable
+ * @param[in] p_dval Pointer to default value for variable
+ *
+ * @return Status of operation
+ */
+status_t default_value(
+    void   * p_var,
+    size_t   size,
+    void   * p_sval,
+    void   * p_dval
+);
 
 /*!
  * @brief Display bytes in hex
  *
  * @param[in] p_buf Pointer to buffer
  * @param[in] size  Size of buffer in bytes
- * @param[in] p_sep Pointer to separator between each byte
+ * @param[in] p_sep String inserted between each byte
+ * @param[in] p_end String appended after last byte
  *
  * @return Status of operation
  */
-status_t display_hex(void * p_buf, size_t size, char const * p_sep);
+status_t display_hex(
+    void * p_buf,
+    size_t size,
+    char const * p_sep,
+    char const * p_end
+);
 
 /*!
  * @brief Display printable characters
  *
  * @param[in] p_buf Pointer to buffer
  * @param[in] size  Size of buffer in bytes
+ * @param[in] p_sep String inserted between each byte
+ * @param[in] p_end String appended after last byte
  *
  * @return Status of operation
  */
-status_t display_printable(void * p_buf, size_t size);
+status_t display_printable(
+    void * p_buf,
+    size_t size,
+    char const * p_sep,
+    char const * p_end
+);
+
+/*!
+ * @brief Python-like print to stream
+ *
+ * @par
+ * Inspired by Python:
+ *
+ * $ python3 -m pydoc print | cat
+ * Help on built-in function print in module builtins:
+ *
+ * print(...)
+ *     print(value, ..., sep=' ', end='\n', file=sys.stdout, flush=False)
+ *
+ *     Prints the values to a stream, or to sys.stdout by default.
+ *     Optional keyword arguments:
+ *     file:  a file-like object (stream); defaults to the current sys.stdout.
+ *     sep:   string inserted between values, default a space.
+ *     end:   string appended after the last value, default a newline.
+ *     flush: whether to forcibly flush the stream.
+ *
+ * @param[in] p_stream     Pointer to stream to write to
+ * @param[in] p_buf        Pointer to buffer to read from
+ * @param[in] size         Size of buffer in bytes
+ * @param[in] p_sep        String inserted between each byte, default space
+ * @param[in] p_end        String appended after last byte, default newline
+ * @param[in] p_ischartype Pointer to character type check function
+ * @param[in] p_fmt_true   String when function returns non-zero, default "%c"
+ * @param[in] p_fmt_false  String when function returns zero, default empty
+ * @param[in] b_flush      Whether to forcibly flush the stream
+ *
+ * @return Status of operation
+ */
+status_t fprint(
+    FILE              * p_stream,
+    void              * p_buf,
+    size_t              size,
+    char const        * p_sep,
+    char const        * p_end,
+    ischartype_func_t   p_ischartype,
+    char const        * p_fmt_true,
+    char const        * p_fmt_false,
+    bool                b_flush
+);
 
 #endif /* COMMON_H */
 
