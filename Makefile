@@ -59,7 +59,7 @@ TIDY_CHECKS = -*, \
 	readability-implicit-bool-conversion, \
 	readability-avoid-const-params-in-decls
 
-.PHONY: all debug clean tidy tidy-fix
+.PHONY: all debug compile_commands tidy tidy-fix clean
 
 # All
 all: $(ALL_TARGETS)
@@ -80,6 +80,14 @@ $(BUILD)/%.o: $(SRC)/%.c
 # Debug
 debug: CFLAGS += -ggdb3 -Og -DDEBUG
 debug: all
+
+# Bear compile commands
+ROOT = ~/bsle-practice
+SUBDIRS := $(wildcard $(ROOT)/*/.)
+compile_commands:
+	$(RM) $(ROOT)/compile_commands.json
+	$(foreach d,$(SUBDIRS),$(MAKE) -C $(d) clean;)
+	$(foreach d,$(SUBDIRS),bear --append --output $(ROOT)/compile_commands.json -- $(MAKE) -C $(d);)
 
 # Clang-Tidy checks
 tidy:
