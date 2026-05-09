@@ -9,43 +9,106 @@
 #include "common.h"
 
 status_t
-display_hex (void * p_buf, size_t size, char const * p_sep)
+display_hex (
+    void * p_buf,
+    size_t size,
+    char const * p_sep,
+    char const * p_end
+)
 {
-    status_t status = STATUS_SUCCESS;
-
-    uint8_t chr;
-
-    for (size_t idx = 0u; idx < size; idx++)
-    {
-        // Print separator between each byte
-        if (1u <= idx)
-        {
-            printf("%s", p_sep);
-        }
-
-        chr = ((uint8_t *)p_buf)[idx];
-        printf("%02hhx", chr);
-    }
-
-    return status;
+    return fprint(
+        stdout,
+        p_buf,
+        size,
+        p_sep,
+        p_end,
+        NULL,
+        "%02hhx",
+        "%02hhx",
+        true
+    );
 }
 
 status_t
-display_printable (void * p_buf, size_t size)
+display_printable (
+    void * p_buf,
+    size_t size,
+    char const * p_sep,
+    char const * p_end
+)
+{
+    return fprint(
+        stdout,
+        p_buf,
+        size,
+        p_sep,
+        p_end,
+        isprint,
+        "%c",
+        "\\x%02hhx",
+        true
+    );
+}
+
+status_t
+fprint (
+    FILE              * p_stream,
+    void              * p_buf,
+    size_t              size,
+    char const        * p_sep,
+    char const        * p_end,
+    ischartype_func_t   p_ischartype,
+    char const        * p_fmt_true,
+    char const        * p_fmt_false,
+    bool                b_flush
+)
 {
     status_t status = STATUS_SUCCESS;
 
-    uint8_t chr;
+    if (NULL == p_buf)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_stream     = (NULL == p_stream)     ? stdout      : p_stream;
+    p_sep        = (NULL == p_sep)        ? ""          : p_sep;
+    p_end        = (NULL == p_end)        ? "\n"        : p_end;
+    p_ischartype = (NULL == p_ischartype) ? isprint     : p_ischartype;
+    p_fmt_true   = (NULL == p_fmt_true)   ? "%c"        : p_fmt_true;
+    p_fmt_false  = (NULL == p_fmt_false)  ? "\\x%02hhx" : p_fmt_false;
 
     for (size_t idx = 0u; idx < size; idx++)
     {
-        chr = ((uint8_t *)p_buf)[idx];
-        if (isprint(chr))
+        uint8_t chr = ((uint8_t *)p_buf)[idx];
+
+        // Print separator
+        if (1u <= idx)
         {
-            printf("%c", chr);
+            fprintf(p_stream, "%s", p_sep);
         }
+
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+        if (0 != p_ischartype(chr))
+        {
+            fprintf(p_stream, p_fmt_true, chr);
+        }
+        else
+        {
+            fprintf(p_stream, p_fmt_false, chr);
+        }
+        #pragma GCC diagnostic pop
     }
 
+    fprintf(p_stream, "%s", p_end);
+
+    if (b_flush)
+    {
+        fflush(p_stream);
+    }
+
+cleanup:
     return status;
 }
 

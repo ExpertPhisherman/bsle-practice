@@ -15,11 +15,26 @@ main (int argc, char * argv[])
     UNUSED(argc);
     UNUSED(argv);
 
-    printf("Hello, World!\n");
+    void * p_buf = NULL;
 
-    goto cleanup;
+    size_t size = 6u;
+
+    p_buf = malloc(size);
+    if (NULL == p_buf)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    memset(p_buf, 2, size);
+
+    memcpy((uint8_t *)p_buf + 1, "abc", 3u);
+
+    fprint(stdout, p_buf, size, NULL, NULL, NULL, NULL, NULL, true);
 
 cleanup:
+    free(p_buf);
+    p_buf = NULL;
     return status;
 }
 
