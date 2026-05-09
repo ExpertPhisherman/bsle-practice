@@ -1,6 +1,6 @@
 /** @file server.h
  *
- * @brief Generic TCP server
+ * @brief Generic TCP server header
  *
  * @par
  *

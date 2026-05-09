@@ -1,6 +1,6 @@
 /** @file server.c
  *
- * @brief Generic TCP server
+ * @brief Generic TCP server source
  *
  * @par
  *

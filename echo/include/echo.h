@@ -1,6 +1,6 @@
 /** @file echo.h
  *
- * @brief Echo server
+ * @brief Echo server header
  *
  * @par
  *
@@ -11,10 +11,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
+#include <stdatomic.h>
+#include <signal.h>
 #include "common.h"
-#include "sockutil.h"
 #include "server.h"
+#include "sockutil.h"
 
 typedef enum opcode
 {

@@ -9,15 +9,15 @@
 #ifndef SOCKUTIL_H
 #define SOCKUTIL_H
 
-#include "common.h"
-#include <errno.h>
-#include <signal.h>
-#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <stdatomic.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include <errno.h>
+#include <signal.h>
+#include "common.h"
 
 /*!
  * @brief Send all data to socket

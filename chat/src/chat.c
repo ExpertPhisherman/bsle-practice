@@ -1,6 +1,6 @@
 /** @file chat.c
  *
- * @brief Chat server
+ * @brief Chat server source
  *
  * @par
  *

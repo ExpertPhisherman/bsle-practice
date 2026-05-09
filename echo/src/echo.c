@@ -1,6 +1,6 @@
 /** @file echo.c
  *
- * @brief Echo server
+ * @brief Echo server source
  *
  * @par
  *
