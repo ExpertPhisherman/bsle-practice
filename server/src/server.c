@@ -10,10 +10,11 @@
 
 extern uint32_t const max_clients;
 extern uint32_t const worker_threads;
+extern uint32_t const epoll_max_events;
 
 uint16_t const max_port = 65535u;
+
 _Atomic sig_atomic_t g_keep_running = 1;
-static uint32_t const epoll_max_events = 64u;
 
 /*!
  * @brief Gracefully shutdown server on SIGINT

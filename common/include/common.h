@@ -20,9 +20,9 @@
 #include <ctype.h>
 
 #ifdef DEBUG
-    #define DEBUG_PRINT(...) (fprintf(stderr, __VA_ARGS__))
+#   define DEBUG_PRINT(...) (fprintf(stderr, __VA_ARGS__))
 #else
-    #define DEBUG_PRINT(...)
+#   define DEBUG_PRINT(...) ((void)0)
 #endif
 
 #define UNUSED(var) ((void)(var))
@@ -56,23 +56,6 @@ typedef int      (*compare_func_t)(void * p_data1, void * p_data2);
 typedef int      (*ischartype_func_t)(int chr);
 
 /*!
- * @brief Set default value
- *
- * @param[in] p_var  Pointer to variable
- * @param[in] size   Size of variable in bytes
- * @param[in] p_sval Pointer to sentinel value for variable
- * @param[in] p_dval Pointer to default value for variable
- *
- * @return Status of operation
- */
-status_t default_value(
-    void   * p_var,
-    size_t   size,
-    void   * p_sval,
-    void   * p_dval
-);
-
-/*!
  * @brief Display bytes in hex
  *
  * @param[in] p_buf Pointer to buffer
@@ -83,8 +66,8 @@ status_t default_value(
  * @return Status of operation
  */
 status_t display_hex(
-    void * p_buf,
-    size_t size,
+    void       * p_buf,
+    size_t       size,
     char const * p_sep,
     char const * p_end
 );
@@ -100,8 +83,8 @@ status_t display_hex(
  * @return Status of operation
  */
 status_t display_printable(
-    void * p_buf,
-    size_t size,
+    void       * p_buf,
+    size_t       size,
     char const * p_sep,
     char const * p_end
 );

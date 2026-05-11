@@ -66,6 +66,7 @@ opcode_default (
     }
 
     p_response->status = 0x01;
+
     status = write_response(
         p_response,
         "Unknown opcode: 0x%02hhx",
@@ -93,6 +94,7 @@ opcode_ping (
     }
 
     p_response->status = 0x00;
+
     status = write_response(p_response, "PONG");
 
 cleanup:
@@ -115,6 +117,7 @@ opcode_echo (
     }
 
     p_response->status = 0x00;
+
     status = write_response(
         p_response,
         "%.*s",
@@ -143,6 +146,7 @@ opcode_quit (
     }
 
     p_response->status = 0x00;
+
     status = write_response(p_response, "Goodbye!");
 
 cleanup:
@@ -241,6 +245,7 @@ opcode_login (
     if (!((3u <= username_size) && (16u >= username_size)))
     {
         p_response->status = 0x01;
+
         status = write_response(p_response, p_username_msg);
         goto cleanup;
     }
@@ -248,6 +253,7 @@ opcode_login (
     if (!(8u <= password_size))
     {
         p_response->status = 0x01;
+
         status = write_response(p_response, p_password_msg);
         goto cleanup;
     }
@@ -258,6 +264,7 @@ opcode_login (
         if (!(isalnum(chr) || ('_' == chr)))
         {
             p_response->status = 0x01;
+
             status = write_response(p_response, p_username_msg);
             goto cleanup;
         }
@@ -269,6 +276,7 @@ opcode_login (
         if (!(isprint(chr) && (' ' != chr)))
         {
             p_response->status = 0x01;
+
             status = write_response(p_response, p_password_msg);
             goto cleanup;
         }
@@ -296,6 +304,7 @@ opcode_login (
         pthread_mutex_unlock(&(p_cred_store->lock));
 
         p_response->status = 0x00;
+
         status = write_response(
             p_response,
             "Created new user: %.*s",
@@ -318,11 +327,13 @@ opcode_login (
         ))
         {
             p_response->status = 0x01;
+
             status = write_response(p_response, "GET OUT!!1!1!");
             goto cleanup;
         }
 
         p_response->status = 0x00;
+
         status = write_response(
             p_response,
             "Successful login to user: %.*s",
@@ -363,6 +374,7 @@ opcode_logout (
     if (NULL != p_response)
     {
         p_response->status = 0x00;
+
         status = write_response(
             p_response,
             "Successful logout from user: %.*s",

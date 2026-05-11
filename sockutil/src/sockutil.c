@@ -32,11 +32,13 @@ sockutil_sendall (int sockfd, void * p_buf, size_t size)
                 continue;
             }
 
+            perror("sendall");
             status = STATUS_SEND_FAILURE;
             goto cleanup;
         }
         else if (0 == sent)
         {
+            perror("sendall");
             status = STATUS_SEND_FAILURE;
             goto cleanup;
         }
@@ -46,15 +48,7 @@ sockutil_sendall (int sockfd, void * p_buf, size_t size)
         }
     }
 
-    status = STATUS_SUCCESS;
-    goto cleanup;
-
 cleanup:
-    if (STATUS_SEND_FAILURE == status)
-    {
-        perror("sendall");
-    }
-
     return status;
 }
 
@@ -80,6 +74,7 @@ sockutil_recvall (int sockfd, void * p_buf, size_t size)
                 continue;
             }
 
+            perror("recvall");
             status = STATUS_RECV_FAILURE;
             goto cleanup;
         }
@@ -96,15 +91,7 @@ sockutil_recvall (int sockfd, void * p_buf, size_t size)
         }
     }
 
-    status = STATUS_SUCCESS;
-    goto cleanup;
-
 cleanup:
-    if (STATUS_RECV_FAILURE == status)
-    {
-        perror("recvall");
-    }
-
     return status;
 }
 
@@ -112,7 +99,8 @@ status_t
 sockutil_drain (int sockfd, size_t size, size_t chunk_size)
 {
     status_t status = STATUS_SUCCESS;
-    uint8_t * p_buf;
+
+    uint8_t * p_buf = NULL;
 
     p_buf = malloc(chunk_size);
     if (NULL == p_buf)
@@ -134,8 +122,6 @@ sockutil_drain (int sockfd, size_t size, size_t chunk_size)
 
         size -= chunk;
     }
-
-    goto cleanup;
 
 cleanup:
     free(p_buf);

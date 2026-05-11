@@ -8,14 +8,13 @@
 
 #include "chat.h"
 
-extern _Atomic sig_atomic_t g_keep_running;
-
 int const      default_backlog  = SOMAXCONN;
 uint16_t const default_lport    = 3333u;
 uint32_t const max_payload_size = 4096u;
 uint32_t const chunk_size       = 512u;
 uint32_t const max_clients      = 100u;
 uint32_t const worker_threads   = 8u;
+uint32_t const epoll_max_events = 64u;
 
 /*!
  * @brief Create application data
@@ -181,7 +180,8 @@ chat_client_run (server_t * p_server, client_t * p_client)
     {
         printf(
             "========================================\n"
-            "Request from sockfd %d:\n", p_client->sockfd
+            "Request from sockfd %d:\n",
+            p_client->sockfd
         );
         display_request(p_request);
     }
@@ -197,7 +197,8 @@ chat_client_run (server_t * p_server, client_t * p_client)
     {
         printf(
             "========================================\n"
-            "Response to sockfd %d:\n", p_client->sockfd
+            "Response to sockfd %d:\n",
+            p_client->sockfd
         );
         display_response(p_response);
     }
@@ -389,9 +390,11 @@ cleanup:
 }
 
 static status_t
-handle_request (session_t  * p_session,
-                request_t  * p_request,
-                response_t * p_response)
+handle_request (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -410,6 +413,7 @@ handle_request (session_t  * p_session,
         (OPCODE_QUIT  != p_request->opcode))
     {
         p_response->status = 0x01;
+
         status = write_response(p_response, "NOT AUTHENTICATED");
         goto cleanup;
     }

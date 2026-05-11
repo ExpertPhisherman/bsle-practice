@@ -13,6 +13,9 @@ __pycache__/
 .valgrindrc
 *.supp
 
+# Clang format
+.clang-format
+
 # GitHub C template
 # Prerequisites
 *.d

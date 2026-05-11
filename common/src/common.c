@@ -10,8 +10,8 @@
 
 status_t
 display_hex (
-    void * p_buf,
-    size_t size,
+    void       * p_buf,
+    size_t       size,
     char const * p_sep,
     char const * p_end
 )
@@ -31,8 +31,8 @@ display_hex (
 
 status_t
 display_printable (
-    void * p_buf,
-    size_t size,
+    void       * p_buf,
+    size_t       size,
     char const * p_sep,
     char const * p_end
 )
@@ -88,17 +88,21 @@ fprint (
             fprintf(p_stream, "%s", p_sep);
         }
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+        char const * p_fmt = NULL;
         if (0 != p_ischartype(chr))
         {
-            fprintf(p_stream, p_fmt_true, chr);
+            p_fmt = p_fmt_true;
         }
         else
         {
-            fprintf(p_stream, p_fmt_false, chr);
+            p_fmt = p_fmt_false;
         }
-        #pragma GCC diagnostic pop
+
+        // NOTE: fprintf expects string literal, ignore compiler warning
+#       pragma GCC diagnostic push
+#       pragma GCC diagnostic ignored "-Wformat-nonliteral"
+        fprintf(p_stream, p_fmt, chr);
+#       pragma GCC diagnostic pop
     }
 
     fprintf(p_stream, "%s", p_end);
