@@ -65,8 +65,8 @@ display_unicode (
         p_sep,
         p_end,
         isprint,
-        "  %c",
-        "\\%02hhx",
+        "%c",
+        ".",
         true
     );
 }

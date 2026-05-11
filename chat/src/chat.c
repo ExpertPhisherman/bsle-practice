@@ -459,7 +459,7 @@ display_request (request_t * p_request)
     );
 
     display_hex(p_request->p_payload, host_request_size, " ", "\n");
-    printf("    string :");
+    printf("    string : ");
     display_unicode(p_request->p_payload, host_request_size, "", "\n");
     printf("}\n");
 
@@ -487,7 +487,7 @@ display_response (response_t * p_response)
     );
 
     display_hex(p_response->p_payload, host_response_size, " ", "\n");
-    printf("    string :");
+    printf("    string : ");
     display_unicode(p_response->p_payload, host_response_size, "", "\n");
     printf("}\n");
 

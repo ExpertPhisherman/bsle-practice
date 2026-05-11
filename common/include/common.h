@@ -94,7 +94,7 @@ status_t display_printable(
  *
  * @par
  * If character is decodable, print decoded character
- * Else, print byte in hex
+ * Else, print "."
  *
  * @param[in] p_buf Pointer to buffer
  * @param[in] size  Size of buffer in bytes
