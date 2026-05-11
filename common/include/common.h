@@ -90,6 +90,27 @@ status_t display_printable(
 );
 
 /*!
+ * @brief Display unicode characters
+ *
+ * @par
+ * If character is decodable, print decoded character
+ * Else, print byte in hex
+ *
+ * @param[in] p_buf Pointer to buffer
+ * @param[in] size  Size of buffer in bytes
+ * @param[in] p_sep String inserted between each byte
+ * @param[in] p_end String appended after last byte
+ *
+ * @return Status of operation
+ */
+status_t display_unicode(
+    void       * p_buf,
+    size_t       size,
+    char const * p_sep,
+    char const * p_end
+);
+
+/*!
  * @brief Python-like print to stream
  *
  * @par

@@ -332,8 +332,7 @@ appdata_create (size_t capacity)
         goto cleanup;
     }
 
-    // NOTE: Possible number of values for uint8_t is 256
-    pp_opcode_funcs = calloc(256u, sizeof(*pp_opcode_funcs));
+    pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -460,8 +459,8 @@ display_request (request_t * p_request)
     );
 
     display_hex(p_request->p_payload, host_request_size, " ", "\n");
-    printf("    string : ");
-    display_printable(p_request->p_payload, host_request_size, "", "\n");
+    printf("    string :");
+    display_unicode(p_request->p_payload, host_request_size, "", "\n");
     printf("}\n");
 
 cleanup:
@@ -488,8 +487,8 @@ display_response (response_t * p_response)
     );
 
     display_hex(p_response->p_payload, host_response_size, " ", "\n");
-    printf("    string : ");
-    display_printable(p_response->p_payload, host_response_size, "", "\n");
+    printf("    string :");
+    display_unicode(p_response->p_payload, host_response_size, "", "\n");
     printf("}\n");
 
 cleanup:

@@ -45,7 +45,28 @@ display_printable (
         p_end,
         isprint,
         "%c",
-        "\\x%02hhx",
+        "",
+        true
+    );
+}
+
+status_t
+display_unicode (
+    void       * p_buf,
+    size_t       size,
+    char const * p_sep,
+    char const * p_end
+)
+{
+    return fprint(
+        stdout,
+        p_buf,
+        size,
+        p_sep,
+        p_end,
+        isprint,
+        "  %c",
+        "\\%02hhx",
         true
     );
 }
@@ -72,7 +93,7 @@ fprint (
     }
 
     p_stream     = (NULL == p_stream)     ? stdout      : p_stream;
-    p_sep        = (NULL == p_sep)        ? ""          : p_sep;
+    p_sep        = (NULL == p_sep)        ? " "         : p_sep;
     p_end        = (NULL == p_end)        ? "\n"        : p_end;
     p_ischartype = (NULL == p_ischartype) ? isprint     : p_ischartype;
     p_fmt_true   = (NULL == p_fmt_true)   ? "%c"        : p_fmt_true;
