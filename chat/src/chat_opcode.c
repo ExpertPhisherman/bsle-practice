@@ -51,8 +51,8 @@ cleanup:
 
 status_t
 opcode_default (
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 )
 {
@@ -79,8 +79,8 @@ cleanup:
 
 status_t
 opcode_ping (
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 )
 {
@@ -103,8 +103,8 @@ cleanup:
 
 status_t
 opcode_echo (
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 )
 {
@@ -131,8 +131,8 @@ cleanup:
 
 status_t
 opcode_quit (
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 )
 {
@@ -155,8 +155,8 @@ cleanup:
 
 status_t
 opcode_login (
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 )
 {
@@ -357,8 +357,8 @@ cleanup:
 
 status_t
 opcode_logout (
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 )
 {

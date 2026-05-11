@@ -51,8 +51,8 @@ status_t write_response(
  * @return Status of operation
  */
 status_t opcode_default(
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 );
 
@@ -66,8 +66,8 @@ status_t opcode_default(
  * @return Status of operation
  */
 status_t opcode_ping(
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 );
 
@@ -81,8 +81,8 @@ status_t opcode_ping(
  * @return Status of operation
  */
 status_t opcode_echo(
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 );
 
@@ -96,8 +96,8 @@ status_t opcode_echo(
  * @return Status of operation
  */
 status_t opcode_quit(
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 );
 
@@ -111,8 +111,8 @@ status_t opcode_quit(
  * @return Status of operation
  */
 status_t opcode_login(
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 );
 
@@ -126,8 +126,8 @@ status_t opcode_login(
  * @return Status of operation
  */
 status_t opcode_logout(
-    session_t * p_session,
-    request_t * p_request,
+    session_t  * p_session,
+    request_t  * p_request,
     response_t * p_response
 );
 
