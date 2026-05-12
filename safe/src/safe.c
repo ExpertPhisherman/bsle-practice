@@ -131,4 +131,57 @@ cleanup:
     return status;
 }
 
+safe_data_t *
+safe_data_create (void * p_data)
+{
+    status_t status = STATUS_SUCCESS;
+
+    safe_data_t * p_safe_data = NULL;
+
+    p_safe_data = malloc(sizeof(*p_safe_data));
+    if (NULL == p_safe_data)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_safe_data->p_data = p_data;
+
+    if (0 != pthread_mutex_init(&(p_safe_data->lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
+        goto cleanup;
+    }
+
+cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        safe_data_destroy(p_safe_data);
+        p_safe_data = NULL;
+    }
+    return p_safe_data;
+}
+
+status_t
+safe_data_destroy (safe_data_t * p_safe_data)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_safe_data)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_safe_data->p_data = NULL;
+
+    pthread_mutex_destroy(&(p_safe_data->lock));
+
+cleanup:
+    free(p_safe_data);
+    p_safe_data = NULL;
+    return status;
+}
+
 /*** end of file ***/

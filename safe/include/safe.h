@@ -29,6 +29,12 @@ typedef struct safe_sll
     pthread_mutex_t   lock;  // Mutex lock for read/write control
 } safe_sll_t;
 
+typedef struct safe_data
+{
+    void            * p_data; // Pointer to data
+    pthread_mutex_t   lock;   // Mutex lock for read/write control
+} safe_data_t;
+
 /*!
  * @brief Create thread-safe hash table
  *
@@ -64,6 +70,24 @@ safe_sll_t * safe_sll_create(void);
  * @return Status of operation
  */
 status_t safe_sll_destroy(safe_sll_t * p_safe_sll);
+
+/*!
+ * @brief Create thread-safe data
+ *
+ * @param[in] p_data Pointer to arbitrary data
+ *
+ * @return Pointer to thread-safe data
+ */
+safe_data_t * safe_data_create(void * p_data);
+
+/*!
+ * @brief Destroy thread-safe data
+ *
+ * @param[in] p_safe_data Pointer to thread-safe data
+ *
+ * @return Status of operation
+ */
+status_t safe_data_destroy(safe_data_t * p_safe_data);
 
 #endif /* SAFE_H */
 
