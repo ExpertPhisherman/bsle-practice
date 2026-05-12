@@ -49,6 +49,7 @@ typedef enum status
     STATUS_NOT_EXISTS        = 17,
     STATUS_OUT_OF_BOUNDS     = 18,
     STATUS_SIZE_MISMATCH     = 19,
+    STATUS_INVALID_SESSION   = 20,
 } status_t;
 
 typedef status_t (*display_func_t)(void * p_data);
