@@ -8,13 +8,14 @@
 
 #include "chat.h"
 
-int const      default_backlog  = SOMAXCONN;
-uint16_t const default_lport    = 3333u;
-uint32_t const max_payload_size = 4096u;
-uint32_t const chunk_size       = 512u;
-uint32_t const max_clients      = 100u;
-uint32_t const worker_threads   = 8u;
-uint32_t const epoll_max_events = 64u;
+int const      default_backlog     = SOMAXCONN;
+uint16_t const default_lport       = 3333u;
+uint32_t const max_payload_size    = 4096u;
+uint32_t const chunk_size          = 512u;
+uint32_t const max_clients         = 100u;
+uint32_t const worker_threads      = 8u;
+uint32_t const epoll_max_events    = 64u;
+size_t const   cred_store_capacity = 101u;
 
 /*!
  * @brief Create application data

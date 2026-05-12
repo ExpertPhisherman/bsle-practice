@@ -11,6 +11,7 @@
 extern uint16_t const max_port;
 extern uint16_t const default_lport;
 extern int const      default_backlog;
+extern size_t const   cred_store_capacity;
 
 int
 main (int argc, char * argv[])
@@ -99,7 +100,7 @@ main (int argc, char * argv[])
     hints.p_client_init = chat_client_init;
     hints.p_client_free = chat_client_free;
 
-    p_server = chat_server_create(&hints, 101u);
+    p_server = chat_server_create(&hints, cred_store_capacity);
     if (NULL == p_server)
     {
         status = STATUS_ALLOC_FAILURE;
