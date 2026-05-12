@@ -43,6 +43,8 @@ typedef enum opcode
     OPCODE_QUIT    = 0x03, // Close client connection
     OPCODE_LOGIN   = 0x04, // Log in with credentials
     OPCODE_LOGOUT  = 0x05, // Log out
+    OPCODE_RECV    = 0x06, // Receive last seen timestamp, send newer messages
+    OPCODE_SEND    = 0x07, // Receive single message
 } opcode_t;
 
 typedef struct session
@@ -57,9 +59,10 @@ typedef struct session
 
 typedef struct request
 {
-    uint8_t    opcode;    // Opcode
-    uint32_t   size;      // Size of payload in network byte order
-    char     * p_payload; // Pointer to payload
+    uint8_t    opcode;     // Opcode
+    uint32_t   session_id; // Session ID network byte order, unauthenticated = 0
+    uint32_t   size;       // Size of payload in network byte order
+    char     * p_payload;  // Pointer to payload
 } request_t;
 
 typedef struct response
@@ -71,6 +74,7 @@ typedef struct response
 
 typedef struct appdata
 {
+    uint32_t        next_session_id; // Next session ID to assign after login
     safe_ht_t     * p_cred_store;    // Pointer to credential store
     opcode_func_t * pp_opcode_funcs; // Double pointer to opcode function array
 } appdata_t;

@@ -36,6 +36,7 @@ class ChatClient(Client):
         super().__init__()
         self.prompt = "chat> "
         self.opcode = 0x00
+        self.session_id = 0
         self.length = 0
         self.payload = b""
         self.username = None
@@ -47,7 +48,8 @@ class ChatClient(Client):
         if self.sock is None:
             return True
         try:
-            request = struct.pack("!BI", self.opcode, self.length)
+            print(f"{self.session_id=}")
+            request = struct.pack("!BII", self.opcode, self.session_id, self.length)
             request += self.payload
             self.sock.sendall(request)
             return False
@@ -76,7 +78,11 @@ class ChatClient(Client):
             if len(payload) != size:
                 raise ConnectionError("Unexpected response length")
 
-            print(payload.decode("utf-8"))
+            if (self.opcode == 0x04) and (status == 0x00):
+                self.session_id = struct.unpack("!I", payload[:4])[0]
+                print(f"Login, set session ID to: {self.session_id}")
+
+            print(f"Payload bytes: {payload}")
             return False
 
         except (ConnectionError, KeyboardInterrupt) as e:
@@ -116,6 +122,7 @@ class ChatClient(Client):
 
         self.opcode = 0x04
         self.payload = b""
+
         self.payload += len(username).to_bytes(1, "big")
         self.payload += len(password).to_bytes(1, "big")
         self.payload += f"{username}{password}".encode("utf-8")
@@ -131,7 +138,9 @@ class ChatClient(Client):
     @with_parser(description="Respond with PONG")
     def do_ping(self, line: str) -> bool:
         self.opcode = 0x01
-        self.payload = b"\x00"
+        self.payload = b""
+
+        self.payload += b"\x00"
 
         self.length = len(self.payload)
         self.send_request()
@@ -143,7 +152,9 @@ class ChatClient(Client):
     )
     def do_echo(self, line: str) -> bool:
         self.opcode = 0x02
-        self.payload = line.encode("utf-8")
+        self.payload = b""
+
+        self.payload += line.encode("utf-8")
 
         self.length = len(self.payload)
         self.send_request()
@@ -152,7 +163,8 @@ class ChatClient(Client):
     @with_parser(description="Close client connection")
     def do_quit(self, line: str) -> bool:
         self.opcode = 0x03
-        self.payload = b"\x00"
+        self.payload = b""
+        self.payload += b"\x00"
 
         self.length = len(self.payload)
         self.send_request()
@@ -164,12 +176,19 @@ class ChatClient(Client):
         self.opcode = 0x05
         self.payload = b""
 
+        self.payload += b"\x00"
+
         print(f"Attempting logout from user: {self.username}")
         self.username = None
         self.password = None
 
         self.length = len(self.payload)
         self.send_request()
+
+        # Set session ID to 0 regardless of response status
+        self.session_id = 0
+        print(f"Logout, set session ID to {self.session_id}")
+
         return self.recv_response()
 
     @with_parser(description="Handle EOF (Ctrl+D)")

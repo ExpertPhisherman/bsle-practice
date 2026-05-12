@@ -39,6 +39,7 @@ write_response (
 
     if (0 > written)
     {
+        fprintf(stderr, "write_response: vsnprintf output failure\n");
         status = STATUS_FAILURE;
         goto cleanup;
     }
@@ -145,6 +146,8 @@ opcode_quit (
         goto cleanup;
     }
 
+    opcode_logout(p_session, p_request, p_response);
+
     p_response->status = 0x00;
 
     status = write_response(p_response, "Goodbye!");
@@ -190,8 +193,7 @@ opcode_login (
     uint8_t username_size = p_session->username_size;
     uint8_t password_size = p_session->password_size;
 
-    if (2u + username_size + password_size !=
-        host_request_size)
+    if (2u + username_size + password_size != host_request_size)
     {
         fprintf(stderr, "Rejecting malformed size in login request\n");
         status = STATUS_SIZE_MISMATCH;
@@ -305,16 +307,22 @@ opcode_login (
 
         p_response->status = 0x00;
 
+        // NOTE: Successful user creation
+        // TODO: Set unique positive session ID
+        p_session->session_id = 255u;
+
+        uint32_t net_session_id = htonl(p_session->session_id);
+
         status = write_response(
             p_response,
-            "Created new user: %.*s",
+            "%c%c%c%cCreated new user: %.*s",
+            (net_session_id >>  0) & 0xFF,
+            (net_session_id >>  8) & 0xFF,
+            (net_session_id >> 16) & 0xFF,
+            (net_session_id >> 24) & 0xFF,
             username_size,
             p_username
         );
-        if (STATUS_SUCCESS != status)
-        {
-            goto cleanup;
-        }
     }
     else
     {
@@ -328,15 +336,36 @@ opcode_login (
         {
             p_response->status = 0x01;
 
-            status = write_response(p_response, "GET OUT!!1!1!");
+            p_session->session_id = 0u;
+
+            uint32_t net_session_id = htonl(p_session->session_id);
+
+            status = write_response(
+                p_response,
+                "%c%c%c%cGET OUT!!1!1!",
+                (net_session_id >>  0) & 0xFF,
+                (net_session_id >>  8) & 0xFF,
+                (net_session_id >> 16) & 0xFF,
+                (net_session_id >> 24) & 0xFF
+            );
             goto cleanup;
         }
 
         p_response->status = 0x00;
 
+        // NOTE: Successful login
+        // TODO: Set unique positive session ID
+        p_session->session_id = 255u;
+
+        uint32_t net_session_id = htonl(p_session->session_id);
+
         status = write_response(
             p_response,
-            "Successful login to user: %.*s",
+            "%c%c%c%cSuccessful login to user: %.*s",
+            (net_session_id >>  0) & 0xFF,
+            (net_session_id >>  8) & 0xFF,
+            (net_session_id >> 16) & 0xFF,
+            (net_session_id >> 24) & 0xFF,
             username_size,
             p_username
         );
@@ -345,11 +374,6 @@ opcode_login (
             goto cleanup;
         }
     }
-
-    // NOTE: Successful login
-
-    // TODO: Set random positive session ID
-    p_session->session_id = 1234u;
 
 cleanup:
     return status;
