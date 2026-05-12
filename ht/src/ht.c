@@ -254,6 +254,17 @@ ht_set (
 {
     status_t status = STATUS_SUCCESS;
 
+    if (
+        (NULL == p_ht) ||
+        (NULL == p_key) ||
+        (NULL == p_value) ||
+        (NULL == p_ht->p_hash_func)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
     item_t item =
     {
         .p_hash_func = p_ht->p_hash_func,
@@ -263,14 +274,6 @@ ht_set (
         .p_value     = NULL,
         .value_size  = value_size,
     };
-
-    if ((NULL == p_ht) ||
-        (NULL == p_key) || (NULL == p_value) ||
-        (NULL == p_ht->p_hash_func))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     // Allocate hash table owned key and value
     item.p_key = malloc(key_size);
