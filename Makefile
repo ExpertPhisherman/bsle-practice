@@ -87,7 +87,7 @@ SUBDIRS := $(wildcard $(ROOT)/*/.)
 compile_commands:
 	$(RM) $(ROOT)/compile_commands.json
 	$(foreach d,$(SUBDIRS),$(MAKE) -C $(d) clean;)
-	$(foreach d,$(SUBDIRS),bear --append --output $(ROOT)/compile_commands.json -- $(MAKE) -C $(d) $(.DEFAULT_GOAL);)
+	$(foreach d,$(SUBDIRS),bear --append --output $(ROOT)/.vscode/compile_commands.json -- $(MAKE) -C $(d) $(.DEFAULT_GOAL);)
 
 # Clang-Tidy checks
 tidy:
