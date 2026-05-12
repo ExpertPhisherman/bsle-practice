@@ -87,6 +87,21 @@ static status_t recv_request(int sockfd, request_t * p_request);
  */
 static status_t send_response(int sockfd, response_t * p_response);
 
+/*!
+ * @brief Validate client session
+ *
+ * @param[in] p_session  Pointer to session
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+static status_t validate_session(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
 server_t *
 chat_server_create (server_t * p_hints, size_t capacity)
 {
@@ -325,6 +340,9 @@ appdata_create (size_t capacity)
 
     memset(p_appdata, 0, sizeof(*p_appdata));
 
+    // TODO: Put into thread safe struct with mutex lock
+    p_appdata->next_session_id = 1u;
+
     p_appdata->p_cred_store = safe_ht_create(capacity);
     if (NULL == p_appdata->p_cred_store)
     {
@@ -407,13 +425,14 @@ handle_request (
         goto cleanup;
     }
 
-    if ((0u == p_session->session_id) &&
-        (OPCODE_LOGIN != p_request->opcode) &&
-        (OPCODE_QUIT  != p_request->opcode))
-    {
-        p_response->status = 0x01;
+    DEBUG_PRINT("Request session ID: %u\n", ntohl(p_request->session_id));
 
-        status = write_response(p_response, "NOT AUTHENTICATED");
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        fprintf(stderr, "Invalid session\n");
+
+        status = STATUS_SUCCESS;
         goto cleanup;
     }
 
@@ -451,10 +470,12 @@ display_request (request_t * p_request)
 
     printf(
         "{\n"
-        "    opcode : 0x%02hhx\n"
-        "    size   : %u\n"
-        "    payload: ",
+        "    opcode    : 0x%02hhx\n"
+        "    session_id: %u\n"
+        "    size      : %u\n"
+        "    payload   : ",
         p_request->opcode,
+        ntohl(p_request->session_id),
         host_request_size
     );
 
@@ -507,7 +528,7 @@ recv_request (int sockfd, request_t * p_request)
         goto cleanup;
     }
 
-    uint32_t const header_size = 5u;
+    uint32_t const header_size = 9u;
 
     p_recv_buf = malloc(header_size);
     if (NULL == p_recv_buf)
@@ -525,7 +546,12 @@ recv_request (int sockfd, request_t * p_request)
     }
 
     memcpy(&(p_request->opcode), p_recv_buf + 0, sizeof(p_request->opcode));
-    memcpy(&(p_request->size),   p_recv_buf + 1, sizeof(p_request->size));
+    memcpy(
+        &(p_request->session_id),
+        p_recv_buf + 1,
+        sizeof(p_request->session_id)
+    );
+    memcpy(&(p_request->size), p_recv_buf + 5, sizeof(p_request->size));
 
     uint32_t const payload_size = ntohl(p_request->size);
 
@@ -605,6 +631,40 @@ send_response (int sockfd, response_t * p_response)
 cleanup:
     free(p_send_buf);
     p_send_buf = NULL;
+    return status;
+}
+
+static status_t
+validate_session (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_session)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    if (
+        (
+            (0u == p_session->session_id) ||
+            (ntohl(p_request->session_id) != p_session->session_id)
+        ) &&
+        (OPCODE_LOGIN != p_request->opcode) &&
+        (OPCODE_QUIT  != p_request->opcode))
+    {
+        p_response->status = 0x01;
+
+        write_response(p_response, "NOT AUTHENTICATED");
+
+        status = STATUS_INVALID_SESSION;
+    }
+
+cleanup:
     return status;
 }
 
