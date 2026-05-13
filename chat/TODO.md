@@ -3,9 +3,8 @@
 
 ## Server
 
-- Put next session ID into thread safe struct with mutex lock
 - Add message_t type that includes message content and timestamp
-- Add OPCODE_RECV and OPCODE_SEND opcode functions
+- Add OPCODE_MSG_RECV and OPCODE_MSG_SEND opcode functions
 - Modify request and response structs to follow requirements
 - Send banner on client connect
 
