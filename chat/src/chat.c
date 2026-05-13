@@ -377,6 +377,13 @@ appdata_create (size_t capacity)
     p_appdata->p_session_id    = p_session_id;
     p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
+    if (0 != pthread_mutex_init(&(p_appdata->lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
+        goto cleanup;
+    }
+
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -392,31 +399,25 @@ appdata_destroy (appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    ht_t          * p_cred_store    = NULL;
-    uint32_t      * p_session_id    = NULL;
-    opcode_func_t * pp_opcode_funcs = NULL;
-
     if (NULL == p_appdata)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_cred_store    = p_appdata->p_cred_store;
-    p_session_id    = p_appdata->p_session_id;
-    pp_opcode_funcs = p_appdata->pp_opcode_funcs;
+    free(p_appdata->p_session_id);
+    p_appdata->p_session_id = NULL;
+
+    ht_destroy(p_appdata->p_cred_store);
+    p_appdata->p_cred_store = NULL;
+
+    free(p_appdata->pp_opcode_funcs);
+    p_appdata->pp_opcode_funcs = NULL;
+
+    pthread_mutex_destroy(&(p_appdata->lock));
 
     free(p_appdata);
     p_appdata = NULL;
-
-    free(p_session_id);
-    p_session_id = NULL;
-
-    ht_destroy(p_cred_store);
-    p_cred_store = NULL;
-
-    free(pp_opcode_funcs);
-    pp_opcode_funcs = NULL;
 
 cleanup:
     return status;
