@@ -356,12 +356,14 @@ appdata_create (size_t capacity)
         goto cleanup;
     }
 
-    pp_opcode_funcs[OPCODE_DEFAULT] = opcode_default;
-    pp_opcode_funcs[OPCODE_PING]    = opcode_ping;
-    pp_opcode_funcs[OPCODE_ECHO]    = opcode_echo;
-    pp_opcode_funcs[OPCODE_QUIT]    = opcode_quit;
-    pp_opcode_funcs[OPCODE_LOGIN]   = opcode_login;
-    pp_opcode_funcs[OPCODE_LOGOUT]  = opcode_logout;
+    pp_opcode_funcs[OPCODE_DEFAULT]  = opcode_default;
+    pp_opcode_funcs[OPCODE_PING]     = opcode_ping;
+    pp_opcode_funcs[OPCODE_ECHO]     = opcode_echo;
+    pp_opcode_funcs[OPCODE_QUIT]     = opcode_quit;
+    pp_opcode_funcs[OPCODE_LOGIN]    = opcode_login;
+    pp_opcode_funcs[OPCODE_LOGOUT]   = opcode_logout;
+    pp_opcode_funcs[OPCODE_MSG_SEND] = opcode_msg_send;
+    pp_opcode_funcs[OPCODE_MSG_RECV] = opcode_msg_recv;
 
     p_appdata->p_cred_store    = p_cred_store;
     p_appdata->next_session_id = 1u;

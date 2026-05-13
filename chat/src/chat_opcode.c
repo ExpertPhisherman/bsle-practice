@@ -440,4 +440,46 @@ cleanup:
     return status;
 }
 
+status_t
+opcode_msg_send (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    ;
+
+cleanup:
+    return status;
+}
+
+status_t
+opcode_msg_recv (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    ;
+
+cleanup:
+    return status;
+}
+
 /*** end of file ***/

@@ -18,10 +18,15 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <time.h>
+#include <endian.h>
 #include "common.h"
 #include "chat.h"
 #include "ht.h"
 #include "sll.h"
+
+#define htonll(x) htobe64(x)
+#define ntohll(x) be64toh(x)
 
 typedef struct session  session_t;
 typedef struct request  request_t;
@@ -126,6 +131,36 @@ status_t opcode_login(
  * @return Status of operation
  */
 status_t opcode_logout(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Receive single message
+ *
+ * @param[in] p_session  Pointer to session
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_msg_send(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Receive last seen timestamp, send newer messages
+ *
+ * @param[in] p_session  Pointer to session
+ * @param[in] p_request  Pointer to request
+ * @param[in] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_msg_recv(
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response

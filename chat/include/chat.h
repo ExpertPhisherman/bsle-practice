@@ -26,6 +26,7 @@
 typedef struct session           session_t;
 typedef struct request           request_t;
 typedef struct response          response_t;
+typedef struct message           message_t;
 typedef struct appdata           appdata_t;
 typedef struct chat_client_state chat_client_state_t;
 
@@ -71,6 +72,12 @@ typedef struct response
     uint32_t   size;      // Size of payload in network byte order
     char     * p_payload; // Pointer to payload
 } response_t;
+
+typedef struct message
+{
+    char const * p_content; // Message text
+    uint64_t     timestamp; // Time message received by server in nanoseconds
+} message_t;
 
 typedef struct appdata
 {
