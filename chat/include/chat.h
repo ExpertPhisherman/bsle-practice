@@ -36,14 +36,14 @@ typedef status_t (*opcode_func_t)(
 
 typedef enum opcode
 {
-    OPCODE_DEFAULT = 0x00, // Default opcode in case of unknown
-    OPCODE_PING    = 0x01, // Respond with PONG
-    OPCODE_ECHO    = 0x02, // Return the provided message
-    OPCODE_QUIT    = 0x03, // Close client connection
-    OPCODE_LOGIN   = 0x04, // Log in with credentials
-    OPCODE_LOGOUT  = 0x05, // Log out
-    OPCODE_RECV    = 0x06, // Receive last seen timestamp, send newer messages
-    OPCODE_SEND    = 0x07, // Receive single message
+    OPCODE_DEFAULT  = 0x00, // Default opcode in case of unknown
+    OPCODE_PING     = 0x01, // Respond with PONG
+    OPCODE_ECHO     = 0x02, // Return the provided message
+    OPCODE_QUIT     = 0x03, // Close client connection
+    OPCODE_LOGIN    = 0x04, // Log in with credentials
+    OPCODE_LOGOUT   = 0x05, // Log out
+    OPCODE_MSG_SEND = 0x06, // Receive single message
+    OPCODE_MSG_RECV = 0x07, // Receive last seen timestamp, send newer messages
 } opcode_t;
 
 typedef struct session
