@@ -120,6 +120,8 @@ class ChatClient(Client):
             self.do_help("login")
             return False
 
+        self.do_logout(line)
+
         self.opcode = 0x04
         self.payload = b""
 
