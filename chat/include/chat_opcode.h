@@ -19,7 +19,6 @@
 #include <netinet/in.h>
 #include "common.h"
 #include "chat.h"
-#include "safe.h"
 #include "ht.h"
 #include "sll.h"
 

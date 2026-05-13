@@ -19,7 +19,6 @@
 #include "server.h"
 #include "chat_opcode.h"
 #include "sockutil.h"
-#include "safe.h"
 #include "ht.h"
 #include "sll.h"
 
