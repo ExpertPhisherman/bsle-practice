@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -74,7 +75,7 @@ typedef struct response
 typedef struct appdata
 {
     ht_t            * p_cred_store;    // Pointer to credential store
-    uint32_t        * p_session_id;    // Pointer to next session ID
+    uint32_t          next_session_id; // Next session ID to assign
     opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
     pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;
