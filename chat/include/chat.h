@@ -27,6 +27,7 @@ typedef struct session           session_t;
 typedef struct request           request_t;
 typedef struct response          response_t;
 typedef struct message           message_t;
+typedef struct room              room_t;
 typedef struct appdata           appdata_t;
 typedef struct chat_client_state chat_client_state_t;
 
@@ -75,14 +76,21 @@ typedef struct response
 
 typedef struct message
 {
-    char const * p_content; // Message text
+    char const * p_content; // Pointer to message text
     uint64_t     timestamp; // Time message received by server in nanoseconds
 } message_t;
 
+typedef struct room
+{
+    char const * p_name;     // Pointer to room name
+    sll_t      * p_messages; // List of messages in reverse chronological order
+} room_t;
+
 typedef struct appdata
 {
-    ht_t            * p_cred_store;    // Pointer to credential store
     uint32_t          next_session_id; // Next session ID to assign
+    ht_t            * p_cred_store;    // Pointer to credential storage
+    ht_t            * p_room_store;    // Pointer to room storage
     opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
     pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;
@@ -98,11 +106,16 @@ typedef struct chat_client_state
  * @brief Create chat server
  *
  * @param[in] p_hints  Pointer to server hints
- * @param[in] capacity Current number of buckets
+ * @param[in] creds_capacity Number of buckets in credential storage
+ * @param[in] rooms_capacity Number of buckets in room storage
  *
  * @return Pointer to chat server
  */
-server_t * chat_server_create(server_t * p_hints, size_t capacity);
+server_t * chat_server_create(
+    server_t * p_hints,
+    size_t     creds_capacity,
+    size_t     rooms_capacity
+);
 
 /*!
  * @brief Destroy chat server

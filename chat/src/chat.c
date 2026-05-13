@@ -15,16 +15,18 @@ uint32_t const chunk_size          = 512u;
 uint32_t const max_clients         = 100u;
 uint32_t const worker_threads      = 8u;
 uint32_t const epoll_max_events    = 64u;
-size_t const   cred_store_capacity = 101u;
+size_t const   creds_capacity      = 17u;
+size_t const   rooms_capacity      = 17u;
 
 /*!
  * @brief Create application data
  *
- * @param[in] capacity Current number of buckets
+ * @param[in] creds_capacity Number of buckets in credential storage
+ * @param[in] rooms_capacity Number of buckets in room storage
  *
  * @return Pointer to application data
  */
-static appdata_t * appdata_create(size_t capacity);
+static appdata_t * appdata_create(size_t creds_capacity, size_t rooms_capacity);
 
 /*!
  * @brief Destroy application data
@@ -104,7 +106,11 @@ static status_t validate_session(
 );
 
 server_t *
-chat_server_create (server_t * p_hints, size_t capacity)
+chat_server_create (
+    server_t * p_hints,
+    size_t     creds_capacity,
+    size_t     rooms_capacity
+)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -123,7 +129,7 @@ chat_server_create (server_t * p_hints, size_t capacity)
         goto cleanup;
     }
 
-    p_server->p_appdata = appdata_create(capacity);
+    p_server->p_appdata = appdata_create(creds_capacity, rooms_capacity);
     if (NULL == p_server->p_appdata)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -325,12 +331,13 @@ cleanup:
 }
 
 static appdata_t *
-appdata_create (size_t capacity)
+appdata_create (size_t creds_capacity, size_t rooms_capacity)
 {
     status_t status = STATUS_SUCCESS;
 
     appdata_t     * p_appdata         = NULL;
     ht_t          * p_cred_store      = NULL;
+    ht_t          * p_room_store      = NULL;
     opcode_func_t * pp_opcode_funcs   = NULL;
 
     p_appdata = malloc(sizeof(*p_appdata));
@@ -342,8 +349,15 @@ appdata_create (size_t capacity)
 
     memset(p_appdata, 0, sizeof(*p_appdata));
 
-    p_cred_store = ht_create(capacity);
+    p_cred_store = ht_create(creds_capacity);
     if (NULL == p_cred_store)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_room_store = ht_create(rooms_capacity);
+    if (NULL == p_room_store)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
@@ -365,8 +379,9 @@ appdata_create (size_t capacity)
     pp_opcode_funcs[OPCODE_MSG_SEND] = opcode_msg_send;
     pp_opcode_funcs[OPCODE_MSG_RECV] = opcode_msg_recv;
 
-    p_appdata->p_cred_store    = p_cred_store;
     p_appdata->next_session_id = 1u;
+    p_appdata->p_cred_store    = p_cred_store;
+    p_appdata->p_room_store    = p_room_store;
     p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
     if (0 != pthread_mutex_init(&(p_appdata->lock), NULL))
@@ -399,6 +414,9 @@ appdata_destroy (appdata_t * p_appdata)
 
     ht_destroy(p_appdata->p_cred_store);
     p_appdata->p_cred_store = NULL;
+
+    ht_destroy(p_appdata->p_room_store);
+    p_appdata->p_room_store = NULL;
 
     free(p_appdata->pp_opcode_funcs);
     p_appdata->pp_opcode_funcs = NULL;
