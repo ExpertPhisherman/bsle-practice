@@ -74,9 +74,10 @@ typedef struct response
 
 typedef struct appdata
 {
-    uint32_t        next_session_id; // Next session ID to assign after login
-    safe_ht_t     * p_cred_store;    // Pointer to credential store
-    opcode_func_t * pp_opcode_funcs; // Double pointer to opcode function array
+    ht_t            * p_cred_store;    // Pointer to credential store
+    uint32_t        * p_session_id;    // Pointer to next session ID
+    opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
+    pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;
 
 typedef struct chat_client_state

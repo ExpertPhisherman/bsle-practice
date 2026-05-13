@@ -166,7 +166,8 @@ opcode_login (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata    = NULL;
-    safe_ht_t * p_cred_store = NULL;
+    ht_t      * p_cred_store = NULL;
+    uint32_t  * p_session_id = NULL;
     item_t    * p_item       = NULL;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
@@ -286,24 +287,34 @@ opcode_login (
 
     p_appdata    = p_session->p_server->p_appdata;
     p_cred_store = p_appdata->p_cred_store;
+    p_session_id = p_appdata->p_session_id;
+
+    pthread_mutex_lock(&(p_appdata->lock));
+
+    // Prevent integer overflow from sending session ID zero
+    if (0u == *p_session_id)
+    {
+        *p_session_id = 1u;
+    }
 
     // Authenticate login against hash table
-    pthread_mutex_lock(&(p_cred_store->lock));
-    p_item = ht_get(p_cred_store->p_ht, p_username, username_size);
-    pthread_mutex_unlock(&(p_cred_store->lock));
+    p_item = ht_get(p_cred_store, p_username, username_size);
+
+    pthread_mutex_unlock(&(p_appdata->lock));
+
     if (NULL == p_item)
     {
         // NOTE: User doesn't exist
         // Create new user
-        pthread_mutex_lock(&(p_cred_store->lock));
+        pthread_mutex_lock(&(p_appdata->lock));
         ht_set(
-            p_cred_store->p_ht,
+            p_cred_store,
             p_username,
             username_size,
             p_password,
             password_size
         );
-        pthread_mutex_unlock(&(p_cred_store->lock));
+        pthread_mutex_unlock(&(p_appdata->lock));
 
         p_response->status = 0x00;
 

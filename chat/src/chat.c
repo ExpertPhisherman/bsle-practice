@@ -329,8 +329,10 @@ appdata_create (size_t capacity)
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t     * p_appdata       = NULL;
-    opcode_func_t * pp_opcode_funcs = NULL;
+    appdata_t     * p_appdata         = NULL;
+    ht_t          * p_cred_store      = NULL;
+    uint32_t      * p_session_id      = NULL;
+    opcode_func_t * pp_opcode_funcs   = NULL;
 
     p_appdata = malloc(sizeof(*p_appdata));
     if (NULL == p_appdata)
@@ -341,11 +343,17 @@ appdata_create (size_t capacity)
 
     memset(p_appdata, 0, sizeof(*p_appdata));
 
-    // TODO: Put into thread safe struct with mutex lock
-    p_appdata->next_session_id = 1u;
+    p_session_id = malloc(sizeof(*p_session_id));
+    if (NULL == p_session_id)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
 
-    p_appdata->p_cred_store = safe_ht_create(capacity);
-    if (NULL == p_appdata->p_cred_store)
+    *p_session_id = 1u;
+
+    p_cred_store = ht_create(capacity);
+    if (NULL == p_cred_store)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
@@ -365,6 +373,8 @@ appdata_create (size_t capacity)
     pp_opcode_funcs[OPCODE_LOGIN]   = opcode_login;
     pp_opcode_funcs[OPCODE_LOGOUT]  = opcode_logout;
 
+    p_appdata->p_cred_store    = p_cred_store;
+    p_appdata->p_session_id    = p_session_id;
     p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
 cleanup:
@@ -382,7 +392,8 @@ appdata_destroy (appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    safe_ht_t     * p_cred_store    = NULL;
+    ht_t          * p_cred_store    = NULL;
+    uint32_t      * p_session_id    = NULL;
     opcode_func_t * pp_opcode_funcs = NULL;
 
     if (NULL == p_appdata)
@@ -392,12 +403,16 @@ appdata_destroy (appdata_t * p_appdata)
     }
 
     p_cred_store    = p_appdata->p_cred_store;
+    p_session_id    = p_appdata->p_session_id;
     pp_opcode_funcs = p_appdata->pp_opcode_funcs;
 
     free(p_appdata);
     p_appdata = NULL;
 
-    safe_ht_destroy(p_cred_store);
+    free(p_session_id);
+    p_session_id = NULL;
+
+    ht_destroy(p_cred_store);
     p_cred_store = NULL;
 
     free(pp_opcode_funcs);
