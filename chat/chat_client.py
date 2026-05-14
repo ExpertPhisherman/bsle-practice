@@ -6,11 +6,26 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parent.parent))
 from client import Client
 
+OPCODE_DEFAULT  = 0x00
+OPCODE_PING     = 0x01
+OPCODE_ECHO     = 0x02
+OPCODE_QUIT     = 0x03
+OPCODE_LOGIN    = 0x04
+OPCODE_LOGOUT   = 0x05
+OPCODE_MSG_SEND = 0x06
+OPCODE_MSG_RECV = 0x07
+
+RETCODE_SUCCESS       = 0x01
+RETCODE_SESSION_ERROR = 0x02
+RETCODE_FAILURE       = 0xff
+
 def with_parser(
     description: str,
     args: dict[str, dict[str, Any]] | None = None,
     epilog: str | None = None
 ) -> Callable[[Callable[..., bool]], Callable[..., bool]]:
+    """Attach argparse parser to do_* methods in client"""
+
     parser = argparse.ArgumentParser(
         description=description,
         epilog=epilog,
@@ -35,10 +50,9 @@ class ChatClient(Client):
     def __init__(self) -> None:
         super().__init__()
         self.prompt = "chat> "
-        self.opcode = 0x00
         self.session_id = 0
-        self.length = 0
-        self.payload = b""
+        self.request = b""
+        self.response = b""
         self.username = None
         self.password = None
 
@@ -49,9 +63,8 @@ class ChatClient(Client):
             return True
         try:
             print(f"{self.session_id=}")
-            request = struct.pack("!BII", self.opcode, self.session_id, self.length)
-            request += self.payload
-            self.sock.sendall(request)
+            self.sock.sendall(self.request)
+            print(f"Request bytes: {self.request}")
             return False
         except (ConnectionError, KeyboardInterrupt) as e:
             if isinstance(e, KeyboardInterrupt):
@@ -59,32 +72,16 @@ class ChatClient(Client):
             print(f"[!] Error sending data: {e}")
             return True
 
-    def recv_response(self) -> bool:
+    def recv_response(self, size: int) -> bool:
         """Receive response from server"""
 
         if self.sock is None:
             return True
         try:
             # Receive opcode and payload size in one recvall
-            response = self.recvall(5)
-            status = response[0]
-            if (status != 0x00) and (status != 0x01):
-                raise ConnectionError("Unknown status received from server")
-            size = struct.unpack("!I", response[1:5])[0]
-
-            # Receive payload
-            response += self.recvall(size)
-            payload = response[5:size+5]
-            if len(payload) != size:
-                raise ConnectionError("Unexpected response length")
-
-            if (self.opcode == 0x04) and (status == 0x00):
-                self.session_id = struct.unpack("!I", payload[:4])[0]
-                print(f"Login, set session ID to: {self.session_id}")
-
-            print(f"Payload bytes: {payload}")
+            self.response = self.recvall(size)
+            print(f"Response bytes: {self.response}")
             return False
-
         except (ConnectionError, KeyboardInterrupt) as e:
             if isinstance(e, KeyboardInterrupt):
                 print()
@@ -99,7 +96,7 @@ class ChatClient(Client):
         },
         epilog=(
             "Username: 3-16 alphanumeric characters or underscore\n"
-            "Password: 8+ printable characters excluding space"
+            "Password: 8-128 printable characters excluding space"
         )
     )
     def do_login(self, line: str) -> bool:
@@ -113,85 +110,167 @@ class ChatClient(Client):
 
         if not (
             (3 <= len(username) <= 16) and
-            (8 <= len(password)) and
+            (8 <= len(password) <= 128) and
             all((c.isalnum() or (c == "_")) for c in username) and
             all((c.isprintable() and (c != " ")) for c in password)
         ):
             self.do_help("login")
             return False
 
-        self.do_logout(line)
+        opcode = OPCODE_LOGIN
+        user_flag = 0
 
-        self.opcode = 0x04
-        self.payload = b""
+        self.request = struct.pack(
+            "!BBxxHHI",
+            opcode,
+            user_flag,
+            len(username),
+            len(password),
+            self.session_id
+        )
 
-        self.payload += len(username).to_bytes(1, "big")
-        self.payload += len(password).to_bytes(1, "big")
-        self.payload += f"{username}{password}".encode("utf-8")
+        self.request += f"{username}{password}".encode("utf-8")
 
         print(f"Attempting login to user: {username}")
         self.username = username
         self.password = password
 
-        self.length = len(self.payload)
-        self.send_request()
-        return self.recv_response()
+        if self.send_request():
+            return True
+
+        if self.recv_response(6):
+            return True
+
+        retcode, session_id = struct.unpack("!BxI", self.response)
+
+        if retcode == RETCODE_SUCCESS:
+            self.session_id = session_id
+            print(f"Login, set session ID to: {self.session_id}")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed login")
+        else:
+            print(f"Unknown return code: {retcode}")
+
+        return False
 
     @with_parser(description="Respond with PONG")
     def do_ping(self, line: str) -> bool:
-        self.opcode = 0x01
-        self.payload = b""
+        opcode = OPCODE_PING
 
-        self.payload += b"\x00"
+        self.request = struct.pack(
+            "!BxI",
+            opcode,
+            self.session_id
+        )
 
-        self.length = len(self.payload)
-        self.send_request()
-        return self.recv_response()
+        if self.send_request():
+            return True
+
+        if self.recv_response(1):
+            return True
+
+        retcode = struct.unpack("!B", self.response)[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("PONG")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed ping")
+        else:
+            print(f"Unknown return code: {retcode}")
+
+        return False
 
     @with_parser(
         description="Return the provided message",
         args={"message": {"help": "message to echo"}}
     )
     def do_echo(self, line: str) -> bool:
-        self.opcode = 0x02
-        self.payload = b""
+        opcode = OPCODE_ECHO
 
-        self.payload += line.encode("utf-8")
+        self.request = struct.pack(
+            "!BxHI",
+            opcode,
+            len(line),
+            self.session_id
+        )
 
-        self.length = len(self.payload)
-        self.send_request()
-        return self.recv_response()
+        self.request += line.encode("utf-8")
+
+        if self.send_request():
+            return True
+
+        if self.recv_response(2 + len(line)):
+            return True
+
+        retcode = struct.unpack("!B", self.response[:1])[0]
+
+        response_payload = self.response[2:]
+
+        if retcode == RETCODE_SUCCESS:
+            print(response_payload.decode("utf-8"))
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed echo")
+        else:
+            print(f"Unknown return code: {retcode}")
+
+        return False
 
     @with_parser(description="Close client connection")
     def do_quit(self, line: str) -> bool:
-        self.opcode = 0x03
-        self.payload = b""
-        self.payload += b"\x00"
+        opcode = OPCODE_QUIT
 
-        self.length = len(self.payload)
-        self.send_request()
-        self.recv_response()
+        self.request = struct.pack("!B", opcode)
+
+        if self.send_request():
+            return True
+
+        if self.recv_response(1):
+            return True
+
+        retcode = struct.unpack("!B", self.response)[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("Goodbye!")
+        else:
+            print(f"Unknown return code: {retcode}")
+
         return True
 
     @with_parser(description="Log out")
     def do_logout(self, line: str) -> bool:
-        self.opcode = 0x05
-        self.payload = b""
+        opcode = OPCODE_LOGOUT
 
-        self.payload += b"\x00"
+        self.request = struct.pack(
+            "!BxI",
+            opcode,
+            self.session_id
+        )
 
-        print(f"Attempting logout from user: {self.username}")
-        self.username = None
-        self.password = None
+        if self.send_request():
+            return True
 
-        self.length = len(self.payload)
-        self.send_request()
+        if self.recv_response(1):
+            return True
 
-        # Set session ID to 0 regardless of response status
-        self.session_id = 0
-        print(f"Logout, set session ID to {self.session_id}")
+        retcode = struct.unpack("!B", self.response)[0]
 
-        return self.recv_response()
+        if retcode == RETCODE_SUCCESS:
+            self.username = None
+            self.password = None
+            self.session_id = 0
+            print(f"Logout, set session ID to {self.session_id}")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed logout")
+        else:
+            print(f"Unknown return code: {retcode}")
+
+        return False
 
     @with_parser(description="Handle EOF (Ctrl+D)")
     def do_EOF(self, line: str) -> bool:
@@ -207,7 +286,7 @@ def main() -> int:
     if failed:
         return 1
 
-    chat_client.do_login("obama pyramid1")
+    chat_client.do_login("admin password")
     chat_client.cmdloop()
     chat_client.disconnect()
     return 0

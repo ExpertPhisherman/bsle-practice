@@ -49,29 +49,37 @@ typedef enum opcode
     OPCODE_MSG_RECV = 0x07, // Receive last seen timestamp, send newer messages
 } opcode_t;
 
+typedef enum retcode
+{
+    RETCODE_SUCCESS       = 0x01, // Server action was successful
+    RETCODE_SESSION_ERROR = 0x02, // Provided session ID was invalid or expired
+    RETCODE_FAILURE       = 0xff, // Server action failed
+} retcode_t;
+
 typedef struct session
 {
     server_t * p_server;      // Pointer to server
+    int        sockfd;        // Client socket file descriptor
     char     * p_username;    // Pointer to username
     char     * p_password;    // Pointer to password
-    uint8_t    username_size; // Size of username in bytes
-    uint8_t    password_size; // Size of password in bytes
-    uint64_t   session_id;    // Unique session ID assigned after login
+    uint16_t   username_size; // Size of username in bytes
+    uint16_t   password_size; // Size of password in bytes
+    uint32_t   session_id;    // Unique session ID assigned after login
 } session_t;
 
 typedef struct request
 {
-    uint8_t    opcode;     // Opcode
+    uint8_t    opcode;     // Operation code
     uint32_t   session_id; // Session ID network byte order, unauthenticated = 0
-    uint32_t   size;       // Size of payload in network byte order
-    char     * p_payload;  // Pointer to payload
+    uint8_t  * p_packet;   // Pointer to packet
+    uint32_t   size;       // Size of request packet in bytes
 } request_t;
 
 typedef struct response
 {
-    uint8_t    status;    // Status 0x00 for success, 0x01 for failure
-    uint32_t   size;      // Size of payload in network byte order
-    char     * p_payload; // Pointer to payload
+    uint8_t   retcode;  // Return code
+    uint8_t * p_packet; // Pointer to packet
+    uint32_t  size;     // Size of response packet in bytes
 } response_t;
 
 typedef struct message

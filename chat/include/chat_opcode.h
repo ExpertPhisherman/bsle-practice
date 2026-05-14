@@ -21,6 +21,7 @@
 #include <time.h>
 #include <endian.h>
 #include "common.h"
+#include "sockutil.h"
 #include "chat.h"
 #include "ht.h"
 #include "sll.h"
@@ -31,20 +32,6 @@
 typedef struct session  session_t;
 typedef struct request  request_t;
 typedef struct response response_t;
-
-/*!
- * @brief Write format string into response payload and set size
- *
- * @param[in] p_response Pointer to response
- * @param[in] p_fmt      Pointer to format string to populate
- *
- * @return Status of operation
- */
-status_t write_response(
-    response_t * p_response,
-    char const * p_fmt,
-    ...
-);
 
 /*!
  * @brief Default opcode in case of unknown
