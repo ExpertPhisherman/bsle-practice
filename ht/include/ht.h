@@ -38,7 +38,7 @@ typedef struct item
 
 typedef struct ht
 {
-    sll_t          ** pp_buckets;     // Double pointer to buckets
+    sll_t          ** pp_buckets;     // Pointer to bucket array
     size_t            capacity;       // Current number of buckets
     size_t            len;            // Current occupied buckets
     hash_func_t       p_hash_func;    // Pointer to hash function
