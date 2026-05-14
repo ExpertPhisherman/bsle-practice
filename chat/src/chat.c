@@ -152,20 +152,17 @@ chat_client_run (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    // Display request packet
     if (p_server->b_verbose)
     {
+        // Display request packet
         printf(
             "========================================\n"
             "Request from sockfd %d:\n",
             p_client->sockfd
         );
         display_hex(p_request->p_packet, p_request->size, " ", "\n");
-    }
 
-    // Display response packet
-    if (p_server->b_verbose)
-    {
+        // Display response packet
         printf(
             "========================================\n"
             "Response to sockfd %d:\n",
