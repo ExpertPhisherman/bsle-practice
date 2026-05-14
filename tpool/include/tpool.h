@@ -35,8 +35,8 @@ typedef struct tpool
     pthread_mutex_t   work_mutex;   // Mutex lock for all locking
     pthread_cond_t    work_cond;    // Signal when there is work to be processed
     pthread_cond_t    working_cond; // Signal when all queued work is done
-    size_t            working_cnt;  // Number of threads actively processing work
-    size_t            thread_cnt;   // Number of threads alive
+    size_t            working_cnt;  // Count of threads actively processing work
+    size_t            thread_cnt;   // Count of threads alive
     bool              stop;         // Stop threads
 } tpool_t;
 
