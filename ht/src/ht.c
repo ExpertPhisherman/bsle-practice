@@ -17,6 +17,9 @@
 /*!
  * @brief djb2 hash function
  *
+ * @par
+ * Reference: https://www.cse.yorku.ca/~oz/hash.html
+ *
  * @param[in] p_key    Pointer to key to be hashed
  * @param[in] key_size Size of key in bytes
  *
