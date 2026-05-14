@@ -113,7 +113,7 @@ typedef struct chat_client_state
 /*!
  * @brief Create chat server
  *
- * @param[in] p_hints  Pointer to server hints
+ * @param[in] p_hints        Pointer to server hints
  * @param[in] creds_capacity Number of buckets in credential storage
  * @param[in] rooms_capacity Number of buckets in room storage
  *
