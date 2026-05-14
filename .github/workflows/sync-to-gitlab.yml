@@ -17,5 +17,5 @@ jobs:
       - name: Push full history to GitLab
         run: |
           git config --global http.sslVerify false
-          git remote add gitlab https://${{ secrets.GITLAB_USERNAME }}:${{ secrets.GITLAB_TOKEN }}@code.levelup.cce.af.mil/ccd-active-jqr/logan.tischler.git
+          git remote add gitlab https://${{ secrets.GITLAB_USERNAME }}:${{ secrets.GITLAB_TOKEN }}@${{ secrets.GITLAB_REPO_PATH }}.git
           git push gitlab HEAD:github-sync --force
