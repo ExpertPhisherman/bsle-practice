@@ -62,7 +62,7 @@ opcode_default (
     }
 
     p_response->opcode  = OPCODE_DEFAULT;
-    p_response->retcode = RETCODE_FAILURE;
+    p_response->retcode = RETCODE_SUCCESS;
 
     p_response->size = 2u;
 
@@ -182,17 +182,19 @@ opcode_echo (
     // Receive payload
     sockutil_recvall(sockfd, p_request_packet + 8u, p_request->size - 8u);
 
-    p_response->size = 2u + p_request->size - 8u;
+    p_response->size = 4u + p_request->size - 8u;
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
     {
-        memset(p_response_packet + 2u, 0, p_request->size - 8u);
+        memcpy(p_response_packet + 2u, p_request_packet + 2u, 2u);
+        memset(p_response_packet + 4u, 0, p_request->size - 8u);
         status = STATUS_SUCCESS;
         goto cleanup;
     }
 
-    memcpy(p_response_packet + 2u, p_request_packet + 8u, p_request->size - 8u);
+    memcpy(p_response_packet + 2u, p_request_packet + 2u, 2u);
+    memcpy(p_response_packet + 4u, p_request_packet + 8u, p_request->size - 8u);
 
     p_response->retcode = RETCODE_SUCCESS;
 
