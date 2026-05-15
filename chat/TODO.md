@@ -3,7 +3,6 @@
 
 ## Server
 
-- Add mutex lock to client struct for all sends to server
 - Add max retries parameter to sendall/recvall
 - Add message_t type that includes message content and timestamp
 - Add OPCODE_MSG_RECV and OPCODE_MSG_SEND opcode functions
