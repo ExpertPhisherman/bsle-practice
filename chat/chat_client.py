@@ -222,7 +222,7 @@ class ChatClient(Client):
     def do_quit(self, line: str) -> bool:
         opcode = OPCODE_QUIT
 
-        self.request = struct.pack("!B", opcode)
+        self.request = struct.pack("!Bx", opcode)
 
         if self.send_request():
             return True
