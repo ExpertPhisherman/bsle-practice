@@ -2,10 +2,12 @@ import argparse
 import struct
 import sys
 import threading
-import termios
-import readline
 from typing import Any, Callable
 from pathlib import Path
+from prompt_toolkit import PromptSession
+from prompt_toolkit.patch_stdout import patch_stdout
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.styles import Style
 sys.path.append(str(Path(__file__).absolute().parent.parent))
 from client import Client
 
@@ -58,6 +60,21 @@ def with_parser(
 
     return decorator
 
+class SlashCompleter(Completer):
+    def __init__(self, commands: list[str]) -> None:
+        self.commands = commands
+
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        if not text.startswith("/"):
+            return
+        word = text[1:]
+        if " " in word:
+            return
+        for cmd in self.commands:
+            if cmd.startswith(word):
+                yield Completion(cmd, start_position=-len(word))
+
 class ChatClient(Client):
     """Chat client"""
 
@@ -65,22 +82,28 @@ class ChatClient(Client):
 
     def __init__(self) -> None:
         super().__init__()
-        self.prompt       = "chat> "
         self.session_id   = 0
         self.request      = b""
         self.username     = None
         self.password     = None
         self.opcode       = OPCODE_DEFAULT
         self.opcode_funcs = [None] * (UINT8_MAX + 1)
+        self._quit_event  = threading.Event()
+        cmds = [name[3:] for name in dir(self) if name.startswith("do_")]
+        style = Style.from_dict({
+            "aborting": "default noreverse noitalic nounderline noblink",
+            "exiting":  "default noreverse noitalic nounderline noblink",
+        })
+        self._session = PromptSession(
+            message=self._get_prompt,
+            completer=SlashCompleter(cmds),
+            style=style
+        )
 
         self.listening_thread = threading.Thread(
             target=self.listener,
             daemon=False
         )
-
-        self._prompt_active = False
-        self._stdout_lock   = threading.Lock()
-        self._quit_event    = threading.Event()
 
         self.opcode_funcs[OPCODE_DEFAULT]  = self.opcode_default
         self.opcode_funcs[OPCODE_PING]     = self.opcode_ping
@@ -91,38 +114,47 @@ class ChatClient(Client):
         self.opcode_funcs[OPCODE_MSG_SEND] = None
         self.opcode_funcs[OPCODE_MSG_RECV] = None
 
-    def preloop(self) -> None:
-        super().preloop()
-        self._prompt_active = True
+    def _get_prompt(self) -> str:
+        return f"({self.username}) " if self.username else "chat> "
 
-    def cmdloop(self, intro=None) -> None:
-        try:
-            super().cmdloop(intro)
-        except (KeyboardInterrupt, EOFError):
-            print()
-            self.do_quit("")
+    def cmdloop(self) -> None:
+        """Read and dispatch commands until quit."""
+        with patch_stdout():
+            while not self._quit_event.is_set():
+                try:
+                    line = self._session.prompt()
+                except (KeyboardInterrupt, EOFError):
+                    self.do_quit("")
+                    break
 
-    def postcmd(self, stop: bool, line: str) -> bool:
-        return stop or self._quit_event.is_set()
+                line = line.strip()
+                if not line:
+                    continue
 
-    def async_print(self, msg: str) -> None:
-        """Print msg without clobbering the readline prompt."""
-        with self._stdout_lock:
-            if self._prompt_active and threading.current_thread() is not threading.main_thread():
-                buf = readline.get_line_buffer()
-                sys.stdout.write('\r\033[K')
-                sys.stdout.write(msg + '\n')
-                sys.stdout.write(self.prompt + buf)
-                sys.stdout.flush()
-            else:
-                print(msg)
+                if not line.startswith("/"):
+                    if self.do_msg_send(line):
+                        break
+                    continue
+
+                cmd_line = line[1:]
+                cmd, *rest = cmd_line.split(None, 1)
+                arg = rest[0] if rest else ""
+
+                func = getattr(self, f"do_{cmd}", None)
+                if func is None:
+                    print(f"Unknown command: /{cmd}")
+                    continue
+
+                if func(arg):
+                    break
 
     def listener(self) -> None:
         while True:
             response = self.recv_response(1)
             if response is None:
-                self._prompt_active = False
                 self._quit_event.set()
+                if self._session.app.is_running:
+                    self._session.app.exit(exception=EOFError)
                 break
 
             opcode = response[0]
@@ -134,7 +166,6 @@ class ChatClient(Client):
                     print("Default opcode function doesn't exist")
                     continue
 
-            # Run specific opcode function
             if opcode_func():
                 break
 
@@ -142,14 +173,14 @@ class ChatClient(Client):
     def opcode_default(self) -> bool:
         response = self.recv_response(1)
         if response is None:
-            return
+            return False
 
         retcode = response[0]
 
         if retcode == RETCODE_SUCCESS:
-            self.async_print(f"Unknown operation code: {self.opcode}")
+            print(f"Unknown operation code: {self.opcode}")
         else:
-            self.async_print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode}")
 
         return False
 
@@ -157,18 +188,18 @@ class ChatClient(Client):
     def opcode_ping(self) -> bool:
         response = self.recv_response(1)
         if response is None:
-            return
+            return False
 
         retcode = response[0]
 
         if retcode == RETCODE_SUCCESS:
-            self.async_print("PONG")
+            print("PONG")
         elif retcode == RETCODE_SESSION_ERROR:
-            self.async_print("Invalid session")
+            print("Invalid session")
         elif retcode == RETCODE_FAILURE:
-            self.async_print("Failed ping")
+            print("Failed ping")
         else:
-            self.async_print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode}")
 
         return False
 
@@ -176,22 +207,22 @@ class ChatClient(Client):
     def opcode_echo(self) -> bool:
         response = self.recv_response(3)
         if response is None:
-            return
+            return False
 
         retcode, size = struct.unpack("!BH", response)
 
         payload = self.recv_response(size)
         if payload is None:
-            return
+            return False
 
         if retcode == RETCODE_SUCCESS:
-            self.async_print(payload.decode("utf-8"))
+            print(payload.decode("utf-8"))
         elif retcode == RETCODE_SESSION_ERROR:
-            self.async_print("Invalid session")
+            print("Invalid session")
         elif retcode == RETCODE_FAILURE:
-            self.async_print("Failed echo")
+            print("Failed echo")
         else:
-            self.async_print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode}")
 
         return False
 
@@ -199,14 +230,14 @@ class ChatClient(Client):
     def opcode_quit(self) -> bool:
         response = self.recv_response(1)
         if response is None:
-            return
+            return False
 
         retcode = response[0]
 
         if retcode == RETCODE_SUCCESS:
-            self.async_print("Goodbye!")
+            print("Goodbye!")
         else:
-            self.async_print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode}")
 
         self._quit_event.set()
         return True
@@ -215,17 +246,17 @@ class ChatClient(Client):
     def opcode_login(self) -> bool:
         response = self.recv_response(5)
         if response is None:
-            return
+            return False
 
         retcode, session_id = struct.unpack("!BI", response)
 
         if retcode == RETCODE_SUCCESS:
             self.session_id = session_id
-            self.async_print(f"Login, set session ID to: {self.session_id}")
+            print(f"Login, set session ID to: {self.session_id}")
         elif retcode == RETCODE_FAILURE:
-            self.async_print("Failed login")
+            print("Failed login")
         else:
-            self.async_print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode}")
 
         return False
 
@@ -233,7 +264,7 @@ class ChatClient(Client):
     def opcode_logout(self) -> bool:
         response = self.recv_response(1)
         if response is None:
-            return
+            return False
 
         retcode = response[0]
 
@@ -241,47 +272,39 @@ class ChatClient(Client):
             self.username = None
             self.password = None
             self.session_id = 0
-            self.async_print(f"Logout, set session ID to {self.session_id}")
+            print(f"Logout, set session ID to {self.session_id}")
         elif retcode == RETCODE_SESSION_ERROR:
-            self.async_print("Invalid session")
+            print("Invalid session")
         elif retcode == RETCODE_FAILURE:
-            self.async_print("Failed logout")
+            print("Failed logout")
         else:
-            self.async_print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode}")
 
         return False
 
     def send_request(self) -> bool:
         """Send request to server"""
-
         if self.sock is None:
             return True
         try:
-            self.async_print(f"{self.session_id=}")
+            print(f"{self.session_id=}")
             self.sock.sendall(self.request)
-            self.async_print(f"Request bytes: {self.request}")
+            print(f"Request bytes: {self.request}")
             return False
-        except (ConnectionError, KeyboardInterrupt) as e:
-            if isinstance(e, KeyboardInterrupt):
-                self.async_print("")
-            self.async_print(f"[!] Error sending data: {e}")
+        except ConnectionError as e:
+            print(f"[!] Error sending data: {e}")
             return True
 
     def recv_response(self, size: int) -> bytes:
         """Receive response from server"""
-
         if self.sock is None:
             return None
         try:
             response = self.recvall(size)
-            self.async_print(f"Response bytes: {response}")
+            print(f"Response bytes: {response}")
             return response
-        except (ConnectionError, KeyboardInterrupt) as e:
-            if isinstance(e, KeyboardInterrupt):
-                self.async_print("")
-            else:
-                self._prompt_active = False
-            self.async_print(f"[!] Error receiving data: {e}")
+        except ConnectionError as e:
+            print(f"[!] Error receiving data: {e}")
             return None
 
     @with_parser(
@@ -310,43 +333,28 @@ class ChatClient(Client):
             all((c.isalnum() or (c == "_")) for c in username) and
             all((c.isprintable() and (c != " ")) for c in password)
         ):
-            self.do_help("login")
+            print(self.do_login.__doc__)
             return False
-
-        user_flag = 0
 
         self.request = struct.pack(
             "!BBxxHHI",
             OPCODE_LOGIN,
-            user_flag,
+            0,
             len(username),
             len(password),
             self.session_id
         )
-
         self.request += f"{username}{password}".encode("utf-8")
 
-        print(f"Attempting login to user: {username}")
         self.username = username
         self.password = password
 
-        if self.send_request():
-            return True
-
-        return False
+        return self.send_request()
 
     @with_parser(description="Respond with PONG")
     def do_ping(self, line: str) -> bool:
-        self.request = struct.pack(
-            "!BxI",
-            OPCODE_PING,
-            self.session_id
-        )
-
-        if self.send_request():
-            return True
-
-        return False
+        self.request = struct.pack("!BxI", OPCODE_PING, self.session_id)
+        return self.send_request()
 
     @with_parser(
         description="Return the provided message",
@@ -359,12 +367,23 @@ class ChatClient(Client):
             len(line),
             self.session_id
         )
-
         self.request += line.encode("utf-8")
+        return self.send_request()
 
-        if self.send_request():
-            return True
-
+    @with_parser(
+        description="Send the provided message to the current lobby",
+        args={"message": {"help": "message to send"}},
+        epilog="Can invoke by typing text without a prepended slash character"
+    )
+    def do_msg_send(self, line: str) -> bool:
+        self.request = struct.pack(
+            "!BxHI",
+            OPCODE_MSG_SEND,
+            len(line),
+            self.session_id
+        )
+        self.request += line.encode("utf-8")
+        #return self.send_request()
         return False
 
     @with_parser(description="Close client connection")
@@ -382,20 +401,11 @@ class ChatClient(Client):
 
     @with_parser(description="Log out")
     def do_logout(self, line: str) -> bool:
-        self.request = struct.pack(
-            "!BxI",
-            OPCODE_LOGOUT,
-            self.session_id
-        )
-
-        if self.send_request():
-            return True
-
-        return False
+        self.request = struct.pack("!BxI", OPCODE_LOGOUT, self.session_id)
+        return self.send_request()
 
     @with_parser(description="Handle EOF (Ctrl+D)")
     def do_EOF(self, line: str) -> bool:
-        print()
         return self.do_quit(line)
 
 def main() -> int:
@@ -407,30 +417,12 @@ def main() -> int:
     if failed:
         return 1
 
-    try:
-        fd = sys.stdin.fileno()
-        old_term = termios.tcgetattr(fd)
-    except termios.error:
-        fd, old_term = None, None
-
     chat_client.listening_thread.start()
-
     chat_client.do_login("admin password")
 
-    cmdloop_thread = threading.Thread(target=chat_client.cmdloop, daemon=True)
-    cmdloop_thread.start()
-
-    try:
-        chat_client.listening_thread.join()
-    except KeyboardInterrupt:
-        print()
-        chat_client.do_quit("")
-        chat_client.listening_thread.join()
-
+    chat_client.cmdloop()
+    chat_client.listening_thread.join()
     chat_client.disconnect()
-
-    if old_term is not None:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_term)
 
     return 0
 
