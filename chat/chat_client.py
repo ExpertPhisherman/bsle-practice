@@ -2,7 +2,7 @@ import argparse
 import struct
 import sys
 import threading
-import _thread
+import termios
 import readline
 from typing import Any, Callable
 from pathlib import Path
@@ -95,6 +95,16 @@ class ChatClient(Client):
         super().preloop()
         self._prompt_active = True
 
+    def cmdloop(self, intro=None) -> None:
+        try:
+            super().cmdloop(intro)
+        except (KeyboardInterrupt, EOFError):
+            print()
+            self.do_quit("")
+
+    def postcmd(self, stop: bool, line: str) -> bool:
+        return stop or self._quit_event.is_set()
+
     def async_print(self, msg: str) -> None:
         """Print msg without clobbering the readline prompt."""
         with self._stdout_lock:
@@ -111,8 +121,8 @@ class ChatClient(Client):
         while True:
             response = self.recv_response(1)
             if response is None:
+                self._prompt_active = False
                 self._quit_event.set()
-                _thread.interrupt_main()
                 break
 
             opcode = response[0]
@@ -269,6 +279,8 @@ class ChatClient(Client):
         except (ConnectionError, KeyboardInterrupt) as e:
             if isinstance(e, KeyboardInterrupt):
                 self.async_print("")
+            else:
+                self._prompt_active = False
             self.async_print(f"[!] Error receiving data: {e}")
             return None
 
@@ -366,7 +378,6 @@ class ChatClient(Client):
             return True
 
         self._quit_event.wait()
-        self.async_print("")
         return True
 
     @with_parser(description="Log out")
@@ -396,12 +407,30 @@ def main() -> int:
     if failed:
         return 1
 
+    try:
+        fd = sys.stdin.fileno()
+        old_term = termios.tcgetattr(fd)
+    except termios.error:
+        fd, old_term = None, None
+
     chat_client.listening_thread.start()
 
     chat_client.do_login("admin password")
 
-    chat_client.cmdloop()
+    cmdloop_thread = threading.Thread(target=chat_client.cmdloop, daemon=True)
+    cmdloop_thread.start()
+
+    try:
+        chat_client.listening_thread.join()
+    except KeyboardInterrupt:
+        print()
+        chat_client.do_quit("")
+        chat_client.listening_thread.join()
+
     chat_client.disconnect()
+
+    if old_term is not None:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_term)
 
     return 0
 
