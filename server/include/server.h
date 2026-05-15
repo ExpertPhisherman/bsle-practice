@@ -54,10 +54,11 @@ typedef struct server
 
 typedef struct client
 {
-    uint16_t   rport;        // Remote port
-    char     * p_rhost;      // Pointer to remote host IP address
-    int        sockfd;       // Socket file descriptor
-    void     * p_clientdata; // Pointer to per-client application state
+    uint16_t          rport;        // Remote port
+    char            * p_rhost;      // Pointer to remote host IP address
+    int               sockfd;       // Socket file descriptor
+    void            * p_clientdata; // Pointer to per-client application state
+    pthread_mutex_t   lock;         // Mutex lock while sending to client
 } client_t;
 
 typedef struct server_client_pair

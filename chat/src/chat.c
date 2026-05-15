@@ -162,6 +162,9 @@ chat_client_run (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
+    (p_response->p_packet)[0] = p_response->opcode;
+    (p_response->p_packet)[1] = p_response->retcode;
+
     if (p_server->b_verbose)
     {
         // Display request packet
@@ -181,9 +184,9 @@ chat_client_run (server_t * p_server, client_t * p_client)
         display_hex(p_response->p_packet, p_response->size, " ", "\n");
     }
 
-    (p_response->p_packet)[0] = p_response->opcode;
-    (p_response->p_packet)[1] = p_response->retcode;
+    pthread_mutex_lock(&(p_client->lock));
     sockutil_sendall(sockfd, p_response->p_packet, p_response->size);
+    pthread_mutex_unlock(&(p_client->lock));
 
     if (OPCODE_QUIT == p_request->opcode)
     {

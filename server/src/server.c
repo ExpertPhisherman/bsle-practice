@@ -667,6 +667,13 @@ client_create (server_t * p_server)
         }
     }
 
+    if (0 != pthread_mutex_init(&(p_client->lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
+        goto cleanup;
+    }
+
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -695,6 +702,8 @@ client_destroy (server_t * p_server, client_t * p_client)
     }
 
     registry_remove(p_server->p_registry, p_client);
+
+    pthread_mutex_destroy(&(p_client->lock));
 
     free(p_client->p_rhost);
     p_client->p_rhost = NULL;
@@ -756,8 +765,6 @@ registry_create (void)
     if (NULL == p_registry->pp_clients)
     {
         fprintf(stderr, "malloc failed\n");
-        free(p_registry);
-        p_registry = NULL;
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -771,10 +778,6 @@ registry_create (void)
     if (0 != pthread_mutex_init(&(p_registry->lock), NULL))
     {
         perror("pthread_mutex_init");
-        free(p_registry->pp_clients);
-        p_registry->pp_clients = NULL;
-        free(p_registry);
-        p_registry = NULL;
         status = STATUS_MUTEX_FAILURE;
         goto cleanup;
     }
