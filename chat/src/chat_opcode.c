@@ -61,9 +61,10 @@ opcode_default (
         goto cleanup;
     }
 
+    p_response->opcode  = OPCODE_DEFAULT;
     p_response->retcode = RETCODE_FAILURE;
 
-    p_response->size = 1u;
+    p_response->size = 2u;
 
     if (p_server->b_verbose)
     {
@@ -107,13 +108,15 @@ opcode_ping (
         goto cleanup;
     }
 
+    p_response->opcode = OPCODE_PING;
+
     // Receive header
     p_request->size = 6u;
     sockutil_recvall(sockfd, p_request_packet + 1u, p_request->size - 1u);
 
     p_request->session_id = ntohl(*(uint32_t *)(p_request_packet + 2u));
 
-    p_response->size = 1u;
+    p_response->size = 2u;
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
@@ -156,6 +159,8 @@ opcode_echo (
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    p_response->opcode = OPCODE_ECHO;
 
     // Receive header
     p_request->size = 8u;
@@ -222,8 +227,9 @@ opcode_quit (
         goto cleanup;
     }
 
-    p_request->size = 1u;
+    p_request->size = 2u;
 
+    p_response->opcode  = OPCODE_QUIT;
     p_response->retcode = RETCODE_SUCCESS;
 
     if (p_server->b_verbose)
@@ -231,7 +237,7 @@ opcode_quit (
         printf("Quitting client session on sockfd %d\n", p_session->sockfd);
     }
 
-    p_response->size = 1u;
+    p_response->size = 2u;
 
 cleanup:
     return status;
@@ -275,6 +281,8 @@ opcode_login (
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    p_response->opcode = OPCODE_LOGIN;
 
     // Receive header
     p_request->size = 12u;
@@ -528,12 +536,14 @@ opcode_logout (
         goto cleanup;
     }
 
+    p_response->opcode = OPCODE_LOGOUT;
+
     p_request->size = 6u;
     sockutil_recvall(sockfd, p_request_packet + 1u, p_request->size - 1u);
 
     p_request->session_id = ntohl(*(uint32_t *)(p_request_packet + 2u));
 
-    p_response->size = 1u;
+    p_response->size = 2u;
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)

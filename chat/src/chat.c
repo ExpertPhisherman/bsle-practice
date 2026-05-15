@@ -147,6 +147,7 @@ chat_client_run (server_t * p_server, client_t * p_client)
     p_request->opcode = OPCODE_DEFAULT;
     memset(p_request->p_packet, 0, max_packet_size);
 
+    p_response->opcode  = OPCODE_DEFAULT;
     p_response->retcode = RETCODE_FAILURE;
     memset(p_response->p_packet, 0, max_packet_size);
     p_response->size = 0u;
@@ -180,7 +181,8 @@ chat_client_run (server_t * p_server, client_t * p_client)
         display_hex(p_response->p_packet, p_response->size, " ", "\n");
     }
 
-    (p_response->p_packet)[0] = p_response->retcode;
+    (p_response->p_packet)[0] = p_response->opcode;
+    (p_response->p_packet)[1] = p_response->retcode;
     sockutil_sendall(sockfd, p_response->p_packet, p_response->size);
 
     if (OPCODE_QUIT == p_request->opcode)

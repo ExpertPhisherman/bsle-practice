@@ -52,7 +52,6 @@ class ChatClient(Client):
         self.prompt = "chat> "
         self.session_id = 0
         self.request = b""
-        self.response = b""
         self.username = None
         self.password = None
 
@@ -72,21 +71,20 @@ class ChatClient(Client):
             print(f"[!] Error sending data: {e}")
             return True
 
-    def recv_response(self, size: int) -> bool:
+    def recv_response(self, size: int) -> bytes:
         """Receive response from server"""
 
         if self.sock is None:
-            return True
+            return None
         try:
-            # Receive opcode and payload size in one recvall
-            self.response = self.recvall(size)
-            print(f"Response bytes: {self.response}")
-            return False
+            response = self.recvall(size)
+            print(f"Response bytes: {response}")
+            return response
         except (ConnectionError, KeyboardInterrupt) as e:
             if isinstance(e, KeyboardInterrupt):
                 print()
             print(f"[!] Error receiving data: {e}")
-            return True
+            return None
 
     @with_parser(
         description="Log in with credentials",
@@ -138,10 +136,11 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        if self.recv_response(6):
+        response = self.recv_response(6)
+        if response is None:
             return True
 
-        retcode, session_id = struct.unpack("!BxI", self.response)
+        response_opcode, retcode, session_id = struct.unpack("!BBI", response)
 
         if retcode == RETCODE_SUCCESS:
             self.session_id = session_id
@@ -166,10 +165,11 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        if self.recv_response(1):
+        response = self.recv_response(2)
+        if response is None:
             return True
 
-        retcode = struct.unpack("!B", self.response)[0]
+        response_opcode, retcode = struct.unpack("!BB", response)
 
         if retcode == RETCODE_SUCCESS:
             print("PONG")
@@ -201,15 +201,14 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        if self.recv_response(2 + len(line)):
+        response = self.recv_response(2 + len(line))
+        if response is None:
             return True
 
-        retcode = struct.unpack("!B", self.response[:1])[0]
-
-        response_payload = self.response[2:]
+        response_opcode, retcode = struct.unpack("!BB", response[:2])
 
         if retcode == RETCODE_SUCCESS:
-            print(response_payload.decode("utf-8"))
+            print(response[2:].decode("utf-8"))
         elif retcode == RETCODE_SESSION_ERROR:
             print("Invalid session")
         elif retcode == RETCODE_FAILURE:
@@ -228,10 +227,11 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        if self.recv_response(1):
+        response = self.recv_response(2)
+        if response is None:
             return True
 
-        retcode = struct.unpack("!B", self.response)[0]
+        response_opcode, retcode = struct.unpack("!BB", response)
 
         if retcode == RETCODE_SUCCESS:
             print("Goodbye!")
@@ -253,10 +253,11 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        if self.recv_response(1):
+        response = self.recv_response(2)
+        if response is None:
             return True
 
-        retcode = struct.unpack("!B", self.response)[0]
+        response_opcode, retcode = struct.unpack("!BB", response)
 
         if retcode == RETCODE_SUCCESS:
             self.username = None
