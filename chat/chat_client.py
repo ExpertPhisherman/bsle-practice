@@ -1,10 +1,15 @@
 import argparse
 import struct
 import sys
+import threading
+import _thread
+import readline
 from typing import Any, Callable
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parent.parent))
 from client import Client
+
+UINT8_MAX = 255
 
 OPCODE_DEFAULT  = 0x00
 OPCODE_PING     = 0x01
@@ -18,6 +23,15 @@ OPCODE_MSG_RECV = 0x07
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
 RETCODE_FAILURE       = 0xff
+
+def with_lock(lock: threading.Lock) -> Callable[[Callable], Callable]:
+    """Acquire lock around function call"""
+    def decorator(func: Callable) -> Callable:
+        def wrapper(*args, **kwargs):
+            with lock:
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def with_parser(
     description: str,
@@ -47,13 +61,185 @@ def with_parser(
 class ChatClient(Client):
     """Chat client"""
 
+    _listener_lock = threading.Lock()
+
     def __init__(self) -> None:
         super().__init__()
-        self.prompt = "chat> "
-        self.session_id = 0
-        self.request = b""
-        self.username = None
-        self.password = None
+        self.prompt       = "chat> "
+        self.session_id   = 0
+        self.request      = b""
+        self.username     = None
+        self.password     = None
+        self.opcode       = OPCODE_DEFAULT
+        self.opcode_funcs = [None] * (UINT8_MAX + 1)
+
+        self.listening_thread = threading.Thread(
+            target=self.listener,
+            daemon=False
+        )
+
+        self._prompt_active = False
+        self._stdout_lock   = threading.Lock()
+        self._quit_event    = threading.Event()
+
+        self.opcode_funcs[OPCODE_DEFAULT]  = self.opcode_default
+        self.opcode_funcs[OPCODE_PING]     = self.opcode_ping
+        self.opcode_funcs[OPCODE_ECHO]     = self.opcode_echo
+        self.opcode_funcs[OPCODE_QUIT]     = self.opcode_quit
+        self.opcode_funcs[OPCODE_LOGIN]    = self.opcode_login
+        self.opcode_funcs[OPCODE_LOGOUT]   = self.opcode_logout
+        self.opcode_funcs[OPCODE_MSG_SEND] = None
+        self.opcode_funcs[OPCODE_MSG_RECV] = None
+
+    def preloop(self) -> None:
+        super().preloop()
+        self._prompt_active = True
+
+    def async_print(self, msg: str) -> None:
+        """Print msg without clobbering the readline prompt."""
+        with self._stdout_lock:
+            if self._prompt_active and threading.current_thread() is not threading.main_thread():
+                buf = readline.get_line_buffer()
+                sys.stdout.write('\r\033[K')
+                sys.stdout.write(msg + '\n')
+                sys.stdout.write(self.prompt + buf)
+                sys.stdout.flush()
+            else:
+                print(msg)
+
+    def listener(self) -> None:
+        while True:
+            response = self.recv_response(1)
+            if response is None:
+                self._quit_event.set()
+                _thread.interrupt_main()
+                break
+
+            opcode = response[0]
+
+            opcode_func = self.opcode_funcs[opcode]
+            if opcode_func is None:
+                opcode_func = self.opcode_funcs[OPCODE_DEFAULT]
+                if opcode_func is None:
+                    print("Default opcode function doesn't exist")
+                    continue
+
+            # Run specific opcode function
+            if opcode_func():
+                break
+
+    @with_lock(_listener_lock)
+    def opcode_default(self) -> bool:
+        response = self.recv_response(1)
+        if response is None:
+            return
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            self.async_print(f"Unknown operation code: {self.opcode}")
+        else:
+            self.async_print(f"Unknown return code: {retcode}")
+
+        return False
+
+    @with_lock(_listener_lock)
+    def opcode_ping(self) -> bool:
+        response = self.recv_response(1)
+        if response is None:
+            return
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            self.async_print("PONG")
+        elif retcode == RETCODE_SESSION_ERROR:
+            self.async_print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            self.async_print("Failed ping")
+        else:
+            self.async_print(f"Unknown return code: {retcode}")
+
+        return False
+
+    @with_lock(_listener_lock)
+    def opcode_echo(self) -> bool:
+        response = self.recv_response(3)
+        if response is None:
+            return
+
+        retcode, size = struct.unpack("!BH", response)
+
+        payload = self.recv_response(size)
+        if payload is None:
+            return
+
+        if retcode == RETCODE_SUCCESS:
+            self.async_print(payload.decode("utf-8"))
+        elif retcode == RETCODE_SESSION_ERROR:
+            self.async_print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            self.async_print("Failed echo")
+        else:
+            self.async_print(f"Unknown return code: {retcode}")
+
+        return False
+
+    @with_lock(_listener_lock)
+    def opcode_quit(self) -> bool:
+        response = self.recv_response(1)
+        if response is None:
+            return
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            self.async_print("Goodbye!")
+        else:
+            self.async_print(f"Unknown return code: {retcode}")
+
+        self._quit_event.set()
+        return True
+
+    @with_lock(_listener_lock)
+    def opcode_login(self) -> bool:
+        response = self.recv_response(5)
+        if response is None:
+            return
+
+        retcode, session_id = struct.unpack("!BI", response)
+
+        if retcode == RETCODE_SUCCESS:
+            self.session_id = session_id
+            self.async_print(f"Login, set session ID to: {self.session_id}")
+        elif retcode == RETCODE_FAILURE:
+            self.async_print("Failed login")
+        else:
+            self.async_print(f"Unknown return code: {retcode}")
+
+        return False
+
+    @with_lock(_listener_lock)
+    def opcode_logout(self) -> bool:
+        response = self.recv_response(1)
+        if response is None:
+            return
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            self.username = None
+            self.password = None
+            self.session_id = 0
+            self.async_print(f"Logout, set session ID to {self.session_id}")
+        elif retcode == RETCODE_SESSION_ERROR:
+            self.async_print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            self.async_print("Failed logout")
+        else:
+            self.async_print(f"Unknown return code: {retcode}")
+
+        return False
 
     def send_request(self) -> bool:
         """Send request to server"""
@@ -61,14 +247,14 @@ class ChatClient(Client):
         if self.sock is None:
             return True
         try:
-            print(f"{self.session_id=}")
+            self.async_print(f"{self.session_id=}")
             self.sock.sendall(self.request)
-            print(f"Request bytes: {self.request}")
+            self.async_print(f"Request bytes: {self.request}")
             return False
         except (ConnectionError, KeyboardInterrupt) as e:
             if isinstance(e, KeyboardInterrupt):
-                print()
-            print(f"[!] Error sending data: {e}")
+                self.async_print("")
+            self.async_print(f"[!] Error sending data: {e}")
             return True
 
     def recv_response(self, size: int) -> bytes:
@@ -78,12 +264,12 @@ class ChatClient(Client):
             return None
         try:
             response = self.recvall(size)
-            print(f"Response bytes: {response}")
+            self.async_print(f"Response bytes: {response}")
             return response
         except (ConnectionError, KeyboardInterrupt) as e:
             if isinstance(e, KeyboardInterrupt):
-                print()
-            print(f"[!] Error receiving data: {e}")
+                self.async_print("")
+            self.async_print(f"[!] Error receiving data: {e}")
             return None
 
     @with_parser(
@@ -115,12 +301,11 @@ class ChatClient(Client):
             self.do_help("login")
             return False
 
-        opcode = OPCODE_LOGIN
         user_flag = 0
 
         self.request = struct.pack(
             "!BBxxHHI",
-            opcode,
+            OPCODE_LOGIN,
             user_flag,
             len(username),
             len(password),
@@ -136,49 +321,18 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        response = self.recv_response(6)
-        if response is None:
-            return True
-
-        response_opcode, retcode, session_id = struct.unpack("!BBI", response)
-
-        if retcode == RETCODE_SUCCESS:
-            self.session_id = session_id
-            print(f"Login, set session ID to: {self.session_id}")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed login")
-        else:
-            print(f"Unknown return code: {retcode}")
-
         return False
 
     @with_parser(description="Respond with PONG")
     def do_ping(self, line: str) -> bool:
-        opcode = OPCODE_PING
-
         self.request = struct.pack(
             "!BxI",
-            opcode,
+            OPCODE_PING,
             self.session_id
         )
 
         if self.send_request():
             return True
-
-        response = self.recv_response(2)
-        if response is None:
-            return True
-
-        response_opcode, retcode = struct.unpack("!BB", response)
-
-        if retcode == RETCODE_SUCCESS:
-            print("PONG")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed ping")
-        else:
-            print(f"Unknown return code: {retcode}")
 
         return False
 
@@ -187,11 +341,9 @@ class ChatClient(Client):
         args={"message": {"help": "message to echo"}}
     )
     def do_echo(self, line: str) -> bool:
-        opcode = OPCODE_ECHO
-
         self.request = struct.pack(
             "!BxHI",
-            opcode,
+            OPCODE_ECHO,
             len(line),
             self.session_id
         )
@@ -201,75 +353,32 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        response = self.recv_response(2 + len(line))
-        if response is None:
-            return True
-
-        response_opcode, retcode = struct.unpack("!BB", response[:2])
-
-        if retcode == RETCODE_SUCCESS:
-            print(response[2:].decode("utf-8"))
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed echo")
-        else:
-            print(f"Unknown return code: {retcode}")
-
         return False
 
     @with_parser(description="Close client connection")
     def do_quit(self, line: str) -> bool:
-        opcode = OPCODE_QUIT
+        if self._quit_event.is_set():
+            return True
 
-        self.request = struct.pack("!Bx", opcode)
+        self.request = struct.pack("!Bx", OPCODE_QUIT)
 
         if self.send_request():
             return True
 
-        response = self.recv_response(2)
-        if response is None:
-            return True
-
-        response_opcode, retcode = struct.unpack("!BB", response)
-
-        if retcode == RETCODE_SUCCESS:
-            print("Goodbye!")
-        else:
-            print(f"Unknown return code: {retcode}")
-
+        self._quit_event.wait()
+        self.async_print("")
         return True
 
     @with_parser(description="Log out")
     def do_logout(self, line: str) -> bool:
-        opcode = OPCODE_LOGOUT
-
         self.request = struct.pack(
             "!BxI",
-            opcode,
+            OPCODE_LOGOUT,
             self.session_id
         )
 
         if self.send_request():
             return True
-
-        response = self.recv_response(2)
-        if response is None:
-            return True
-
-        response_opcode, retcode = struct.unpack("!BB", response)
-
-        if retcode == RETCODE_SUCCESS:
-            self.username = None
-            self.password = None
-            self.session_id = 0
-            print(f"Logout, set session ID to {self.session_id}")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed logout")
-        else:
-            print(f"Unknown return code: {retcode}")
 
         return False
 
@@ -287,9 +396,13 @@ def main() -> int:
     if failed:
         return 1
 
+    chat_client.listening_thread.start()
+
     chat_client.do_login("admin password")
+
     chat_client.cmdloop()
     chat_client.disconnect()
+
     return 0
 
 if __name__ == "__main__":
