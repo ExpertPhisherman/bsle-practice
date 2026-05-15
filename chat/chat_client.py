@@ -1,6 +1,7 @@
 import argparse
 import struct
 import sys
+import functools
 import threading
 from typing import Any, Callable
 from pathlib import Path
@@ -29,6 +30,7 @@ RETCODE_FAILURE       = 0xff
 def with_lock(lock: threading.Lock) -> Callable[[Callable], Callable]:
     """Acquire lock around function call"""
     def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             with lock:
                 return func(*args, **kwargs)
@@ -117,7 +119,7 @@ class ChatClient(Client):
     def _get_prompt(self) -> str:
         return f"({self.username}) " if self.username else "chat> "
 
-    def cmdloop(self) -> None:
+    def cmdloop(self, intro=None) -> None:
         """Read and dispatch commands until quit."""
         with patch_stdout():
             while not self._quit_event.is_set():
