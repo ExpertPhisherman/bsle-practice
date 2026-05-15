@@ -38,12 +38,13 @@ typedef struct item
 
 typedef struct ht
 {
-    sll_t          ** pp_buckets;     // Pointer to bucket array
-    size_t            capacity;       // Current number of buckets
-    size_t            len;            // Current occupied buckets
-    hash_func_t       p_hash_func;    // Pointer to hash function
-    display_func_t    p_display_item; // Pointer to display function
-    compare_func_t    p_compare_item; // Pointer to compare function
+    sll_t          ** pp_buckets;      // Pointer to bucket array
+    size_t            capacity;        // Current number of buckets
+    size_t            len;             // Current occupied buckets
+    hash_func_t       p_hash_func;     // Pointer to hash function
+    display_func_t    p_display_item;  // Pointer to display function
+    compare_func_t    p_compare_item;  // Pointer to compare function
+    destroy_func_t    p_destroy_value; // Pointer to destroy function
 } ht_t;
 
 /*!

@@ -54,6 +54,7 @@ typedef enum status
 
 typedef status_t (*display_func_t)(void * p_data);
 typedef int      (*compare_func_t)(void * p_data1, void * p_data2);
+typedef void     (*destroy_func_t)(void * p_data);
 typedef int      (*ischartype_func_t)(int chr);
 
 /*!

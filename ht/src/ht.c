@@ -76,11 +76,12 @@ ht_create (size_t capacity)
         goto cleanup;
     }
 
-    p_ht->capacity       = capacity;
-    p_ht->len            = 0u;
-    p_ht->p_hash_func    = djb2_hash;
-    p_ht->p_display_item = display_item;
-    p_ht->p_compare_item = compare_item;
+    p_ht->capacity        = capacity;
+    p_ht->len             = 0u;
+    p_ht->p_hash_func     = djb2_hash;
+    p_ht->p_display_item  = display_item;
+    p_ht->p_compare_item  = compare_item;
+    p_ht->p_destroy_value = NULL;
 
     p_ht->pp_buckets = calloc(capacity, sizeof(*(p_ht->pp_buckets)));
     if (NULL == p_ht->pp_buckets)
@@ -126,10 +127,11 @@ ht_destroy (ht_t * p_ht)
         goto cleanup;
     }
 
-    p_ht->len            = 0u;
-    p_ht->p_hash_func    = NULL;
-    p_ht->p_display_item = NULL;
-    p_ht->p_compare_item = NULL;
+    p_ht->len             = 0u;
+    p_ht->p_hash_func     = NULL;
+    p_ht->p_display_item  = NULL;
+    p_ht->p_compare_item  = NULL;
+    p_ht->p_destroy_value = free;
 
     if (NULL == p_ht->pp_buckets)
     {
@@ -143,22 +145,28 @@ ht_destroy (ht_t * p_ht)
         sll_t * p_sll = (p_ht->pp_buckets)[idx];
         (p_ht->pp_buckets)[idx] = NULL;
 
-        if (NULL != p_sll)
+        if (NULL == p_sll)
         {
-            // Free heap allocated key and value
-            node_t * p_curr = p_sll->p_head;
-            while (NULL != p_curr)
+            continue;
+        }
+
+        // Free heap allocated key and value
+        node_t * p_curr = p_sll->p_head;
+        while (NULL != p_curr)
+        {
+            item_t * p_item = p_curr->p_data;
+            if (NULL != p_item)
             {
-                item_t * p_item = p_curr->p_data;
-                if (NULL != p_item)
+                free(p_item->p_key);
+                p_item->p_key = NULL;
+
+                if (NULL != p_ht->p_destroy_value)
                 {
-                    free(p_item->p_key);
-                    p_item->p_key = NULL;
-                    free(p_item->p_value);
+                    (p_ht->p_destroy_value)(p_item->p_value);
                     p_item->p_value = NULL;
                 }
-                p_curr = p_curr->p_next;
             }
+            p_curr = p_curr->p_next;
         }
 
         sll_destroy(p_sll);

@@ -52,6 +52,15 @@ static status_t handle_request(
     response_t * p_response
 );
 
+/*!
+ * @brief Destroy room
+ *
+ * @param[in] p_data Pointer to room
+ *
+ * @return void
+ */
+static void room_destroy(void * p_data);
+
 server_t *
 chat_server_create (
     server_t * p_hints,
@@ -317,6 +326,8 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
         goto cleanup;
     }
 
+    p_room_store->p_destroy_value = room_destroy;
+
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
     {
@@ -423,6 +434,23 @@ handle_request (
 
 cleanup:
     return status;
+}
+
+static void
+room_destroy (void * p_data)
+{
+    if (NULL == p_data)
+    {
+        goto cleanup;
+    }
+
+    room_t * p_room = p_data;
+
+    free(p_room);
+    p_room = NULL;
+
+cleanup:
+    return;
 }
 
 /*** end of file ***/
