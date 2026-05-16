@@ -19,7 +19,12 @@ sockutil_sendall (int sockfd, void * p_buf, size_t size)
 
     while (total < size)
     {
-        ssize_t sent = send(sockfd, (uint8_t *)p_buf + total, size - total, 0);
+        ssize_t sent = send(
+            sockfd,
+            (uint8_t *)p_buf + total,
+            size - total,
+            MSG_NOSIGNAL
+        );
         if (-1 == sent)
         {
             if (EINTR == errno)
