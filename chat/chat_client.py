@@ -137,7 +137,8 @@ class ChatClient(Client):
                     print(f"Unknown command: /{cmd}")
                     continue
 
-                func(arg)
+                if func(arg):
+                    break
 
     def listener(self) -> None:
         while True:
@@ -161,7 +162,8 @@ class ChatClient(Client):
                     continue
 
             with self._listener_lock:
-                opcode_func()
+                if opcode_func():
+                    break
 
     def opcode_default(self) -> bool:
         response = self.recv_response(1)
