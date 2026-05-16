@@ -91,7 +91,6 @@ class Client(cmd.Cmd):
             super().cmdloop(intro)
         except KeyboardInterrupt:
             print()
-            self.do_quit("")
 
     cmdloop.__doc__ = cmd.Cmd.cmdloop.__doc__
 
