@@ -197,12 +197,6 @@ sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
     (p_sll->len)++;
 
 cleanup:
-    if (STATUS_ALLOC_FAILURE == status)
-    {
-        sll_destroy(p_sll);
-        p_sll = NULL;
-    }
-
     return status;
 }
 

@@ -81,7 +81,7 @@ ht_create (size_t capacity)
     p_ht->p_hash_func     = djb2_hash;
     p_ht->p_display_item  = display_item;
     p_ht->p_compare_item  = compare_item;
-    p_ht->p_destroy_value = NULL;
+    p_ht->p_destroy_value = free;
 
     p_ht->pp_buckets = calloc(capacity, sizeof(*(p_ht->pp_buckets)));
     if (NULL == p_ht->pp_buckets)
@@ -131,7 +131,6 @@ ht_destroy (ht_t * p_ht)
     p_ht->p_hash_func     = NULL;
     p_ht->p_display_item  = NULL;
     p_ht->p_compare_item  = NULL;
-    p_ht->p_destroy_value = free;
 
     if (NULL == p_ht->pp_buckets)
     {
@@ -163,8 +162,8 @@ ht_destroy (ht_t * p_ht)
                 if (NULL != p_ht->p_destroy_value)
                 {
                     (p_ht->p_destroy_value)(p_item->p_value);
-                    p_item->p_value = NULL;
                 }
+                p_item->p_value = NULL;
             }
             p_curr = p_curr->p_next;
         }
@@ -172,6 +171,8 @@ ht_destroy (ht_t * p_ht)
         sll_destroy(p_sll);
         p_sll = NULL;
     }
+
+    p_ht->p_destroy_value = NULL;
 
     p_ht->capacity = 0u;
 
@@ -277,7 +278,7 @@ ht_set (
         goto cleanup;
     }
 
-    item_t item =
+    item_t new_item =
     {
         .p_hash_func = p_ht->p_hash_func,
         .hash        = (p_ht->p_hash_func)(p_key, key_size),
@@ -288,24 +289,24 @@ ht_set (
     };
 
     // Allocate hash table owned key and value
-    item.p_key = malloc(key_size);
-    if (NULL == item.p_key)
+    new_item.p_key = malloc(key_size);
+    if (NULL == new_item.p_key)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    memcpy(item.p_key, p_key, key_size);
+    memcpy(new_item.p_key, p_key, key_size);
 
-    item.p_value = malloc(value_size);
-    if (NULL == item.p_value)
+    new_item.p_value = malloc(value_size);
+    if (NULL == new_item.p_value)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    memcpy(item.p_value, p_value, value_size);
+    memcpy(new_item.p_value, p_value, value_size);
 
-    sll_t * p_sll = ht_select(p_ht, &item);
-    node_t * p_node = sll_get(p_sll, &item);
+    sll_t * p_sll = ht_select(p_ht, &new_item);
+    node_t * p_node = sll_get(p_sll, &new_item);
 
     // Update item if key exists in SLL
     if (NULL != p_node)
@@ -313,26 +314,34 @@ ht_set (
         // NOTE: Key exists in SLL
         item_t * p_item = p_node->p_data;
 
-        // Free old value
-        free(p_item->p_value);
+        // Destroy old value
+        if (NULL != p_ht->p_destroy_value)
+        {
+            (p_ht->p_destroy_value)(p_item->p_value);
+        }
         p_item->p_value = NULL;
 
-        p_item->p_value    = item.p_value;
-        p_item->value_size = item.value_size;
+        // Set new value
+        p_item->p_value    = new_item.p_value;
+        p_item->value_size = new_item.value_size;
 
         // Free key copy
-        free(item.p_key);
-        item.p_key = NULL;
+        free(new_item.p_key);
+        new_item.p_key = NULL;
 
         status = STATUS_EXISTS;
         goto cleanup;
     }
 
     // Append item if key does not exist in SLL
-    status = sll_append(p_sll, &item, sizeof(item));
+    status = sll_append(p_sll, &new_item, sizeof(new_item));
+    if (STATUS_SUCCESS != status)
+    {
+        goto cleanup;
+    }
 
     // Increment length if first node inserted
-    if ((STATUS_SUCCESS == status) && (1u == p_sll->len))
+    if (1u == p_sll->len)
     {
         (p_ht->len)++;
     }
@@ -340,14 +349,11 @@ ht_set (
 cleanup:
     if (STATUS_ALLOC_FAILURE == status)
     {
-        free(item.p_key);
-        item.p_key = NULL;
+        free(new_item.p_key);
+        new_item.p_key = NULL;
 
-        free(item.p_value);
-        item.p_value = NULL;
-
-        ht_destroy(p_ht);
-        p_ht = NULL;
+        free(new_item.p_value);
+        new_item.p_value = NULL;
     }
 
     return status;
@@ -389,19 +395,21 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
     void * p_val_cpy = p_item->p_value;
 
     status = sll_remove(p_sll, &item);
-
-    if (STATUS_SUCCESS == status)
+    if (STATUS_SUCCESS != status)
     {
-        free(p_key_cpy);
-        p_key_cpy = NULL;
-        free(p_val_cpy);
-        p_val_cpy = NULL;
+        goto cleanup;
+    }
 
-        // Decrement length if last node removed
-        if (0u == p_sll->len)
-        {
-            (p_ht->len)--;
-        }
+    free(p_key_cpy);
+    p_key_cpy = NULL;
+
+    free(p_val_cpy);
+    p_val_cpy = NULL;
+
+    // Decrement length if last node removed
+    if (0u == p_sll->len)
+    {
+        (p_ht->len)--;
     }
 
 cleanup:
