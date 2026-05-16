@@ -596,6 +596,13 @@ client_create (server_t * p_server)
     p_client->sockfd       = -1;
     p_client->p_clientdata = NULL;
 
+    if (0 != pthread_mutex_init(&(p_client->lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
+        goto cleanup;
+    }
+
     struct sockaddr_in client_addr;
     socklen_t sin_size = sizeof(client_addr);
 
@@ -665,13 +672,6 @@ client_create (server_t * p_server)
             fprintf(stderr, "p_client_init failed\n");
             goto cleanup;
         }
-    }
-
-    if (0 != pthread_mutex_init(&(p_client->lock), NULL))
-    {
-        perror("pthread_mutex_init");
-        status = STATUS_MUTEX_FAILURE;
-        goto cleanup;
     }
 
 cleanup:
