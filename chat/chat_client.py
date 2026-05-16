@@ -27,16 +27,6 @@ RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
 RETCODE_FAILURE       = 0xff
 
-def with_lock(lock: threading.Lock) -> Callable[[Callable], Callable]:
-    """Acquire lock around function call"""
-    def decorator(func: Callable) -> Callable:
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            with lock:
-                return func(*args, **kwargs)
-        return wrapper
-    return decorator
-
 def with_parser(
     description: str,
     args: dict[str, dict[str, Any]] | None = None,
@@ -80,8 +70,6 @@ class SlashCompleter(Completer):
 class ChatClient(Client):
     """Chat client"""
 
-    _listener_lock = threading.Lock()
-
     def __init__(self) -> None:
         super().__init__()
         self.session_id   = 0
@@ -106,6 +94,8 @@ class ChatClient(Client):
             target=self.listener,
             daemon=False
         )
+
+        self._listener_lock = threading.Lock()
 
         self.opcode_funcs[OPCODE_DEFAULT]  = self.opcode_default
         self.opcode_funcs[OPCODE_PING]     = self.opcode_ping
@@ -147,16 +137,18 @@ class ChatClient(Client):
                     print(f"Unknown command: /{cmd}")
                     continue
 
-                if func(arg):
-                    break
+                func(arg)
 
     def listener(self) -> None:
         while True:
             response = self.recv_response(1)
             if response is None:
                 self._quit_event.set()
-                if self._session.app.is_running:
-                    self._session.app.exit(exception=EOFError)
+                loop = self._session.app.loop
+                if loop is not None and loop.is_running():
+                    loop.call_soon_threadsafe(
+                        lambda: self._session.app.exit(exception=EOFError)
+                    )
                 break
 
             opcode = response[0]
@@ -168,10 +160,9 @@ class ChatClient(Client):
                     print("Default opcode function doesn't exist")
                     continue
 
-            if opcode_func():
-                break
+            with self._listener_lock:
+                opcode_func()
 
-    @with_lock(_listener_lock)
     def opcode_default(self) -> bool:
         response = self.recv_response(1)
         if response is None:
@@ -186,7 +177,6 @@ class ChatClient(Client):
 
         return False
 
-    @with_lock(_listener_lock)
     def opcode_ping(self) -> bool:
         response = self.recv_response(1)
         if response is None:
@@ -205,7 +195,6 @@ class ChatClient(Client):
 
         return False
 
-    @with_lock(_listener_lock)
     def opcode_echo(self) -> bool:
         response = self.recv_response(3)
         if response is None:
@@ -228,7 +217,6 @@ class ChatClient(Client):
 
         return False
 
-    @with_lock(_listener_lock)
     def opcode_quit(self) -> bool:
         response = self.recv_response(1)
         if response is None:
@@ -244,7 +232,6 @@ class ChatClient(Client):
         self._quit_event.set()
         return True
 
-    @with_lock(_listener_lock)
     def opcode_login(self) -> bool:
         response = self.recv_response(5)
         if response is None:
@@ -262,7 +249,6 @@ class ChatClient(Client):
 
         return False
 
-    @with_lock(_listener_lock)
     def opcode_logout(self) -> bool:
         response = self.recv_response(1)
         if response is None:
