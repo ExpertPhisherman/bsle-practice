@@ -594,6 +594,7 @@ client_create (server_t * p_server)
     p_client->rport        = 0u;
     p_client->p_rhost      = NULL;
     p_client->sockfd       = -1;
+    p_client->registry_idx = -1;
     p_client->p_clientdata = NULL;
 
     if (0 != pthread_mutex_init(&(p_client->lock), NULL))
@@ -809,6 +810,7 @@ registry_add (registry_t * p_registry, client_t * p_client)
         if (NULL == (p_registry->pp_clients)[idx])
         {
             (p_registry->pp_clients)[idx] = p_client;
+            p_client->registry_idx = idx;
             status = STATUS_SUCCESS;
             break;
         }
@@ -848,19 +850,11 @@ registry_remove (registry_t * p_registry, client_t * p_client)
     }
 
     pthread_mutex_lock(&(p_registry->lock));
-    for (size_t idx = 0u; idx < max_clients; idx++)
+    if (-1 != p_client->registry_idx)
     {
-        if (NULL == (p_registry->pp_clients)[idx])
-        {
-            continue;
-        }
-
-        if (p_client == (p_registry->pp_clients)[idx])
-        {
-            (p_registry->pp_clients)[idx] = NULL;
-            status = STATUS_SUCCESS;
-            break;
-        }
+        (p_registry->pp_clients)[p_client->registry_idx] = NULL;
+        p_client->registry_idx = -1;
+        status = STATUS_SUCCESS;
     }
     pthread_mutex_unlock(&(p_registry->lock));
 
