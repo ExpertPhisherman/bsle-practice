@@ -595,6 +595,7 @@ client_create (server_t * p_server)
     p_client->p_rhost      = NULL;
     p_client->sockfd       = -1;
     p_client->p_clientdata = NULL;
+    p_client->lock         = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
 
     if (0 != pthread_mutex_init(&(p_client->lock), NULL))
     {
@@ -759,21 +760,19 @@ registry_create (void)
         goto cleanup;
     }
 
-    p_registry->pp_clients = malloc(
-        max_clients * sizeof(*(p_registry->pp_clients))
+    p_registry->pp_clients = NULL;
+    p_registry->lock       = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+
+    p_registry->pp_clients = calloc(
+        max_clients,
+        sizeof(*(p_registry->pp_clients))
     );
     if (NULL == p_registry->pp_clients)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-
-    memset(
-        p_registry->pp_clients,
-        0,
-        max_clients * sizeof(*(p_registry->pp_clients))
-    );
 
     if (0 != pthread_mutex_init(&(p_registry->lock), NULL))
     {
@@ -860,7 +859,7 @@ registry_remove (registry_t * p_registry, client_t * p_client)
             continue;
         }
 
-        if (p_client->sockfd == ((p_registry->pp_clients)[idx])->sockfd)
+        if (p_client == (p_registry->pp_clients)[idx])
         {
             (p_registry->pp_clients)[idx] = NULL;
             status = STATUS_SUCCESS;
