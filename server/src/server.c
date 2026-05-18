@@ -907,7 +907,10 @@ registry_shutdown (registry_t * p_registry)
 
         if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
         {
-            perror("shutdown in registry_shutdown");
+            if (ENOTCONN != errno)
+            {
+                perror("shutdown in registry_shutdown");
+            }
         }
     }
     pthread_mutex_unlock(&(p_registry->lock));
@@ -982,18 +985,11 @@ registry_cleanup_clients (server_t * p_server)
             }
         }
 
-        if (-1 == shutdown(p_client->sockfd, SHUT_RDWR))
-        {
-            if (ENOTCONN != errno)
-            {
-                perror("shutdown in registry_cleanup_clients");
-            }
-        }
-
         if (-1 == close(p_client->sockfd))
         {
             perror("close in registry_cleanup_clients");
         }
+        p_client->sockfd = -1;
 
         free(p_client->p_rhost);
         p_client->p_rhost = NULL;
