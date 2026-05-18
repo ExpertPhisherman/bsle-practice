@@ -22,6 +22,7 @@ OPCODE_LOGIN    = 0x04
 OPCODE_LOGOUT   = 0x05
 OPCODE_MSG_SEND = 0x06
 OPCODE_MSG_RECV = 0x07
+OPCODE_JOIN     = 0x08
 
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
@@ -76,6 +77,7 @@ class ChatClient(Client):
         self.request      = b""
         self.username     = None
         self.password     = None
+        self.room_name    = None
         self.opcode       = OPCODE_DEFAULT
         self.opcode_funcs = [None] * (UINT8_MAX + 1)
         self._quit_event  = threading.Event()
@@ -105,6 +107,7 @@ class ChatClient(Client):
         self.opcode_funcs[OPCODE_LOGOUT]   = self.opcode_logout
         self.opcode_funcs[OPCODE_MSG_SEND] = None
         self.opcode_funcs[OPCODE_MSG_RECV] = None
+        self.opcode_funcs[OPCODE_JOIN]     = self.opcode_join
 
     def _get_prompt(self) -> str:
         return f"({self.username}) " if self.username else "chat> "
@@ -219,6 +222,27 @@ class ChatClient(Client):
 
         return False
 
+    def opcode_join(self) -> bool:
+        response = self.recv_response(1)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print(f"{self.username} joined room: {self.room_name}")
+        elif retcode == RETCODE_SESSION_ERROR:
+            self.room_name = None
+            print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            self.room_name = None
+            print("Failed join")
+        else:
+            self.room_name = None
+            print(f"Unknown return code: {retcode}")
+
+        return False
+
     def opcode_quit(self) -> bool:
         response = self.recv_response(1)
         if response is None:
@@ -245,8 +269,14 @@ class ChatClient(Client):
             self.session_id = session_id
             print(f"Login, set session ID to: {self.session_id}")
         elif retcode == RETCODE_FAILURE:
+            self.session_id = 0
+            self.username = None
+            self.password = None
             print("Failed login")
         else:
+            self.session_id = 0
+            self.username = None
+            self.password = None
             print(f"Unknown return code: {retcode}")
 
         return False
@@ -361,7 +391,7 @@ class ChatClient(Client):
         return self.send_request()
 
     @with_parser(
-        description="Send the provided message to the current lobby",
+        description="Send message to all users in room",
         args={"message": {"help": "message to send"}},
         epilog="Can invoke by typing text without a prepended slash character"
     )
@@ -375,6 +405,23 @@ class ChatClient(Client):
         self.request += line.encode("utf-8")
         #return self.send_request()
         return False
+
+    @with_parser(
+        description="Join room or create it if it doesn't exist",
+        args={"room_name": {"help": "Room name to join"}}
+    )
+    def do_join(self, line: str) -> bool:
+        self.request = struct.pack(
+            "!BxHI",
+            OPCODE_JOIN,
+            len(line),
+            self.session_id
+        )
+        self.request += line.encode("utf-8")
+
+        self.room_name = line
+
+        return self.send_request()
 
     @with_parser(description="Close client connection")
     def do_quit(self, line: str) -> bool:

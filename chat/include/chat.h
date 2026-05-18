@@ -45,8 +45,9 @@ typedef enum opcode
     OPCODE_QUIT     = 0x03, // Close client connection
     OPCODE_LOGIN    = 0x04, // Log in with credentials
     OPCODE_LOGOUT   = 0x05, // Log out
-    OPCODE_MSG_SEND = 0x06, // Receive single message
-    OPCODE_MSG_RECV = 0x07, // Receive last seen timestamp, send newer messages
+    OPCODE_MSG_SEND = 0x06, // Send message to all users in room
+    OPCODE_MSG_RECV = 0x07, // Receive single message
+    OPCODE_JOIN     = 0x08, // Join or create room
 } opcode_t;
 
 typedef enum retcode
@@ -58,13 +59,15 @@ typedef enum retcode
 
 typedef struct session
 {
-    server_t * p_server;      // Pointer to server
-    int        sockfd;        // Client socket file descriptor
-    char     * p_username;    // Pointer to username
-    char     * p_password;    // Pointer to password
-    uint16_t   username_size; // Size of username in bytes
-    uint16_t   password_size; // Size of password in bytes
-    uint32_t   session_id;    // Unique session ID assigned after login
+    server_t * p_server;       // Pointer to server
+    int        sockfd;         // Client socket file descriptor
+    char     * p_username;     // Pointer to username
+    char     * p_password;     // Pointer to password
+    uint16_t   username_size;  // Size of username in bytes
+    uint16_t   password_size;  // Size of password in bytes
+    uint32_t   session_id;     // Unique session ID assigned after login
+    char     * p_room_name;    // Pointer to current room name
+    uint16_t   room_name_size; // Size of room name in bytes
 } session_t;
 
 typedef struct request
@@ -85,14 +88,14 @@ typedef struct response
 
 typedef struct message
 {
-    char const * p_content; // Pointer to message text
-    uint64_t     timestamp; // Time message received by server in nanoseconds
+    char * p_content; // Pointer to message text
 } message_t;
 
 typedef struct room
 {
-    char const * p_name;     // Pointer to room name
-    sll_t      * p_messages; // List of messages in reverse chronological order
+    char     * p_name;     // Pointer to name
+    uint16_t   name_size;  // Size of name in bytes
+    sll_t    * p_sessions; // Pointer to list of members' sessions
 } room_t;
 
 typedef struct appdata
@@ -164,6 +167,25 @@ status_t chat_client_init(server_t * p_server, client_t * p_client);
  * @return Status of operation
  */
 status_t chat_client_free(server_t * p_server, client_t * p_client);
+
+/*!
+ * @brief Create room
+ *
+ * @param[in] p_name    Pointer to name
+ * @param[in] name_size Size of name in bytes
+ *
+ * @return Pointer to room
+ */
+room_t * room_create(char * p_name, uint16_t name_size);
+
+/*!
+ * @brief Destroy room
+ *
+ * @param[in] pp_room Double pointer to room
+ *
+ * @return void
+ */
+void room_destroy(void * pp_room);
 
 #endif /* CHAT_H */
 

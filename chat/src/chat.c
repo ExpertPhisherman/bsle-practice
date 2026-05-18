@@ -52,15 +52,6 @@ static status_t handle_request(
     response_t * p_response
 );
 
-/*!
- * @brief Destroy room
- *
- * @param[in] p_data Pointer to room
- *
- * @return void
- */
-static void room_destroy(void * p_data);
-
 server_t *
 chat_server_create (
     server_t * p_hints,
@@ -282,6 +273,9 @@ chat_client_free (server_t * p_server, client_t * p_client)
     free(p_state->response.p_packet);
     p_state->response.p_packet = NULL;
 
+    free(p_state->session.p_room_name);
+    p_state->session.p_room_name = NULL;
+
     free(p_state);
     p_state = NULL;
 
@@ -289,6 +283,84 @@ chat_client_free (server_t * p_server, client_t * p_client)
 
 cleanup:
     return status;
+}
+
+room_t *
+room_create (char * p_name, uint16_t name_size)
+{
+    status_t status = STATUS_SUCCESS;
+
+    room_t * p_room     = NULL;
+    sll_t  * p_sessions = NULL;
+
+    p_room = malloc(sizeof(*p_room));
+    if (NULL == p_room)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    memset(p_room, 0, sizeof(*p_room));
+
+    p_room->name_size = name_size;
+
+    p_room->p_name = malloc(name_size);
+    if (NULL == p_room->p_name)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    memcpy(p_room->p_name, p_name, name_size);
+
+    p_sessions = sll_create();
+    if (NULL == p_sessions)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_room->p_sessions = p_sessions;
+
+cleanup:
+    if (STATUS_SUCCESS != status)
+    {
+        room_destroy(&p_room);
+        p_room = NULL;
+    }
+
+    return p_room;
+}
+
+void
+room_destroy (void * pp_room)
+{
+    if (NULL == pp_room)
+    {
+        goto cleanup;
+    }
+
+    room_t * p_room = *(room_t **)pp_room;
+
+    if (NULL == p_room)
+    {
+        goto cleanup;
+    }
+
+    free(p_room->p_name);
+    p_room->p_name = NULL;
+
+    sll_destroy(p_room->p_sessions);
+    p_room->p_sessions = NULL;
+
+    free(p_room);
+    p_room = NULL;
+
+    free(pp_room);
+    pp_room = NULL;
+
+cleanup:
+    return;
 }
 
 static appdata_t *
@@ -299,6 +371,7 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
     appdata_t     * p_appdata         = NULL;
     ht_t          * p_cred_store      = NULL;
     ht_t          * p_room_store      = NULL;
+    room_t        * p_room            = NULL;
     opcode_func_t * pp_opcode_funcs   = NULL;
 
     p_appdata = malloc(sizeof(*p_appdata));
@@ -316,8 +389,9 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_appdata->p_cred_store = p_cred_store;
 
-    status = ht_set(p_cred_store, (void *)"admin", 5u, (void *)"password", 8u);
+    status = ht_set(p_cred_store, (char *)"admin", 5u, (char *)"password", 8u);
     if (STATUS_SUCCESS != status)
     {
         fprintf(stderr, "ht_set failed\n");
@@ -330,8 +404,29 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_appdata->p_room_store = p_room_store;
 
     p_room_store->p_destroy_value = room_destroy;
+
+    p_room = room_create((char *)"general", 7u);
+    if (NULL == p_room)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    status = ht_set(
+        p_room_store,
+        p_room->p_name,
+        p_room->name_size,
+        &p_room,
+        sizeof(p_room)
+    );
+    if (STATUS_SUCCESS != status)
+    {
+        fprintf(stderr, "ht_set failed\n");
+        goto cleanup;
+    }
 
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
@@ -339,6 +434,7 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
     pp_opcode_funcs[OPCODE_DEFAULT]  = opcode_default;
     pp_opcode_funcs[OPCODE_PING]     = opcode_ping;
@@ -348,11 +444,9 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
     pp_opcode_funcs[OPCODE_LOGOUT]   = opcode_logout;
     pp_opcode_funcs[OPCODE_MSG_SEND] = opcode_msg_send;
     pp_opcode_funcs[OPCODE_MSG_RECV] = opcode_msg_recv;
+    pp_opcode_funcs[OPCODE_JOIN]     = opcode_join;
 
     p_appdata->next_session_id = 1u;
-    p_appdata->p_cred_store    = p_cred_store;
-    p_appdata->p_room_store    = p_room_store;
-    p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
     if (0 != pthread_mutex_init(&(p_appdata->lock), NULL))
     {
@@ -439,23 +533,6 @@ handle_request (
 
 cleanup:
     return status;
-}
-
-static void
-room_destroy (void * p_data)
-{
-    if (NULL == p_data)
-    {
-        goto cleanup;
-    }
-
-    room_t * p_room = p_data;
-
-    free(p_room);
-    p_room = NULL;
-
-cleanup:
-    return;
 }
 
 /*** end of file ***/
