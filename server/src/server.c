@@ -595,7 +595,6 @@ client_create (server_t * p_server)
     p_client->p_rhost      = NULL;
     p_client->sockfd       = -1;
     p_client->p_clientdata = NULL;
-    p_client->lock         = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
 
     if (0 != pthread_mutex_init(&(p_client->lock), NULL))
     {
@@ -759,9 +758,6 @@ registry_create (void)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-
-    p_registry->pp_clients = NULL;
-    p_registry->lock       = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
 
     p_registry->pp_clients = calloc(
         max_clients,
@@ -931,73 +927,16 @@ registry_cleanup_clients (server_t * p_server)
 
     registry_t * p_registry = p_server->p_registry;
 
-    /*
-    NOTE:
-    Can't call client_destroy while locked because
-    client_destroy calls registry_remove which also locks
-    */
-
-    // Collect whatever remains under the lock, then destroy outside it
-    client_t ** pp_remaining = calloc(max_clients, sizeof(*pp_remaining));
-    if (NULL == pp_remaining)
-    {
-        fprintf(stderr, "calloc failed in registry_cleanup_clients\n");
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    size_t remaining_count = 0u;
-
-    pthread_mutex_lock(&(p_registry->lock));
     for (size_t idx = 0u; idx < max_clients; idx++)
     {
-        if (NULL != (p_registry->pp_clients)[idx])
+        client_t * p_client = (p_registry->pp_clients)[idx];
+        if (NULL == p_client)
         {
-            pp_remaining[remaining_count] = (p_registry->pp_clients)[idx];
-            (p_registry->pp_clients)[idx] = NULL;
-            remaining_count++;
+            continue;
         }
+
+        client_destroy(p_server, p_client);
     }
-    pthread_mutex_unlock(&(p_registry->lock));
-
-    // Destroy each idle client
-    for (size_t idx = 0u; idx < remaining_count; idx++)
-    {
-        client_t * p_client = pp_remaining[idx];
-
-        if (NULL != p_server->p_client_free)
-        {
-            (p_server->p_client_free)(p_server, p_client);
-            p_client->p_clientdata = NULL;
-        }
-
-        if (-1 == epoll_ctl(
-            p_server->epollfd,
-            EPOLL_CTL_DEL,
-            p_client->sockfd,
-            NULL
-        ))
-        {
-            if (ENOENT != errno)
-            {
-                perror("epoll_ctl DEL in registry_cleanup_clients");
-            }
-        }
-
-        if (-1 == close(p_client->sockfd))
-        {
-            perror("close in registry_cleanup_clients");
-        }
-        p_client->sockfd = -1;
-
-        free(p_client->p_rhost);
-        p_client->p_rhost = NULL;
-        free(p_client);
-        pp_remaining[idx] = NULL;
-    }
-
-    free(pp_remaining);
-    pp_remaining = NULL;
 
 cleanup:
     return status;
