@@ -35,10 +35,8 @@ opcode_default (
 {
     status_t status = STATUS_SUCCESS;
 
-    int         sockfd            = -1;
-    server_t  * p_server          = NULL;
-    uint8_t   * p_request_packet  = NULL;
-    uint8_t   * p_response_packet = NULL;
+    int        sockfd   = -1;
+    server_t * p_server = NULL;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -46,16 +44,10 @@ opcode_default (
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_server          = p_session->p_server;
-    p_request_packet  = p_request->p_packet;
-    p_response_packet = p_response->p_packet;
+    sockfd   = p_session->sockfd;
+    p_server = p_session->p_server;
 
-    if (
-        (NULL == p_server) ||
-        (NULL == p_request_packet) ||
-        (NULL == p_response_packet)
-    )
+    if (NULL == p_server)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -88,9 +80,8 @@ opcode_ping (
 {
     status_t status = STATUS_SUCCESS;
 
-    int       sockfd            = -1;
-    uint8_t * p_request_packet  = NULL;
-    uint8_t * p_response_packet = NULL;
+    int       sockfd           = -1;
+    uint8_t * p_request_packet = NULL;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -98,11 +89,10 @@ opcode_ping (
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_request_packet  = p_request->p_packet;
-    p_response_packet = p_response->p_packet;
+    sockfd           = p_session->sockfd;
+    p_request_packet = p_request->p_packet;
 
-    if ((NULL == p_request_packet) || (NULL == p_response_packet))
+    if (NULL == p_request_packet)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -211,8 +201,7 @@ opcode_quit (
 {
     status_t status = STATUS_SUCCESS;
 
-    server_t * p_server          = NULL;
-    uint8_t  * p_response_packet = NULL;
+    server_t * p_server = NULL;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -221,9 +210,8 @@ opcode_quit (
     }
 
     p_server = p_session->p_server;
-    p_response_packet = p_response->p_packet;
 
-    if ((NULL == p_server) || (NULL == p_response_packet))
+    if (NULL == p_server)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -262,6 +250,7 @@ opcode_login (
     uint8_t   * p_request_packet  = NULL;
     uint8_t   * p_response_packet = NULL;
     char      * p_tmp             = NULL;
+    bool        b_locked          = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -401,6 +390,7 @@ opcode_login (
     p_cred_store = p_appdata->p_cred_store;
 
     pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
 
     // Prevent integer overflow from sending session ID zero
     if (0u == p_appdata->next_session_id)
@@ -412,14 +402,11 @@ opcode_login (
     // Authenticate login against hash table
     p_item = ht_get(p_cred_store, p_username, username_size);
 
-    pthread_mutex_unlock(&(p_appdata->lock));
-
     if (NULL == p_item)
     {
         // NOTE: User doesn't exist
 
         // Create new user
-        pthread_mutex_lock(&(p_appdata->lock));
         status = ht_set(
             p_cred_store,
             p_username,
@@ -427,7 +414,6 @@ opcode_login (
             p_password,
             password_size
         );
-        pthread_mutex_unlock(&(p_appdata->lock));
 
         if (STATUS_SUCCESS != status)
         {
@@ -443,9 +429,7 @@ opcode_login (
 
         p_response->retcode = RETCODE_SUCCESS;
 
-        pthread_mutex_lock(&(p_appdata->lock));
         p_session->session_id = (p_appdata->next_session_id)++;
-        pthread_mutex_unlock(&(p_appdata->lock));
 
         *(uint32_t *)(p_response_packet + 2u) = htonl(p_session->session_id);
 
@@ -488,9 +472,7 @@ opcode_login (
 
     p_response->retcode = RETCODE_SUCCESS;
 
-    pthread_mutex_lock(&(p_appdata->lock));
     p_session->session_id = (p_appdata->next_session_id)++;
-    pthread_mutex_unlock(&(p_appdata->lock));
 
     *(uint32_t *)(p_response_packet + 2u) = htonl(p_session->session_id);
 
@@ -500,6 +482,10 @@ opcode_login (
     }
 
 cleanup:
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+    }
     return status;
 }
 
@@ -512,10 +498,9 @@ opcode_logout (
 {
     status_t status = STATUS_SUCCESS;
 
-    int        sockfd            = -1;
-    server_t * p_server          = NULL;
-    uint8_t  * p_request_packet  = NULL;
-    uint8_t  * p_response_packet = NULL;
+    int        sockfd           = -1;
+    server_t * p_server         = NULL;
+    uint8_t  * p_request_packet = NULL;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -523,16 +508,11 @@ opcode_logout (
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_server          = p_session->p_server;
-    p_request_packet  = p_request->p_packet;
-    p_response_packet = p_response->p_packet;
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
 
-    if (
-        (NULL == p_server) ||
-        (NULL == p_request_packet) ||
-        (NULL == p_response_packet)
-    )
+    if ((NULL == p_server) || (NULL == p_request_packet))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
