@@ -408,7 +408,10 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
     free(p_key_cpy);
     p_key_cpy = NULL;
 
-    free(p_val_cpy);
+    if (NULL != p_ht->p_destroy_value)
+    {
+        (p_ht->p_destroy_value)(p_val_cpy);
+    }
     p_val_cpy = NULL;
 
     // Decrement length if last node removed
