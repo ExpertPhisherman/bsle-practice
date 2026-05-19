@@ -176,11 +176,11 @@ room_t * room_create(char * p_name, uint16_t name_size);
 /*!
  * @brief Destroy room
  *
- * @param[in] pp_room Double pointer to room
+ * @param[in] p_data Pointer to room
  *
  * @return void
  */
-void room_destroy(void * pp_room);
+void room_destroy(void * p_data);
 
 #endif /* CHAT_H */
 
