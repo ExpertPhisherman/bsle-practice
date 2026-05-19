@@ -461,9 +461,12 @@ def main() -> int:
 
     chat_client.listening_thread.start()
 
+    #chat_client.do_login(f"test {'password'*5}")
     chat_client.do_login("admin password")
     time.sleep(0.1)
-    chat_client.do_echo("a"*23)
+    chat_client.do_echo("a"*22)
+    time.sleep(0.1)
+    chat_client.do_join("general")
 
     chat_client.cmdloop()
     chat_client.listening_thread.join()

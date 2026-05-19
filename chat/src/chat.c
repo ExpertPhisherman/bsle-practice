@@ -144,8 +144,8 @@ chat_client_run (server_t * p_server, client_t * p_client)
     p_response->size    = FIELD_SIZE_OPCODE + FIELD_SIZE_RETCODE;
     memset(p_response->p_packet, 0, max_packet_size);
 
-    sockutil_recvall(sockfd, p_request->p_packet, 1u);
-    p_request->opcode = (p_request->p_packet)[0];
+    sockutil_recvall(sockfd, p_request->p_packet, FIELD_SIZE_OPCODE);
+    p_request->opcode = (p_request->p_packet)[FIELD_OFFSET_OPCODE];
 
     status = handle_request(p_session, p_request, p_response);
     if (STATUS_SUCCESS != status)
@@ -154,8 +154,8 @@ chat_client_run (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    (p_response->p_packet)[0] = p_response->opcode;
-    (p_response->p_packet)[1] = p_response->retcode;
+    (p_response->p_packet)[FIELD_OFFSET_OPCODE]  = p_response->opcode;
+    (p_response->p_packet)[FIELD_OFFSET_RETCODE] = p_response->retcode;
 
     if (p_server->b_verbose)
     {

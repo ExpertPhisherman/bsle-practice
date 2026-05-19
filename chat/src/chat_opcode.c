@@ -344,42 +344,76 @@ opcode_login (
 
     p_response->opcode = OPCODE_LOGIN;
 
-    // Receive header
-    p_request->size = 12u;
-    sockutil_recvall(sockfd, p_request_packet + 1u, p_request->size - 1u);
-    uint8_t user_flag = p_request_packet[1];
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_PADDING * 3
+    );
+
+    uint8_t user_flag = p_request_packet[p_request->size];
     UNUSED(user_flag);
 
-    // NOTE: 2 byte reserved field between user flag and username length
+    p_request->size += FIELD_SIZE_PADDING * 3;
 
-    p_session->username_size = ntohs(*(uint16_t *)(p_request_packet + 4u));
-    p_session->password_size = ntohs(*(uint16_t *)(p_request_packet + 6u));
-    p_request->session_id    = ntohl(*(uint32_t *)(p_request_packet + 8u));
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SIZE
+    );
+
+    p_session->username_size = ntohs(
+        *(uint16_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SIZE;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SIZE
+    );
+
+    p_session->password_size = ntohs(
+        *(uint16_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SIZE;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SESSION_ID
+    );
+
+    p_session->session_id = ntohs(
+        *(uint32_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SESSION_ID;
 
     uint16_t username_size = p_session->username_size;
     uint16_t password_size = p_session->password_size;
 
-    p_request->size += username_size + password_size;
-
-    p_response->size = 6u;
-
-    if (p_request->size > max_packet_size)
-    {
-        p_response->retcode = RETCODE_FAILURE;
-        fprintf(stderr, "Login request size exceeds max_packet_size\n");
-        sockutil_drain(sockfd, p_request->size - 12u, chunk_size);
-        goto cleanup;
-    }
+    uint32_t const response_session_id_offset = p_response->size;
+    p_response->size += FIELD_SIZE_SESSION_ID;
 
     char const * p_username_msg = "Username: 3-16 alphanumeric or underscore";
     char const * p_password_msg = "Password: 8-128 printable characters excluding space";
+
+    if ((p_request->size + username_size + password_size) > max_packet_size)
+    {
+        p_response->retcode = RETCODE_FAILURE;
+        fprintf(stderr, "Login request size exceeds max_packet_size\n");
+        sockutil_drain(sockfd, username_size + password_size, chunk_size);
+        goto cleanup;
+    }
 
     // Validate username and password length
     if (!((3u <= username_size) && (16u >= username_size)))
     {
         p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "%s\n", p_username_msg);
-        sockutil_drain(sockfd, p_request->size - 12u, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, chunk_size);
         goto cleanup;
     }
 
@@ -387,7 +421,7 @@ opcode_login (
     {
         p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "%s\n", p_password_msg);
-        sockutil_drain(sockfd, p_request->size - 12u, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, chunk_size);
         goto cleanup;
     }
 
@@ -398,7 +432,7 @@ opcode_login (
     {
         p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "realloc failed in opcode_login\n");
-        sockutil_drain(sockfd, p_request->size - 12u, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, chunk_size);
         goto cleanup;
     }
     p_session->p_username = p_tmp;
@@ -408,7 +442,7 @@ opcode_login (
     {
         p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "realloc failed in opcode_login\n");
-        sockutil_drain(sockfd, p_request->size - 12u, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, chunk_size);
         goto cleanup;
     }
     p_session->p_password = p_tmp;
@@ -416,10 +450,23 @@ opcode_login (
     char * p_username = p_session->p_username;
     char * p_password = p_session->p_password;
 
-    sockutil_recvall(sockfd, p_request_packet + 12u, p_request->size - 12u);
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        username_size
+    );
 
-    memcpy(p_username, p_request_packet + 12u, username_size);
-    memcpy(p_password, p_request_packet + 12u + username_size, password_size);
+    memcpy(p_username, p_request_packet + p_request->size, username_size);
+    p_request->size += username_size;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        password_size
+    );
+
+    memcpy(p_password, p_request_packet + p_request->size, password_size);
+    p_request->size += password_size;
 
     if (p_server->b_verbose)
     {
@@ -497,7 +544,9 @@ opcode_login (
 
         p_session->session_id = (p_appdata->next_session_id)++;
 
-        *(uint32_t *)(p_response_packet + 2u) = htonl(p_session->session_id);
+        *(uint32_t *)(p_response_packet + response_session_id_offset) = htonl(
+            p_session->session_id
+        );
 
         if (p_server->b_verbose)
         {
@@ -520,7 +569,10 @@ opcode_login (
         p_response->retcode = RETCODE_FAILURE;
 
         p_session->session_id = 0u;
-        *(uint32_t *)(p_response_packet + 2u) = htonl(p_session->session_id);
+
+        *(uint32_t *)(p_response_packet + response_session_id_offset) = htonl(
+            p_session->session_id
+        );
 
         if (p_server->b_verbose)
         {
@@ -540,7 +592,9 @@ opcode_login (
 
     p_session->session_id = (p_appdata->next_session_id)++;
 
-    *(uint32_t *)(p_response_packet + 2u) = htonl(p_session->session_id);
+    *(uint32_t *)(p_response_packet + response_session_id_offset) = htonl(
+        p_session->session_id
+    );
 
     if (p_server->b_verbose)
     {
@@ -586,12 +640,25 @@ opcode_logout (
 
     p_response->opcode = OPCODE_LOGOUT;
 
-    p_request->size = 6u;
-    sockutil_recvall(sockfd, p_request_packet + 1u, p_request->size - 1u);
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_PADDING
+    );
 
-    p_request->session_id = ntohl(*(uint32_t *)(p_request_packet + 2u));
+    p_request->size += FIELD_SIZE_PADDING;
 
-    p_response->size = 2u;
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SESSION_ID
+    );
+
+    p_request->session_id = ntohl(
+        *(uint32_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SESSION_ID;
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
@@ -733,29 +800,54 @@ opcode_join (
 
     p_response->opcode = OPCODE_JOIN;
 
-    // Receive header
-    p_request->size = 8u;
-    sockutil_recvall(sockfd, p_request_packet + 1u, p_request->size - 1u);
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_PADDING
+    );
 
-    p_session->room_name_size = ntohs(*(uint16_t *)(p_request_packet + 2u));
-    p_request->session_id     = ntohl(*(uint32_t *)(p_request_packet + 4u));
+    p_request->size += FIELD_SIZE_PADDING;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SIZE
+    );
+
+    p_session->room_name_size = ntohs(
+        *(uint16_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SIZE;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SESSION_ID
+    );
+
+    p_request->session_id = ntohl(
+        *(uint32_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SESSION_ID;
 
     uint16_t room_name_size = p_session->room_name_size;
 
-    p_request->size += room_name_size;
-
-    p_response->size = 2u;
-
-    if (p_request->size > max_packet_size)
+    if ((p_request->size + room_name_size) > max_packet_size)
     {
         p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "Join request size exceeds max_packet_size\n");
-        sockutil_drain(sockfd, p_request->size - 8u, chunk_size);
+        sockutil_drain(sockfd, room_name_size, chunk_size);
         goto cleanup;
     }
 
     // Receive room name
-    sockutil_recvall(sockfd, p_request_packet + 8u, room_name_size);
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        room_name_size
+    );
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
@@ -769,16 +861,16 @@ opcode_join (
     {
         p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "realloc failed in opcode_join\n");
-        sockutil_drain(sockfd, p_request->size - 8u, chunk_size);
+        sockutil_drain(sockfd, room_name_size, chunk_size);
         goto cleanup;
     }
     p_session->p_room_name = p_tmp;
 
     char * p_room_name = p_session->p_room_name;
 
-    memcpy(p_room_name, p_request_packet + 8u, room_name_size);
+    memcpy(p_room_name, p_request_packet + p_request->size, room_name_size);
 
-    p_response->retcode = RETCODE_SUCCESS;
+    p_request->size += room_name_size;
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;

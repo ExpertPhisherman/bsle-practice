@@ -37,6 +37,12 @@ typedef enum field_size
     FIELD_SIZE_SESSION_ID = 4,
 } field_size_t;
 
+typedef enum field_offset
+{
+    FIELD_OFFSET_OPCODE  = 0,
+    FIELD_OFFSET_RETCODE = 1,
+} field_offset_t;
+
 /*!
  * @brief Default opcode in case of unknown
  *
