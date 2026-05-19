@@ -53,6 +53,9 @@ opcode_default (
         goto cleanup;
     }
 
+    p_response->opcode  = OPCODE_DEFAULT;
+    p_response->retcode = RETCODE_SUCCESS;
+
     if (p_server->b_verbose)
     {
         printf(
@@ -93,7 +96,8 @@ opcode_ping (
         goto cleanup;
     }
 
-    p_response->opcode = OPCODE_PING;
+    p_response->opcode  = OPCODE_PING;
+    p_response->retcode = RETCODE_SUCCESS;
 
     sockutil_recvall(
         sockfd,
@@ -155,7 +159,8 @@ opcode_echo (
         goto cleanup;
     }
 
-    p_response->opcode = OPCODE_ECHO;
+    p_response->opcode  = OPCODE_ECHO;
+    p_response->retcode = RETCODE_SUCCESS;
 
     sockutil_recvall(
         sockfd,
@@ -268,7 +273,8 @@ opcode_quit (
         goto cleanup;
     }
 
-    p_response->opcode = OPCODE_QUIT;
+    p_response->opcode  = OPCODE_QUIT;
+    p_response->retcode = RETCODE_SUCCESS;
 
     sockutil_recvall(
         sockfd,
@@ -282,7 +288,6 @@ opcode_quit (
     {
         printf("Quitting client session on sockfd %d\n", p_session->sockfd);
     }
-
 
 cleanup:
     return status;
@@ -342,7 +347,27 @@ opcode_login (
         goto cleanup;
     }
 
-    p_response->opcode = OPCODE_LOGIN;
+    p_response->opcode  = OPCODE_LOGIN;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    free(p_session->p_username);
+    p_session->p_username = NULL;
+
+    free(p_session->p_password);
+    p_session->p_password = NULL;
+
+    p_session->username_size = 0u;
+    p_session->password_size = 0u;
+
+    p_session->session_id = 0u;
+
+    // TODO: Remove p_session from room's sessions SLL
+    ;
+
+    free(p_session->p_room_name);
+    p_session->p_room_name = NULL;
+
+    p_session->room_name_size = 0u;
 
     sockutil_recvall(
         sockfd,
@@ -385,7 +410,7 @@ opcode_login (
         FIELD_SIZE_SESSION_ID
     );
 
-    p_session->session_id = ntohs(
+    p_session->session_id = ntohl(
         *(uint32_t *)(p_request_packet + p_request->size)
     );
 
@@ -394,35 +419,38 @@ opcode_login (
     uint16_t username_size = p_session->username_size;
     uint16_t password_size = p_session->password_size;
 
-    uint32_t const response_session_id_offset = p_response->size;
-    p_response->size += FIELD_SIZE_SESSION_ID;
-
     char const * p_username_msg = "Username: 3-16 alphanumeric or underscore";
     char const * p_password_msg = "Password: 8-128 printable characters excluding space";
 
     if ((p_request->size + username_size + password_size) > max_packet_size)
     {
-        p_response->retcode = RETCODE_OVERFLOW;
         fprintf(stderr, "Login request size exceeds max_packet_size\n");
         sockutil_drain(sockfd, username_size + password_size, chunk_size);
-        goto cleanup;
+
+        p_response->retcode   = RETCODE_OVERFLOW;
+        p_session->session_id = 0u;
+        goto cpy_session_id;
     }
 
     // Validate username and password length
     if (!((3u <= username_size) && (16u >= username_size)))
     {
-        p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "%s\n", p_username_msg);
         sockutil_drain(sockfd, username_size + password_size, chunk_size);
-        goto cleanup;
+
+        p_response->retcode   = RETCODE_FAILURE;
+        p_session->session_id = 0u;
+        goto cpy_session_id;
     }
 
     if (!((8u <= password_size) && (128u >= password_size)))
     {
-        p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "%s\n", p_password_msg);
         sockutil_drain(sockfd, username_size + password_size, chunk_size);
-        goto cleanup;
+
+        p_response->retcode   = RETCODE_FAILURE;
+        p_session->session_id = 0u;
+        goto cpy_session_id;
     }
 
     // NOTE: realloc behaves like malloc when pointer argument is NULL
@@ -430,20 +458,24 @@ opcode_login (
     p_tmp = realloc(p_session->p_username, username_size);
     if (NULL == p_tmp)
     {
-        p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "realloc failed in opcode_login\n");
         sockutil_drain(sockfd, username_size + password_size, chunk_size);
-        goto cleanup;
+
+        p_response->retcode   = RETCODE_FAILURE;
+        p_session->session_id = 0u;
+        goto cpy_session_id;
     }
     p_session->p_username = p_tmp;
 
     p_tmp = realloc(p_session->p_password, password_size);
     if (NULL == p_tmp)
     {
-        p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "realloc failed in opcode_login\n");
         sockutil_drain(sockfd, username_size + password_size, chunk_size);
-        goto cleanup;
+
+        p_response->retcode   = RETCODE_FAILURE;
+        p_session->session_id = 0u;
+        goto cpy_session_id;
     }
     p_session->p_password = p_tmp;
 
@@ -485,9 +517,11 @@ opcode_login (
         char chr = p_username[idx];
         if (!(isalnum(chr) || ('_' == chr)))
         {
-            p_response->retcode = RETCODE_FAILURE;
             fprintf(stderr, "%s\n", p_username_msg);
-            goto cleanup;
+
+            p_response->retcode   = RETCODE_FAILURE;
+            p_session->session_id = 0u;
+            goto cpy_session_id;
         }
     }
 
@@ -496,9 +530,11 @@ opcode_login (
         char chr = p_password[idx];
         if (!(isprint(chr) && (' ' != chr)))
         {
-            p_response->retcode = RETCODE_FAILURE;
             fprintf(stderr, "%s\n", p_password_msg);
-            goto cleanup;
+
+            p_response->retcode   = RETCODE_FAILURE;
+            p_session->session_id = 0u;
+            goto cpy_session_id;
         }
     }
 
@@ -531,11 +567,11 @@ opcode_login (
         if (STATUS_SUCCESS != status)
         {
             fprintf(stderr, "ht_set failed\n");
-
-            // Don't exit early with non-success status so response gets sent
-            p_response->retcode = RETCODE_FAILURE;
             status = STATUS_SUCCESS;
-            goto cleanup;
+
+            p_response->retcode   = RETCODE_FAILURE;
+            p_session->session_id = 0u;
+            goto cpy_session_id;
         }
 
         // NOTE: Successful user creation
@@ -544,16 +580,12 @@ opcode_login (
 
         p_session->session_id = (p_appdata->next_session_id)++;
 
-        *(uint32_t *)(p_response_packet + response_session_id_offset) = htonl(
-            p_session->session_id
-        );
-
         if (p_server->b_verbose)
         {
             printf("Created new user: %.*s\n", username_size, p_username);
         }
 
-        goto cleanup;
+        goto cpy_session_id;
     }
 
     // NOTE: User already exists
@@ -570,10 +602,6 @@ opcode_login (
 
         p_session->session_id = 0u;
 
-        *(uint32_t *)(p_response_packet + response_session_id_offset) = htonl(
-            p_session->session_id
-        );
-
         if (p_server->b_verbose)
         {
             printf(
@@ -583,7 +611,7 @@ opcode_login (
             );
         }
 
-        goto cleanup;
+        goto cpy_session_id;
     }
 
     // NOTE: Successful login
@@ -592,16 +620,27 @@ opcode_login (
 
     p_session->session_id = (p_appdata->next_session_id)++;
 
-    *(uint32_t *)(p_response_packet + response_session_id_offset) = htonl(
-        p_session->session_id
-    );
-
     if (p_server->b_verbose)
     {
         printf("Successful login to user: %.*s\n", username_size, p_username);
     }
 
+cpy_session_id:
+    // Copy session ID into response
+    *(uint32_t *)(p_response_packet + p_response->size) = htonl(
+        p_session->session_id
+    );
+
+    p_response->size += FIELD_SIZE_SESSION_ID;
+
 cleanup:
+    // Always set response size so packet sends entirely
+    p_response->size = (
+        FIELD_SIZE_OPCODE +
+        FIELD_SIZE_RETCODE +
+        FIELD_SIZE_SESSION_ID
+    );
+
     if (b_locked)
     {
         pthread_mutex_unlock(&(p_appdata->lock));
@@ -638,7 +677,8 @@ opcode_logout (
         goto cleanup;
     }
 
-    p_response->opcode = OPCODE_LOGOUT;
+    p_response->opcode  = OPCODE_LOGOUT;
+    p_response->retcode = RETCODE_SUCCESS;
 
     sockutil_recvall(
         sockfd,
@@ -757,7 +797,8 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    p_response->opcode = OPCODE_MSG_SEND;
+    p_response->opcode  = OPCODE_MSG_SEND;
+    p_response->retcode = RETCODE_SUCCESS;
 
     sockutil_recvall(
         sockfd,
@@ -864,7 +905,7 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    p_room = *(room_t **)(p_item->p_value);
+    p_room = p_item->p_value;
 
     p_node = sll_get(p_room->p_sessions, &p_session, sizeof(p_session));
     if (NULL == p_node)
@@ -926,6 +967,9 @@ opcode_msg_recv (
         goto cleanup;
     }
 
+    p_response->opcode  = OPCODE_MSG_RECV;
+    p_response->retcode = RETCODE_SUCCESS;
+
     ;
 
 cleanup:
@@ -947,7 +991,6 @@ opcode_join (
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
-    uint8_t   * p_response_packet = NULL;
     room_t    * p_room            = NULL;
     void      * p_tmp             = NULL;
     bool        b_locked          = false;
@@ -961,17 +1004,15 @@ opcode_join (
     sockfd            = p_session->sockfd;
     p_server          = p_session->p_server;
     p_request_packet  = p_request->p_packet;
-    p_response_packet = p_response->p_packet;
 
-    if (
-        (NULL == p_server) ||
-        (NULL == p_request_packet) ||
-        (NULL == p_response_packet)
-    )
+    if ((NULL == p_server) || (NULL == p_request_packet))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    p_response->opcode  = OPCODE_JOIN;
+    p_response->retcode = RETCODE_SUCCESS;
 
     p_appdata = p_server->p_appdata;
     if (NULL == p_appdata)
@@ -986,8 +1027,6 @@ opcode_join (
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
-
-    p_response->opcode = OPCODE_JOIN;
 
     sockutil_recvall(
         sockfd,
@@ -1050,7 +1089,6 @@ opcode_join (
     {
         p_response->retcode = RETCODE_FAILURE;
         fprintf(stderr, "realloc failed in opcode_join\n");
-        sockutil_drain(sockfd, room_name_size, chunk_size);
         goto cleanup;
     }
     p_session->p_room_name = p_tmp;
@@ -1082,15 +1120,22 @@ opcode_join (
             p_room_store,
             p_room->p_name,
             p_room->name_size,
-            &p_room,
-            sizeof(p_room)
+            p_room,
+            sizeof(*p_room)
         );
         if (STATUS_SUCCESS != status)
         {
             fprintf(stderr, "ht_set failed\n");
             p_response->retcode = RETCODE_FAILURE;
+
+            room_destroy(p_room);
+            p_room = NULL;
             goto cleanup;
         }
+
+        // Free room after hash table makes its own copy
+        free(p_room);
+        p_room = NULL;
 
         if (p_server->b_verbose)
         {
@@ -1112,7 +1157,7 @@ opcode_join (
         }
     }
 
-    p_room = *(room_t **)(p_item->p_value);
+    p_room = p_item->p_value;
 
     status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
     if (STATUS_SUCCESS != status)

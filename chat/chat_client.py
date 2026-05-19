@@ -133,8 +133,9 @@ class ChatClient(Client):
                     continue
 
                 if not line.startswith("/"):
-                    if self.do_msg_send(line):
-                        break
+                    with self._listener_lock:
+                        if self.do_msg_send(line):
+                            break
                     continue
 
                 cmd_line = line[1:]
@@ -146,8 +147,13 @@ class ChatClient(Client):
                     print(f"Unknown command: /{cmd}")
                     continue
 
-                if func(arg):
-                    break
+                if func is self.do_quit:
+                    if func(arg):
+                        break
+                else:
+                    with self._listener_lock:
+                        if func(arg):
+                            break
 
     def listener(self) -> None:
         while True:
@@ -497,6 +503,7 @@ def main() -> int:
     chat_client.do_echo("a"*22)
     time.sleep(0.1)
     chat_client.do_join("general")
+    time.sleep(0.1)
 
     chat_client.cmdloop()
     chat_client.listening_thread.join()

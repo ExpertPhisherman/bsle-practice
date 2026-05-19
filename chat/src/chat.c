@@ -140,7 +140,7 @@ chat_client_run (server_t * p_server, client_t * p_client)
     memset(p_request->p_packet, 0, max_packet_size);
 
     p_response->opcode  = OPCODE_DEFAULT;
-    p_response->retcode = RETCODE_SUCCESS;
+    p_response->retcode = RETCODE_FAILURE;
     p_response->size    = FIELD_SIZE_OPCODE + FIELD_SIZE_RETCODE;
     memset(p_response->p_packet, 0, max_packet_size);
 
@@ -326,7 +326,7 @@ room_create (char * p_name, uint16_t name_size)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        room_destroy(&p_room);
+        room_destroy(p_room);
         p_room = NULL;
     }
 
@@ -334,19 +334,15 @@ cleanup:
 }
 
 void
-room_destroy (void * pp_room)
+room_destroy (void * p_data)
 {
-    if (NULL == pp_room)
+    if (NULL == p_data)
     {
         goto cleanup;
     }
 
-    room_t * p_room = *(room_t **)pp_room;
-
-    if (NULL == p_room)
-    {
-        goto cleanup;
-    }
+    room_t * p_room = p_data;
+    p_data = NULL;
 
     free(p_room->p_name);
     p_room->p_name = NULL;
@@ -356,9 +352,6 @@ room_destroy (void * pp_room)
 
     free(p_room);
     p_room = NULL;
-
-    free(pp_room);
-    pp_room = NULL;
 
 cleanup:
     return;
@@ -420,14 +413,21 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
         p_room_store,
         p_room->p_name,
         p_room->name_size,
-        &p_room,
-        sizeof(p_room)
+        p_room,
+        sizeof(*p_room)
     );
     if (STATUS_SUCCESS != status)
     {
         fprintf(stderr, "ht_set failed\n");
+
+        room_destroy(p_room);
+        p_room = NULL;
         goto cleanup;
     }
+
+    // Free room after hash table makes its own copy
+    free(p_room);
+    p_room = NULL;
 
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
