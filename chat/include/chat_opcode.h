@@ -28,6 +28,15 @@ typedef struct session  session_t;
 typedef struct request  request_t;
 typedef struct response response_t;
 
+typedef enum field_size
+{
+    FIELD_SIZE_OPCODE     = 1,
+    FIELD_SIZE_PADDING    = 1,
+    FIELD_SIZE_RETCODE    = 1,
+    FIELD_SIZE_SIZE       = 2,
+    FIELD_SIZE_SESSION_ID = 4,
+} field_size_t;
+
 /*!
  * @brief Default opcode in case of unknown
  *

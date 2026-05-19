@@ -1,7 +1,7 @@
 import argparse
 import struct
 import sys
-import functools
+import time
 import threading
 from typing import Any, Callable
 from pathlib import Path
@@ -27,6 +27,11 @@ OPCODE_JOIN     = 0x08
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
 RETCODE_FAILURE       = 0xff
+
+FIELD_SIZE_OPCODE     = 1
+FIELD_SIZE_RETCODE    = 1
+FIELD_SIZE_SIZE       = 2
+FIELD_SIZE_SESSION_ID = 4
 
 def with_parser(
     description: str,
@@ -455,7 +460,10 @@ def main() -> int:
         return 1
 
     chat_client.listening_thread.start()
+
     chat_client.do_login("admin password")
+    time.sleep(0.1)
+    chat_client.do_echo("a"*23)
 
     chat_client.cmdloop()
     chat_client.listening_thread.join()

@@ -53,11 +53,6 @@ opcode_default (
         goto cleanup;
     }
 
-    p_response->opcode  = OPCODE_DEFAULT;
-    p_response->retcode = RETCODE_SUCCESS;
-
-    p_response->size = 2u;
-
     if (p_server->b_verbose)
     {
         printf(
@@ -100,13 +95,25 @@ opcode_ping (
 
     p_response->opcode = OPCODE_PING;
 
-    // Receive header
-    p_request->size = 6u;
-    sockutil_recvall(sockfd, p_request_packet + 1u, p_request->size - 1u);
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_PADDING
+    );
 
-    p_request->session_id = ntohl(*(uint32_t *)(p_request_packet + 2u));
+    p_request->size += FIELD_SIZE_PADDING;
 
-    p_response->size = 2u;
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SESSION_ID
+    );
+
+    p_request->session_id = ntohl(
+        *(uint32_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SESSION_ID;
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
@@ -114,8 +121,6 @@ opcode_ping (
         status = STATUS_SUCCESS;
         goto cleanup;
     }
-
-    p_response->retcode = RETCODE_SUCCESS;
 
 cleanup:
     return status;
@@ -152,41 +157,83 @@ opcode_echo (
 
     p_response->opcode = OPCODE_ECHO;
 
-    // Receive header
-    p_request->size = 8u;
-    sockutil_recvall(sockfd, p_request_packet + 1u, p_request->size - 1u);
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_PADDING
+    );
 
-    p_request->size += ntohs(*(uint16_t *)(p_request_packet + 2u));
+    p_request->size += FIELD_SIZE_PADDING;
 
-    p_request->session_id = ntohl(*(uint32_t *)(p_request_packet + 4u));
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SIZE
+    );
 
-    if (p_request->size > max_packet_size)
+    uint16_t payload_size = ntohs(
+        *(uint16_t *)(p_request_packet + p_request->size)
+    );
+
+    // Copy size into response
+    memcpy(
+        p_response_packet + p_response->size,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SIZE
+    );
+
+    p_request->size += FIELD_SIZE_SIZE;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SESSION_ID
+    );
+
+    p_request->session_id = ntohl(
+        *(uint32_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SESSION_ID;
+
+    if ((p_request->size + payload_size) > max_packet_size)
     {
-        p_response->retcode = RETCODE_FAILURE;
+        // Zero out response size field
         fprintf(stderr, "Echo request size exceeds max_packet_size\n");
-        sockutil_drain(sockfd, p_request->size - 8u, chunk_size);
-        p_response->size = 2u;
-        goto cleanup;
+        p_response->retcode = RETCODE_FAILURE;
+        memset(p_response_packet + p_response->size, 0, FIELD_SIZE_SIZE);
+        sockutil_drain(sockfd, payload_size, chunk_size);
+        payload_size = 0u;
     }
-
-    // Receive payload
-    sockutil_recvall(sockfd, p_request_packet + 8u, p_request->size - 8u);
-
-    p_response->size = 4u + p_request->size - 8u;
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
     {
-        memcpy(p_response_packet + 2u, p_request_packet + 2u, 2u);
-        memset(p_response_packet + 4u, 0, p_request->size - 8u);
+        // Zero out response size field
         status = STATUS_SUCCESS;
-        goto cleanup;
+        memset(p_response_packet + p_response->size, 0, FIELD_SIZE_SIZE);
+        sockutil_drain(sockfd, payload_size, chunk_size);
+        payload_size = 0u;
     }
 
-    memcpy(p_response_packet + 2u, p_request_packet + 2u, 2u);
-    memcpy(p_response_packet + 4u, p_request_packet + 8u, p_request->size - 8u);
+    p_response->size += FIELD_SIZE_SIZE;
 
-    p_response->retcode = RETCODE_SUCCESS;
+    // Receive payload
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        payload_size
+    );
+
+    // Copy payload into response
+    memcpy(
+        p_response_packet + p_response->size,
+        p_request_packet + p_request->size,
+        payload_size
+    );
+
+    p_request->size  += payload_size;
+    p_response->size += payload_size;
 
 cleanup:
     return status;
@@ -201,7 +248,9 @@ opcode_quit (
 {
     status_t status = STATUS_SUCCESS;
 
-    server_t * p_server = NULL;
+    int        sockfd            = -1;
+    server_t * p_server          = NULL;
+    uint8_t  * p_request_packet  = NULL;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -209,25 +258,31 @@ opcode_quit (
         goto cleanup;
     }
 
-    p_server = p_session->p_server;
+    sockfd            = p_session->sockfd;
+    p_server          = p_session->p_server;
+    p_request_packet  = p_request->p_packet;
 
-    if (NULL == p_server)
+    if ((NULL == p_server) || (NULL == p_request_packet))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_request->size = 2u;
+    p_response->opcode = OPCODE_QUIT;
 
-    p_response->opcode  = OPCODE_QUIT;
-    p_response->retcode = RETCODE_SUCCESS;
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_PADDING
+    );
+
+    p_request->size += FIELD_SIZE_PADDING;
 
     if (p_server->b_verbose)
     {
         printf("Quitting client session on sockfd %d\n", p_session->sockfd);
     }
 
-    p_response->size = 2u;
 
 cleanup:
     return status;
@@ -556,9 +611,24 @@ opcode_logout (
         );
     }
 
+    free(p_session->p_username);
+    p_session->p_username = NULL;
+
+    free(p_session->p_password);
+    p_session->p_password = NULL;
+
     p_session->username_size = 0u;
     p_session->password_size = 0u;
-    p_session->session_id    = 0u;
+
+    p_session->session_id = 0u;
+
+    // TODO: Remove p_session from room's sessions SLL
+    ;
+
+    free(p_session->p_room_name);
+    p_session->p_room_name = NULL;
+
+    p_session->room_name_size = 0u;
 
 cleanup:
     return status;

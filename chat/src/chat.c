@@ -10,7 +10,7 @@
 
 int const      default_backlog     = SOMAXCONN;
 uint16_t const default_lport       = 3333u;
-uint32_t const max_packet_size     = 2048u;
+uint32_t const max_packet_size     = 30u;
 uint32_t const chunk_size          = 512u;
 uint32_t const max_clients         = 100u;
 uint32_t const worker_threads      = 8u;
@@ -136,12 +136,13 @@ chat_client_run (server_t * p_server, client_t * p_client)
     int sockfd = p_client->sockfd;
 
     p_request->opcode = OPCODE_DEFAULT;
+    p_request->size   = FIELD_SIZE_OPCODE;
     memset(p_request->p_packet, 0, max_packet_size);
 
     p_response->opcode  = OPCODE_DEFAULT;
-    p_response->retcode = RETCODE_FAILURE;
+    p_response->retcode = RETCODE_SUCCESS;
+    p_response->size    = FIELD_SIZE_OPCODE + FIELD_SIZE_RETCODE;
     memset(p_response->p_packet, 0, max_packet_size);
-    p_response->size = 0u;
 
     sockutil_recvall(sockfd, p_request->p_packet, 1u);
     p_request->opcode = (p_request->p_packet)[0];
