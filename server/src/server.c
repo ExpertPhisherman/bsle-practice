@@ -122,8 +122,7 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    struct sigaction sa_int;
-    memset(&sa_int, 0, sizeof(sa_int));
+    struct sigaction sa_int = {0};
     sa_int.sa_handler = handle_sigint;
     sa_int.sa_flags   = 0;
     sigemptyset(&sa_int.sa_mask);
@@ -192,7 +191,8 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    struct sockaddr_in server_addr;
+    struct sockaddr_in server_addr = {0};
+    socklen_t sin_size = sizeof(server_addr);
     int yes = 1;
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -211,7 +211,6 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family      = AF_INET;
     server_addr.sin_port        = htons(p_server->lport);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -219,13 +218,17 @@ server_create (server_t * p_hints)
     if (-1 == bind(
         sockfd,
         (struct sockaddr *)&server_addr,
-        sizeof(server_addr)
+        sin_size
     ))
     {
         perror("bind");
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
     }
+
+    // Overwrite local port in case of bind on port 0
+    getsockname(sockfd, (struct sockaddr *)&server_addr, &sin_size);
+    p_server->lport = ntohs(server_addr.sin_port);
 
     if (-1 == listen(sockfd, p_server->backlog))
     {
@@ -244,8 +247,7 @@ server_create (server_t * p_hints)
     p_server->epollfd = epollfd;
 
     // Add server socket to epoll
-    struct epoll_event server_ev;
-    memset(&server_ev, 0, sizeof(server_ev));
+    struct epoll_event server_ev = {0};
     server_ev.events   = EPOLLIN;
     server_ev.data.ptr = p_server;
 
@@ -346,8 +348,7 @@ server_run (server_t * p_server)
                     continue;
                 }
 
-                struct epoll_event client_ev;
-                memset(&client_ev, 0, sizeof(client_ev));
+                struct epoll_event client_ev = {0};
                 client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
                 client_ev.data.ptr = p_client;
 
@@ -405,8 +406,7 @@ server_run (server_t * p_server)
                 p_pair = NULL;
 
                 // Re-arm so client is not permanently silenced
-                struct epoll_event client_ev;
-                memset(&client_ev, 0, sizeof(client_ev));
+                struct epoll_event client_ev = {0};
                 client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
                 client_ev.data.ptr = p_client;
 
@@ -549,8 +549,7 @@ client_run_wrapper (void * p_arg)
     }
 
     // Re-arm so the next request triggers a new dispatch
-    struct epoll_event client_ev;
-    memset(&client_ev, 0, sizeof(client_ev));
+    struct epoll_event client_ev = {0};
     client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
     client_ev.data.ptr = p_client;
 
