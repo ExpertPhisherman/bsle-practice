@@ -757,7 +757,6 @@ opcode_msg_send (
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
-    uint8_t   * p_response_packet = NULL;
     room_t    * p_room            = NULL;
     char      * p_message         = NULL;
     bool        b_locked          = false;
@@ -771,13 +770,8 @@ opcode_msg_send (
     sockfd            = p_session->sockfd;
     p_server          = p_session->p_server;
     p_request_packet  = p_request->p_packet;
-    p_response_packet = p_response->p_packet;
 
-    if (
-        (NULL == p_server) ||
-        (NULL == p_request_packet) ||
-        (NULL == p_response_packet)
-    )
+    if ((NULL == p_server) || (NULL == p_request_packet))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
