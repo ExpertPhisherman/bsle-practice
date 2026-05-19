@@ -123,9 +123,10 @@ server_create (server_t * p_hints)
     }
 
     struct sigaction sa_int = {0};
-    sa_int.sa_handler = handle_sigint;
-    sa_int.sa_flags   = 0;
-    sigemptyset(&sa_int.sa_mask);
+
+    sa_int.sa_handler       = handle_sigint;
+    sa_int.sa_flags         = 0;
+    sigemptyset(&(sa_int.sa_mask));
 
     if (-1 == sigaction(SIGINT, &sa_int, NULL))
     {
@@ -192,8 +193,9 @@ server_create (server_t * p_hints)
     }
 
     struct sockaddr_in server_addr = {0};
+
     socklen_t sin_size = sizeof(server_addr);
-    int yes = 1;
+    int yes            = 1;
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == sockfd)
@@ -248,6 +250,7 @@ server_create (server_t * p_hints)
 
     // Add server socket to epoll
     struct epoll_event server_ev = {0};
+
     server_ev.events   = EPOLLIN;
     server_ev.data.ptr = p_server;
 
@@ -349,6 +352,7 @@ server_run (server_t * p_server)
                 }
 
                 struct epoll_event client_ev = {0};
+
                 client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
                 client_ev.data.ptr = p_client;
 
@@ -370,8 +374,7 @@ server_run (server_t * p_server)
             // NOTE: Client socket is readable
             client_t * p_client = p_events[idx].data.ptr;
 
-            uint32_t const err_events =
-                (uint32_t)(EPOLLHUP | EPOLLERR | EPOLLRDHUP);
+            uint32_t const err_events = EPOLLHUP | EPOLLERR | EPOLLRDHUP;
 
             if (0u != (p_events[idx].events & err_events))
             {
@@ -407,6 +410,7 @@ server_run (server_t * p_server)
 
                 // Re-arm so client is not permanently silenced
                 struct epoll_event client_ev = {0};
+
                 client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
                 client_ev.data.ptr = p_client;
 
@@ -550,6 +554,7 @@ client_run_wrapper (void * p_arg)
 
     // Re-arm so the next request triggers a new dispatch
     struct epoll_event client_ev = {0};
+
     client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
     client_ev.data.ptr = p_client;
 
@@ -603,7 +608,8 @@ client_create (server_t * p_server)
         goto cleanup;
     }
 
-    struct sockaddr_in client_addr;
+    struct sockaddr_in client_addr = {0};
+
     socklen_t sin_size = sizeof(client_addr);
 
     int sockfd = accept(
