@@ -188,7 +188,7 @@ class ChatClient(Client):
         retcode = response[0]
 
         if retcode == RETCODE_SUCCESS:
-            print(f"Unknown operation code: {self.opcode}")
+            print("Unknown operation code")
         else:
             print(f"Unknown return code: {retcode}")
 
@@ -426,7 +426,7 @@ class ChatClient(Client):
         self.request = struct.pack(
             "!BxHI",
             OPCODE_ECHO,
-            len(line),
+            len(line.encode("utf-8")),
             self.session_id
         )
         self.request += line.encode("utf-8")
@@ -441,7 +441,7 @@ class ChatClient(Client):
         self.request = struct.pack(
             "!BxHI",
             OPCODE_MSG_SEND,
-            len(line),
+            len(line.encode("utf-8")),
             self.session_id
         )
         self.request += line.encode("utf-8")
@@ -455,7 +455,7 @@ class ChatClient(Client):
         self.request = struct.pack(
             "!BxHI",
             OPCODE_JOIN,
-            len(line),
+            len(line.encode("utf-8")),
             self.session_id
         )
         self.request += line.encode("utf-8")
