@@ -102,12 +102,12 @@ typedef struct appdata
     pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;
 
-typedef struct chat_client_state
+typedef struct state
 {
     session_t  session;  // Session
     request_t  request;  // Request reused across iterations
     response_t response; // Respose reused across iterations
-} chat_client_state_t;
+} state_t;
 
 /*!
  * @brief Create chat server

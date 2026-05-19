@@ -128,10 +128,10 @@ chat_client_run (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    chat_client_state_t * p_state    = p_client->p_clientdata;
-    session_t           * p_session  = &(p_state->session);
-    request_t           * p_request  = &(p_state->request);
-    response_t          * p_response = &(p_state->response);
+    state_t    * p_state    = p_client->p_clientdata;
+    session_t  * p_session  = &(p_state->session);
+    request_t  * p_request  = &(p_state->request);
+    response_t * p_response = &(p_state->response);
 
     int sockfd = p_client->sockfd;
 
@@ -197,7 +197,7 @@ chat_client_init (server_t * p_server, client_t * p_client)
     status_t status = STATUS_SUCCESS;
     UNUSED(p_server);
 
-    chat_client_state_t * p_state = NULL;
+    state_t * p_state = NULL;
 
     if (NULL == p_client)
     {
@@ -255,7 +255,7 @@ chat_client_free (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    chat_client_state_t * p_state = p_client->p_clientdata;
+    state_t * p_state = p_client->p_clientdata;
     if (NULL == p_state)
     {
         status = STATUS_NULL_ARG;
