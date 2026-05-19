@@ -389,9 +389,12 @@ class ChatClient(Client):
         username = args.username
         password = args.password
 
+        username_enc = username.encode("utf-8")
+        password_enc = password.encode("utf-8")
+
         if not (
-            (3 <= len(username) <= 16) and
-            (8 <= len(password) <= 128) and
+            (3 <= len(username_enc) <= 16) and
+            (8 <= len(password_enc) <= 128) and
             all((c.isalnum() or (c == "_")) for c in username) and
             all((c.isprintable() and (c != " ")) for c in password)
         ):
@@ -402,11 +405,11 @@ class ChatClient(Client):
             "!BBxxHHI",
             OPCODE_LOGIN,
             0,
-            len(username),
-            len(password),
+            len(username_enc),
+            len(password_enc),
             self.session_id
         )
-        self.request += f"{username}{password}".encode("utf-8")
+        self.request += username_enc + password_enc
 
         self.username = username
         self.password = password
@@ -423,13 +426,15 @@ class ChatClient(Client):
         args={"message": {"help": "message to echo"}}
     )
     def do_echo(self, line: str) -> bool:
+        line_enc = line.encode("utf-8")
+
         self.request = struct.pack(
             "!BxHI",
             OPCODE_ECHO,
-            len(line.encode("utf-8")),
+            len(line_enc),
             self.session_id
         )
-        self.request += line.encode("utf-8")
+        self.request += line_enc
         return self.send_request()
 
     @with_parser(
@@ -438,13 +443,15 @@ class ChatClient(Client):
         epilog="Can invoke by typing text without a prepended slash character"
     )
     def do_msg_send(self, line: str) -> bool:
+        line_enc = line.encode("utf-8")
+
         self.request = struct.pack(
             "!BxHI",
             OPCODE_MSG_SEND,
-            len(line.encode("utf-8")),
+            len(line_enc),
             self.session_id
         )
-        self.request += line.encode("utf-8")
+        self.request += line_enc
         return self.send_request()
 
     @with_parser(
@@ -452,13 +459,15 @@ class ChatClient(Client):
         args={"room_name": {"help": "Room name to join"}}
     )
     def do_join(self, line: str) -> bool:
+        line_enc = line.encode("utf-8")
+
         self.request = struct.pack(
             "!BxHI",
             OPCODE_JOIN,
-            len(line.encode("utf-8")),
+            len(line_enc),
             self.session_id
         )
-        self.request += line.encode("utf-8")
+        self.request += line_enc
 
         self.room_name = line
 
