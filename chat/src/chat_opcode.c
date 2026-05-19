@@ -515,7 +515,7 @@ opcode_login (
     for (size_t idx = 0u; idx < username_size; idx++)
     {
         char chr = p_username[idx];
-        if (!(isalnum(chr) || ('_' == chr)))
+        if (!(isalnum((unsigned char)chr) || ('_' == chr)))
         {
             fprintf(stderr, "%s\n", p_username_msg);
 
@@ -528,7 +528,7 @@ opcode_login (
     for (size_t idx = 0u; idx < password_size; idx++)
     {
         char chr = p_password[idx];
-        if (!(isprint(chr) && (' ' != chr)))
+        if (!(isprint((unsigned char)chr) && (' ' != chr)))
         {
             fprintf(stderr, "%s\n", p_password_msg);
 
