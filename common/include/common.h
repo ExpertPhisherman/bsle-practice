@@ -52,8 +52,13 @@ typedef enum status
     STATUS_INVALID_SESSION   = 20,
 } status_t;
 
+typedef int (*compare_func_t)(
+    void const * p_data1,
+    void const * p_data2,
+    size_t size
+);
+
 typedef status_t (*display_func_t)(void * p_data);
-typedef int      (*compare_func_t)(void * p_data1, void * p_data2);
 typedef void     (*destroy_func_t)(void * p_data);
 typedef int      (*ischartype_func_t)(int chr);
 

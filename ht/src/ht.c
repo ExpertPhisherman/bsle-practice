@@ -52,10 +52,15 @@ static status_t display_item(void * p_data);
  *
  * @param[in] p_data1 Pointer to first item
  * @param[in] p_data2 Pointer to second item
+ * @param[in] size    Size of item in bytes
  *
  * @return Difference between first and second item
  */
-static int compare_item(void * p_data1, void * p_data2);
+static int compare_item(
+    void const * p_data1,
+    void const * p_data2,
+    size_t size
+);
 
 ht_t *
 ht_create (size_t capacity)
@@ -243,7 +248,7 @@ ht_get (ht_t * p_ht, void * p_key, size_t key_size)
     };
 
     sll_t * p_sll = ht_select(p_ht, &item);
-    node_t * p_node = sll_get(p_sll, &item);
+    node_t * p_node = sll_get(p_sll, &item, sizeof(item));
 
     if (NULL == p_node)
     {
@@ -306,7 +311,7 @@ ht_set (
     memcpy(new_item.p_value, p_value, value_size);
 
     sll_t * p_sll = ht_select(p_ht, &new_item);
-    node_t * p_node = sll_get(p_sll, &new_item);
+    node_t * p_node = sll_get(p_sll, &new_item, sizeof(new_item));
 
     // Update item if key exists in SLL
     if (NULL != p_node)
@@ -379,7 +384,7 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
     };
 
     sll_t * p_sll = ht_select(p_ht, &item);
-    node_t * p_node = sll_get(p_sll, &item);
+    node_t * p_node = sll_get(p_sll, &item, sizeof(item));
 
     // Remove item if key exists in SLL
     if (NULL == p_node)
@@ -394,7 +399,7 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
     void * p_key_cpy = p_item->p_key;
     void * p_val_cpy = p_item->p_value;
 
-    status = sll_remove(p_sll, &item);
+    status = sll_remove(p_sll, &item, sizeof(item));
     if (STATUS_SUCCESS != status)
     {
         goto cleanup;
@@ -474,9 +479,14 @@ cleanup:
 }
 
 static int
-compare_item (void * p_data1, void * p_data2)
+compare_item (
+    void const * p_data1,
+    void const * p_data2,
+    size_t size
+)
 {
     int result = 0;
+    UNUSED(size);
 
     if ((NULL == p_data1) && (NULL == p_data2))
     {
@@ -495,8 +505,8 @@ compare_item (void * p_data1, void * p_data2)
         goto cleanup;
     }
 
-    item_t * p_item1 = p_data1;
-    item_t * p_item2 = p_data2;
+    item_t * p_item1 = (item_t *)p_data1;
+    item_t * p_item2 = (item_t *)p_data2;
 
     if ((NULL == p_item1->p_key) && (NULL == p_item2->p_key))
     {
