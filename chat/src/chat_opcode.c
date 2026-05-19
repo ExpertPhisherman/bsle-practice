@@ -199,8 +199,8 @@ opcode_echo (
     if ((p_request->size + payload_size) > max_packet_size)
     {
         // Zero out response size field
+        p_response->retcode = RETCODE_OVERFLOW;
         fprintf(stderr, "Echo request size exceeds max_packet_size\n");
-        p_response->retcode = RETCODE_FAILURE;
         memset(p_response_packet + p_response->size, 0, FIELD_SIZE_SIZE);
         sockutil_drain(sockfd, payload_size, chunk_size);
         payload_size = 0u;
@@ -402,7 +402,7 @@ opcode_login (
 
     if ((p_request->size + username_size + password_size) > max_packet_size)
     {
-        p_response->retcode = RETCODE_FAILURE;
+        p_response->retcode = RETCODE_OVERFLOW;
         fprintf(stderr, "Login request size exceeds max_packet_size\n");
         sockutil_drain(sockfd, username_size + password_size, chunk_size);
         goto cleanup;
@@ -710,15 +710,204 @@ opcode_msg_send (
 {
     status_t status = STATUS_SUCCESS;
 
+    appdata_t * p_appdata         = NULL;
+    ht_t      * p_room_store      = NULL;
+    item_t    * p_item            = NULL;
+    node_t    * p_node            = NULL;
+    int         sockfd            = -1;
+    server_t  * p_server          = NULL;
+    uint8_t   * p_request_packet  = NULL;
+    uint8_t   * p_response_packet = NULL;
+    room_t    * p_room            = NULL;
+    char      * p_message         = NULL;
+    bool        b_locked          = false;
+
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
+    sockfd            = p_session->sockfd;
+    p_server          = p_session->p_server;
+    p_request_packet  = p_request->p_packet;
+    p_response_packet = p_response->p_packet;
+
+    if (
+        (NULL == p_server) ||
+        (NULL == p_request_packet) ||
+        (NULL == p_response_packet)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_appdata = p_server->p_appdata;
+    if (NULL == p_appdata)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_room_store = p_appdata->p_room_store;
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode = OPCODE_MSG_SEND;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_PADDING
+    );
+
+    p_request->size += FIELD_SIZE_PADDING;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SIZE
+    );
+
+    uint16_t message_size = ntohs(
+        *(uint16_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SIZE;
+
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        FIELD_SIZE_SESSION_ID
+    );
+
+    p_request->session_id = ntohl(
+        *(uint32_t *)(p_request_packet + p_request->size)
+    );
+
+    p_request->size += FIELD_SIZE_SESSION_ID;
+
+    if ((p_request->size + message_size) > max_packet_size)
+    {
+        p_response->retcode = RETCODE_OVERFLOW;
+        fprintf(stderr, "Message send request size exceeds max_packet_size\n");
+        sockutil_drain(sockfd, message_size, chunk_size);
+        goto cleanup;
+    }
+
+    // Receive message
+    sockutil_recvall(
+        sockfd,
+        p_request_packet + p_request->size,
+        message_size
+    );
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    if (NULL == p_session->p_room_name)
+    {
+        p_response->retcode = RETCODE_FAILURE;
+
+        if (p_server->b_verbose)
+        {
+            printf(
+                "%.*s is not in a room\n",
+                p_session->username_size,
+                p_session->p_username
+            );
+        }
+
+        goto cleanup;
+    }
+
+    p_message = calloc(1u, message_size);
+    if (NULL == p_message)
+    {
+        p_response->retcode = RETCODE_FAILURE;
+        fprintf(stderr, "calloc failed in opcode_msg_send\n");
+        goto cleanup;
+    }
+
+    memcpy(p_message, p_request_packet + p_request->size, message_size);
+
+    p_request->size += message_size;
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    p_item = ht_get(
+        p_room_store,
+        p_session->p_room_name,
+        p_session->room_name_size
+    );
+    if (NULL == p_item)
+    {
+        // NOTE: Room doesn't exist
+
+        p_response->retcode = RETCODE_FAILURE;
+
+        printf(
+            "Room %.*s doesn't exist\n",
+            p_session->room_name_size,
+            p_session->p_room_name
+        );
+
+        goto cleanup;
+    }
+
+    p_room = *(room_t **)(p_item->p_value);
+
+    p_node = sll_get(p_room->p_sessions, &p_session, sizeof(p_session));
+    if (NULL == p_node)
+    {
+        // NOTE: Session is not member of room
+
+        p_response->retcode = RETCODE_FAILURE;
+
+        printf(
+            "Session of user %.*s is not member of room %.*s\n",
+            p_session->username_size,
+            p_session->p_username,
+            p_session->room_name_size,
+            p_session->p_room_name
+        );
+
+        goto cleanup;
+    }
+
+    // TODO: Send message to all sessions in room
     ;
 
+    if (p_server->b_verbose)
+    {
+        printf(
+            "%.*s sent message \"%.*s\" to room: %.*s\n",
+            p_session->username_size,
+            p_session->p_username,
+            message_size,
+            p_message,
+            p_session->room_name_size,
+            p_session->p_room_name
+        );
+    }
+
 cleanup:
+    free(p_message);
+    p_message = NULL;
+
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+    }
     return status;
 }
 
@@ -836,7 +1025,7 @@ opcode_join (
 
     if ((p_request->size + room_name_size) > max_packet_size)
     {
-        p_response->retcode = RETCODE_FAILURE;
+        p_response->retcode = RETCODE_OVERFLOW;
         fprintf(stderr, "Join request size exceeds max_packet_size\n");
         sockutil_drain(sockfd, room_name_size, chunk_size);
         goto cleanup;

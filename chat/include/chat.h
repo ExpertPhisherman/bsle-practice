@@ -26,7 +26,6 @@
 typedef struct session           session_t;
 typedef struct request           request_t;
 typedef struct response          response_t;
-typedef struct message           message_t;
 typedef struct room              room_t;
 typedef struct appdata           appdata_t;
 typedef struct chat_client_state chat_client_state_t;
@@ -54,6 +53,7 @@ typedef enum retcode
 {
     RETCODE_SUCCESS       = 0x01, // Server action was successful
     RETCODE_SESSION_ERROR = 0x02, // Provided session ID was invalid or expired
+    RETCODE_OVERFLOW      = 0x03, // Exceeds max_packet_size
     RETCODE_FAILURE       = 0xff, // Server action failed
 } retcode_t;
 
@@ -85,11 +85,6 @@ typedef struct response
     uint8_t * p_packet; // Pointer to packet
     uint32_t  size;     // Size of response packet in bytes
 } response_t;
-
-typedef struct message
-{
-    char * p_content; // Pointer to message text
-} message_t;
 
 typedef struct room
 {

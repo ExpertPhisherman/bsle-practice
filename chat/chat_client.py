@@ -26,6 +26,7 @@ OPCODE_JOIN     = 0x08
 
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
+RETCODE_OVERFLOW      = 0x03
 RETCODE_FAILURE       = 0xff
 
 FIELD_SIZE_OPCODE     = 1
@@ -110,7 +111,7 @@ class ChatClient(Client):
         self.opcode_funcs[OPCODE_QUIT]     = self.opcode_quit
         self.opcode_funcs[OPCODE_LOGIN]    = self.opcode_login
         self.opcode_funcs[OPCODE_LOGOUT]   = self.opcode_logout
-        self.opcode_funcs[OPCODE_MSG_SEND] = None
+        self.opcode_funcs[OPCODE_MSG_SEND] = self.opcode_msg_send
         self.opcode_funcs[OPCODE_MSG_RECV] = None
         self.opcode_funcs[OPCODE_JOIN]     = self.opcode_join
 
@@ -220,6 +221,8 @@ class ChatClient(Client):
             print(payload.decode("utf-8"))
         elif retcode == RETCODE_SESSION_ERROR:
             print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
         elif retcode == RETCODE_FAILURE:
             print("Failed echo")
         else:
@@ -242,6 +245,9 @@ class ChatClient(Client):
         elif retcode == RETCODE_FAILURE:
             self.room_name = None
             print("Failed join")
+        elif retcode == RETCODE_OVERFLOW:
+            self.room_name = None
+            print("Exceeds maximum packet size")
         else:
             self.room_name = None
             print(f"Unknown return code: {retcode}")
@@ -278,6 +284,11 @@ class ChatClient(Client):
             self.username = None
             self.password = None
             print("Failed login")
+        elif retcode == RETCODE_OVERFLOW:
+            self.session_id = 0
+            self.username = None
+            self.password = None
+            print("Exceeds maximum packet size")
         else:
             self.session_id = 0
             self.username = None
@@ -302,6 +313,26 @@ class ChatClient(Client):
             print("Invalid session")
         elif retcode == RETCODE_FAILURE:
             print("Failed logout")
+        else:
+            print(f"Unknown return code: {retcode}")
+
+        return False
+
+    def opcode_msg_send(self) -> bool:
+        response = self.recv_response(1)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("Message sent")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed message send")
         else:
             print(f"Unknown return code: {retcode}")
 
@@ -408,8 +439,7 @@ class ChatClient(Client):
             self.session_id
         )
         self.request += line.encode("utf-8")
-        #return self.send_request()
-        return False
+        return self.send_request()
 
     @with_parser(
         description="Join room or create it if it doesn't exist",
