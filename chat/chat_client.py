@@ -244,7 +244,7 @@ class ChatClient(Client):
         retcode = response[0]
 
         if retcode == RETCODE_SUCCESS:
-            print(f"{self.username} joined room: {self.room_name}")
+            print(f"{self.username} joined room: \"{self.room_name}\"")
         elif retcode == RETCODE_SESSION_ERROR:
             self.room_name = None
             print("Invalid session")

@@ -1084,7 +1084,7 @@ opcode_msg_send (
     if (p_server->b_verbose)
     {
         printf(
-            "%.*s sent message \"%.*s\" to room: %.*s\n",
+            "%.*s sent message \"%.*s\" to room: \"%.*s\"\n",
             p_session->username_size,
             p_session->p_username,
             message_size,
@@ -1290,7 +1290,7 @@ opcode_join (
         if (p_server->b_verbose)
         {
             printf(
-                "%.*s created new room: %.*s\n",
+                "%.*s created new room: \"%.*s\"\n",
                 p_session->username_size,
                 p_session->p_username,
                 room_name_size,
@@ -1326,7 +1326,7 @@ opcode_join (
     if (p_server->b_verbose)
     {
         printf(
-            "%.*s joined room: %.*s\n",
+            "%.*s joined room: \"%.*s\"\n",
             p_session->username_size,
             p_session->p_username,
             p_session->room_name_size,
