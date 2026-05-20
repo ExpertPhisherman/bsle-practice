@@ -10,7 +10,7 @@
 
 int const      default_backlog     = SOMAXCONN;
 uint16_t const default_lport       = 3333u;
-uint32_t const max_packet_size     = 30u;
+uint32_t const max_packet_size     = 4096u;
 uint32_t const chunk_size          = 512u;
 uint32_t const max_clients         = 100u;
 uint32_t const worker_threads      = 8u;
