@@ -467,13 +467,17 @@ class ChatClient(Client):
     def do_msg_send(self, line: str) -> bool:
         line_enc = line.encode("utf-8")
 
+        # Prepend sender username to message
+        # NOTE: This is neither enforced nor done by the server
+        message_enc = self.username.encode("utf-8") + b": " + line_enc
+
         self.request = struct.pack(
             "!BxHI",
             OPCODE_MSG_SEND,
-            len(line_enc),
+            len(message_enc),
             self.session_id
         )
-        self.request += line_enc
+        self.request += message_enc
         return self.send_request()
 
     @with_parser(
@@ -535,6 +539,7 @@ def main() -> int:
     time.sleep(0.1)
     chat_client.do_join("general")
     time.sleep(0.1)
+    sdfgsdfg
 
     chat_client.cmdloop()
     chat_client.listening_thread.join()
