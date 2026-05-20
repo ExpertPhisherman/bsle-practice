@@ -465,10 +465,10 @@ server_destroy (server_t * p_server)
     // Wait for workers to finish and join all threads
     tpool_wait(p_server->p_tm);
 
-    destroy_all_clients(p_server);
-
     tpool_destroy(p_server->p_tm);
     p_server->p_tm = NULL;
+
+    destroy_all_clients(p_server);
 
     registry_destroy(p_server->p_registry);
     p_server->p_registry = NULL;
