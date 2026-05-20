@@ -92,6 +92,7 @@ typedef struct room
     char     * p_name;     // Pointer to name
     uint16_t   name_size;  // Size of name in bytes
     sll_t    * p_sessions; // Pointer to list of members' sessions
+    bool       b_private;  // Boolean if room is private (direct message)
 } room_t;
 
 typedef struct appdata
