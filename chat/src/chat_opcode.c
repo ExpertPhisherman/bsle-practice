@@ -1121,7 +1121,6 @@ opcode_join (
     appdata_t * p_appdata         = NULL;
     ht_t      * p_room_store      = NULL;
     item_t    * p_item            = NULL;
-    node_t    * p_node            = NULL;
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
@@ -1310,23 +1309,19 @@ opcode_join (
 
     p_room = p_item->p_value;
 
-    p_node = sll_get(p_room->p_sessions, &p_session, sizeof(p_session));
-    if (NULL == p_node)
+    // Join room
+    status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
+    if (STATUS_SUCCESS != status)
     {
-        // Join room
-        status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
-        if (STATUS_SUCCESS != status)
-        {
-            fprintf(stderr, "sll_append failed\n");
-            p_response->retcode = RETCODE_FAILURE;
-            goto cleanup;
-        }
-
-        free(p_session->p_room_name);
-        p_session->p_room_name    = p_room_name;
-        p_session->room_name_size = room_name_size;
-        p_room_name = NULL;
+        fprintf(stderr, "sll_append failed\n");
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
     }
+
+    free(p_session->p_room_name);
+    p_session->p_room_name    = p_room_name;
+    p_session->room_name_size = room_name_size;
+    p_room_name = NULL;
 
     if (p_server->b_verbose)
     {
