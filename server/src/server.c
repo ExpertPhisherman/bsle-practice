@@ -93,15 +93,6 @@ static status_t registry_remove(registry_t * p_registry, client_t * p_client);
 static status_t registry_shutdown(registry_t * p_registry);
 
 /*!
- * @brief Destroy clients idle in epoll at shutdown time
- *
- * @param[in] p_server Pointer to server
- *
- * @return Status of operation
- */
-static status_t registry_cleanup_clients(server_t * p_server);
-
-/*!
  * @brief Destroy registry
  *
  * @param[in] p_registry Pointer to registry
@@ -109,6 +100,15 @@ static status_t registry_cleanup_clients(server_t * p_server);
  * @return Status of operation
  */
 static status_t registry_destroy(registry_t * p_registry);
+
+/*!
+ * @brief Destroy clients idle in epoll at shutdown time
+ *
+ * @param[in] p_server Pointer to server
+ *
+ * @return Status of operation
+ */
+static status_t destroy_all_clients(server_t * p_server);
 
 server_t *
 server_create (server_t * p_hints)
@@ -465,7 +465,7 @@ server_destroy (server_t * p_server)
     // Wait for workers to finish and join all threads
     tpool_wait(p_server->p_tm);
 
-    registry_cleanup_clients(p_server);
+    destroy_all_clients(p_server);
 
     tpool_destroy(p_server->p_tm);
     p_server->p_tm = NULL;
@@ -914,7 +914,31 @@ cleanup:
 }
 
 static status_t
-registry_cleanup_clients (server_t * p_server)
+registry_destroy (registry_t * p_registry)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_registry)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // NOTE: All clients must already have been destroyed
+    free(p_registry->pp_clients);
+    p_registry->pp_clients = NULL;
+
+    pthread_mutex_destroy(&(p_registry->lock));
+
+    free(p_registry);
+    p_registry = NULL;
+
+cleanup:
+    return status;
+}
+
+static status_t
+destroy_all_clients (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -936,30 +960,6 @@ registry_cleanup_clients (server_t * p_server)
 
         client_destroy(p_server, p_client);
     }
-
-cleanup:
-    return status;
-}
-
-static status_t
-registry_destroy (registry_t * p_registry)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_registry)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    // NOTE: All clients must already have been destroyed
-    free(p_registry->pp_clients);
-    p_registry->pp_clients = NULL;
-
-    pthread_mutex_destroy(&(p_registry->lock));
-
-    free(p_registry);
-    p_registry = NULL;
 
 cleanup:
     return status;
