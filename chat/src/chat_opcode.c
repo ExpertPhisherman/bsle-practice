@@ -389,13 +389,13 @@ opcode_login (
         sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
     }
 
-    pthread_mutex_unlock(&(p_appdata->lock));
-    b_locked = false;
-
     free(p_session->p_room_name);
     p_session->p_room_name = NULL;
 
     p_session->room_name_size = 0u;
+
+    pthread_mutex_unlock(&(p_appdata->lock));
+    b_locked = false;
 
     sockutil_recvall(
         sockfd,
