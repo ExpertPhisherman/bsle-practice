@@ -148,8 +148,9 @@ class ChatClient(Client):
                     continue
 
                 if func is self.do_quit:
-                    if func(arg):
-                        break
+                    func(arg)
+                    self._quit_event.wait()
+                    break
                 else:
                     with self._listener_lock:
                         if func(arg):
@@ -509,7 +510,6 @@ class ChatClient(Client):
         if self.send_request():
             return True
 
-        self._quit_event.wait()
         return True
 
     @with_parser(description="Log out")
