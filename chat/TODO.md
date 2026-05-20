@@ -3,6 +3,11 @@
 
 ## Server
 
+- Send direct messages between users (via server)
+- Add file transfer within direct messages
+- List active users
+- List available lobbies
+- Add admin user role and abilities
 - Enforce cap on hash table items count
 - Modify request and response structs to follow requirements
 - Change all malloc to calloc
