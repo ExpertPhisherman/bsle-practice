@@ -128,7 +128,13 @@ chat_client_run (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    state_t    * p_state    = p_client->p_clientdata;
+    state_t * p_state = p_client->p_clientdata;
+    if (NULL == p_state)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
     session_t  * p_session  = &(p_state->session);
     request_t  * p_request  = &(p_state->request);
     response_t * p_response = &(p_state->response);
@@ -195,11 +201,10 @@ status_t
 chat_client_init (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
-    UNUSED(p_server);
 
     state_t * p_state = NULL;
 
-    if (NULL == p_client)
+    if ((NULL == p_server) || (NULL == p_client))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -217,6 +222,7 @@ chat_client_init (server_t * p_server, client_t * p_client)
     memset(p_state, 0, sizeof(*p_state));
 
     p_state->session.p_server = p_server;
+    p_state->session.p_client = p_client;
     p_state->session.sockfd   = p_client->sockfd;
 
     p_state->request.p_packet = malloc(max_packet_size);
@@ -247,35 +253,77 @@ status_t
 chat_client_free (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
-    UNUSED(p_server);
 
-    if (NULL == p_client)
+    state_t    * p_state      = NULL;
+    session_t  * p_session    = NULL;
+    request_t  * p_request    = NULL;
+    response_t * p_response   = NULL;
+    appdata_t  * p_appdata    = NULL;
+    ht_t       * p_room_store = NULL;
+    item_t     * p_item       = NULL;
+    room_t     * p_room       = NULL;
+    bool         b_locked     = false;
+
+    if ((NULL == p_server) || (NULL == p_client))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    state_t * p_state = p_client->p_clientdata;
+    p_state = p_client->p_clientdata;
     if (NULL == p_state)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    free(p_state->session.p_username);
-    p_state->session.p_username = NULL;
+    p_session  = &(p_state->session);
+    p_request  = &(p_state->request);
+    p_response = &(p_state->response);
 
-    free(p_state->session.p_password);
-    p_state->session.p_password = NULL;
+    p_appdata = p_server->p_appdata;
+    if (NULL == p_appdata)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
 
-    free(p_state->request.p_packet);
-    p_state->request.p_packet = NULL;
+    p_room_store = p_appdata->p_room_store;
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
 
-    free(p_state->response.p_packet);
-    p_state->response.p_packet = NULL;
+    free(p_session->p_username);
+    p_session->p_username = NULL;
 
-    free(p_state->session.p_room_name);
-    p_state->session.p_room_name = NULL;
+    free(p_session->p_password);
+    p_session->p_password = NULL;
+
+    free(p_request->p_packet);
+    p_request->p_packet = NULL;
+
+    free(p_response->p_packet);
+    p_response->p_packet = NULL;
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    // Remove p_session from room's sessions SLL
+    p_item = ht_get(
+        p_room_store,
+        p_session->p_room_name,
+        p_session->room_name_size
+    );
+    if (NULL != p_item)
+    {
+        p_room = p_item->p_value;
+        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
+    }
+
+    free(p_session->p_room_name);
+    p_session->p_room_name = NULL;
 
     free(p_state);
     p_state = NULL;
@@ -283,6 +331,10 @@ chat_client_free (server_t * p_server, client_t * p_client)
     p_client->p_clientdata = NULL;
 
 cleanup:
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+    }
     return status;
 }
 
@@ -444,7 +496,7 @@ appdata_create (size_t creds_capacity, size_t rooms_capacity)
     pp_opcode_funcs[OPCODE_LOGIN]    = opcode_login;
     pp_opcode_funcs[OPCODE_LOGOUT]   = opcode_logout;
     pp_opcode_funcs[OPCODE_MSG_SEND] = opcode_msg_send;
-    pp_opcode_funcs[OPCODE_MSG_RECV] = opcode_msg_recv;
+    pp_opcode_funcs[OPCODE_MSG_RECV] = NULL;
     pp_opcode_funcs[OPCODE_JOIN]     = opcode_join;
 
     p_appdata->next_session_id = 1u;

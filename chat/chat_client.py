@@ -112,7 +112,7 @@ class ChatClient(Client):
         self.opcode_funcs[OPCODE_LOGIN]    = self.opcode_login
         self.opcode_funcs[OPCODE_LOGOUT]   = self.opcode_logout
         self.opcode_funcs[OPCODE_MSG_SEND] = self.opcode_msg_send
-        self.opcode_funcs[OPCODE_MSG_RECV] = None
+        self.opcode_funcs[OPCODE_MSG_RECV] = self.opcode_msg_recv
         self.opcode_funcs[OPCODE_JOIN]     = self.opcode_join
 
     def _get_prompt(self) -> str:
@@ -287,18 +287,21 @@ class ChatClient(Client):
             print(f"Login, set session ID to: {self.session_id}")
         elif retcode == RETCODE_FAILURE:
             self.session_id = 0
-            self.username = None
-            self.password = None
+            self.username   = None
+            self.password   = None
+            self.room_name  = None
             print("Failed login")
         elif retcode == RETCODE_OVERFLOW:
             self.session_id = 0
-            self.username = None
-            self.password = None
+            self.username   = None
+            self.password   = None
+            self.room_name  = None
             print("Exceeds maximum packet size")
         else:
             self.session_id = 0
-            self.username = None
-            self.password = None
+            self.username   = None
+            self.password   = None
+            self.room_name  = None
             print(f"Unknown return code: {retcode}")
 
         return False
@@ -311,9 +314,10 @@ class ChatClient(Client):
         retcode = response[0]
 
         if retcode == RETCODE_SUCCESS:
-            self.username = None
-            self.password = None
             self.session_id = 0
+            self.username   = None
+            self.password   = None
+            self.room_name  = None
             print(f"Logout, set session ID to {self.session_id}")
         elif retcode == RETCODE_SESSION_ERROR:
             print("Invalid session")
@@ -344,14 +348,32 @@ class ChatClient(Client):
 
         return False
 
+    def opcode_msg_recv(self) -> bool:
+        response = self.recv_response(3)
+        if response is None:
+            return False
+
+        retcode, size = struct.unpack("!BH", response)
+
+        payload = self.recv_response(size)
+        if payload is None:
+            return False
+
+        if retcode == RETCODE_SUCCESS:
+            print(payload.decode("utf-8"))
+        else:
+            print(f"Unknown return code: {retcode}")
+
+        return False
+
     def send_request(self) -> bool:
         """Send request to server"""
         if self.sock is None:
             return True
         try:
-            print(f"{self.session_id=}")
+            #print(f"{self.session_id=}")
             self.sock.sendall(self.request)
-            print(f"Request bytes: {self.request}")
+            #print(f"Request bytes: {self.request}")
             return False
         except ConnectionError as e:
             print(f"[!] Error sending data: {e}")
@@ -363,7 +385,7 @@ class ChatClient(Client):
             return None
         try:
             response = self.recvall(size)
-            print(f"Response bytes: {response}")
+            #print(f"Response bytes: {response}")
             return response
         except ConnectionError as e:
             print(f"[!] Error receiving data: {e}")

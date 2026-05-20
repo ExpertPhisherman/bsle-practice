@@ -304,7 +304,9 @@ opcode_login (
 
     appdata_t * p_appdata         = NULL;
     ht_t      * p_cred_store      = NULL;
+    ht_t      * p_room_store      = NULL;
     item_t    * p_item            = NULL;
+    room_t    * p_room            = NULL;
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
@@ -347,6 +349,13 @@ opcode_login (
         goto cleanup;
     }
 
+    p_room_store = p_appdata->p_room_store;
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
     p_response->opcode  = OPCODE_LOGIN;
     p_response->retcode = RETCODE_SUCCESS;
 
@@ -361,8 +370,21 @@ opcode_login (
 
     p_session->session_id = 0u;
 
-    // TODO: Remove p_session from room's sessions SLL
-    ;
+    pthread_mutex_lock(&(p_appdata->lock));
+
+    // Remove p_session from room's sessions SLL
+    p_item = ht_get(
+        p_room_store,
+        p_session->p_room_name,
+        p_session->room_name_size
+    );
+    if (NULL != p_item)
+    {
+        p_room = p_item->p_value;
+        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
+    }
+
+    pthread_mutex_unlock(&(p_appdata->lock));
 
     free(p_session->p_room_name);
     p_session->p_room_name = NULL;
@@ -657,9 +679,14 @@ opcode_logout (
 {
     status_t status = STATUS_SUCCESS;
 
-    int        sockfd           = -1;
-    server_t * p_server         = NULL;
-    uint8_t  * p_request_packet = NULL;
+    appdata_t * p_appdata         = NULL;
+    ht_t      * p_room_store      = NULL;
+    item_t    * p_item            = NULL;
+    room_t    * p_room            = NULL;
+    int         sockfd            = -1;
+    server_t  * p_server          = NULL;
+    uint8_t   * p_request_packet  = NULL;
+    bool        b_locked          = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -667,11 +694,25 @@ opcode_logout (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
+    sockfd            = p_session->sockfd;
+    p_server          = p_session->p_server;
+    p_request_packet  = p_request->p_packet;
 
     if ((NULL == p_server) || (NULL == p_request_packet))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_appdata = p_server->p_appdata;
+    if (NULL == p_appdata)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_room_store = p_appdata->p_room_store;
+    if (NULL == p_room_store)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -729,8 +770,20 @@ opcode_logout (
 
     p_session->session_id = 0u;
 
-    // TODO: Remove p_session from room's sessions SLL
-    ;
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    // Remove p_session from room's sessions SLL
+    p_item = ht_get(
+        p_room_store,
+        p_session->p_room_name,
+        p_session->room_name_size
+    );
+    if (NULL != p_item)
+    {
+        p_room = p_item->p_value;
+        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
+    }
 
     free(p_session->p_room_name);
     p_session->p_room_name = NULL;
@@ -738,6 +791,10 @@ opcode_logout (
     p_session->room_name_size = 0u;
 
 cleanup:
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+    }
     return status;
 }
 
@@ -759,6 +816,7 @@ opcode_msg_send (
     uint8_t   * p_request_packet  = NULL;
     room_t    * p_room            = NULL;
     char      * p_message         = NULL;
+    uint8_t   * p_message_packet  = NULL;
     bool        b_locked          = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
@@ -919,8 +977,73 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    // TODO: Send message to all sessions in room
-    ;
+    uint32_t message_packet_size = (
+        FIELD_SIZE_OPCODE +
+        FIELD_SIZE_RETCODE +
+        FIELD_SIZE_SIZE +
+        message_size
+    );
+
+    p_message_packet = calloc(1u, message_packet_size);
+    if (NULL == p_message_packet)
+    {
+        p_response->retcode = RETCODE_FAILURE;
+        fprintf(stderr, "calloc failed in opcode_msg_send\n");
+        goto cleanup;
+    }
+
+    p_message_packet[FIELD_OFFSET_OPCODE]  = OPCODE_MSG_RECV;
+    p_message_packet[FIELD_OFFSET_RETCODE] = RETCODE_SUCCESS;
+
+    *(uint16_t *)(
+        p_message_packet + FIELD_SIZE_OPCODE + FIELD_SIZE_RETCODE
+    ) = htons(message_size);
+
+    memcpy(
+        (
+            p_message_packet +
+            FIELD_SIZE_OPCODE +
+            FIELD_SIZE_RETCODE +
+            FIELD_SIZE_SIZE
+        ),
+        p_message,
+        message_size
+    );
+
+    // Send message to all sessions in room
+    node_t * p_curr = p_room->p_sessions->p_head;
+    while (NULL != p_curr)
+    {
+        // Send message to single session
+        session_t * p_target = *(session_t **)(p_curr->p_data);
+        if (
+            (p_target == p_session) ||
+            (0u == p_target->session_id) ||
+            (0u == p_target->username_size) ||
+            (NULL == p_target->p_username) ||
+            (p_room->name_size != p_target->room_name_size) ||
+            (NULL == p_target->p_room_name) ||
+            (0 != memcmp(
+                p_target->p_room_name,
+                p_room->p_name,
+                p_room->name_size
+            ))
+        )
+        {
+            p_curr = p_curr->p_next;
+            continue;
+        }
+
+        pthread_mutex_lock(&(p_target->p_client->lock));
+        sockutil_sendall(
+            p_target->sockfd,
+            p_message_packet,
+            message_packet_size
+        );
+        pthread_mutex_unlock(&(p_target->p_client->lock));
+
+        p_curr = p_curr->p_next;
+    }
 
     if (p_server->b_verbose)
     {
@@ -936,6 +1059,9 @@ opcode_msg_send (
     }
 
 cleanup:
+    free(p_message_packet);
+    p_message_packet = NULL;
+
     free(p_message);
     p_message = NULL;
 
@@ -943,30 +1069,6 @@ cleanup:
     {
         pthread_mutex_unlock(&(p_appdata->lock));
     }
-    return status;
-}
-
-status_t
-opcode_msg_recv (
-    session_t  * p_session,
-    request_t  * p_request,
-    response_t * p_response
-)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_response->opcode  = OPCODE_MSG_RECV;
-    p_response->retcode = RETCODE_SUCCESS;
-
-    ;
-
-cleanup:
     return status;
 }
 

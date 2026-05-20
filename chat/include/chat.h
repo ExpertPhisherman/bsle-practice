@@ -60,6 +60,7 @@ typedef enum retcode
 typedef struct session
 {
     server_t * p_server;       // Pointer to server
+    client_t * p_client;       // Pointer to client
     int        sockfd;         // Client socket file descriptor
     char     * p_username;     // Pointer to username
     char     * p_password;     // Pointer to password

@@ -18,6 +18,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include "common.h"
 #include "sockutil.h"
 #include "chat.h"
@@ -143,21 +144,6 @@ status_t opcode_logout(
  * @return Status of operation
  */
 status_t opcode_msg_send(
-    session_t  * p_session,
-    request_t  * p_request,
-    response_t * p_response
-);
-
-/*!
- * @brief Receive single message
- *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
- *
- * @return Status of operation
- */
-status_t opcode_msg_recv(
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response
