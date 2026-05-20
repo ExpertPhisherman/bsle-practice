@@ -539,7 +539,6 @@ def main() -> int:
     time.sleep(0.1)
     chat_client.do_join("general")
     time.sleep(0.1)
-    sdfgsdfg
 
     chat_client.cmdloop()
     chat_client.listening_thread.join()
