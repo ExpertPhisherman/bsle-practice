@@ -3,6 +3,7 @@
 
 ## Server
 
+- Reduce function sizes
 - Add functions to free and reset session members
 - Send direct messages between users (via server)
 - Add file transfer within direct messages
