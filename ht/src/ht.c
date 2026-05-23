@@ -86,6 +86,7 @@ ht_create (size_t capacity)
     p_ht->p_hash_func     = djb2_hash;
     p_ht->p_display_item  = display_item;
     p_ht->p_compare_item  = compare_item;
+    p_ht->p_destroy_key   = free;
     p_ht->p_destroy_value = free;
 
     p_ht->pp_buckets = calloc(capacity, sizeof(*(p_ht->pp_buckets)));
@@ -126,7 +127,11 @@ ht_destroy (ht_t * p_ht)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_ht)
+    if (
+        (NULL == p_ht) ||
+        (NULL == p_ht->p_destroy_key) ||
+        (NULL == p_ht->p_destroy_value)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -161,13 +166,10 @@ ht_destroy (ht_t * p_ht)
             item_t * p_item = p_curr->p_data;
             if (NULL != p_item)
             {
-                free(p_item->p_key);
+                (p_ht->p_destroy_key)(p_item->p_key);
                 p_item->p_key = NULL;
 
-                if (NULL != p_ht->p_destroy_value)
-                {
-                    (p_ht->p_destroy_value)(p_item->p_value);
-                }
+                (p_ht->p_destroy_value)(p_item->p_value);
                 p_item->p_value = NULL;
             }
             p_curr = p_curr->p_next;
@@ -276,7 +278,8 @@ ht_set (
         (NULL == p_ht) ||
         (NULL == p_key) ||
         (NULL == p_value) ||
-        (NULL == p_ht->p_hash_func)
+        (NULL == p_ht->p_hash_func) ||
+        (NULL == p_ht->p_destroy_value)
     )
     {
         status = STATUS_NULL_ARG;
@@ -320,10 +323,7 @@ ht_set (
         item_t * p_item = p_node->p_data;
 
         // Destroy old value
-        if (NULL != p_ht->p_destroy_value)
-        {
-            (p_ht->p_destroy_value)(p_item->p_value);
-        }
+        (p_ht->p_destroy_value)(p_item->p_value);
         p_item->p_value = NULL;
 
         // Set new value
@@ -369,7 +369,13 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash_func))
+    if (
+        (NULL == p_ht) ||
+        (NULL == p_key) ||
+        (NULL == p_ht->p_hash_func) ||
+        (NULL == p_ht->p_destroy_key) ||
+        (NULL == p_ht->p_destroy_value)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -405,13 +411,10 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
         goto cleanup;
     }
 
-    free(p_key_cpy);
+    (p_ht->p_destroy_key)(p_key_cpy);
     p_key_cpy = NULL;
 
-    if (NULL != p_ht->p_destroy_value)
-    {
-        (p_ht->p_destroy_value)(p_val_cpy);
-    }
+    (p_ht->p_destroy_value)(p_val_cpy);
     p_val_cpy = NULL;
 
     // Decrement length if last node removed
@@ -469,13 +472,14 @@ display_item (void * p_data)
 
     item_t * p_item = p_data;
 
-    printf("\"");
-    // NOTE: Assuming p_key is a string
-    printf("%.*s", (int)(p_item->key_size), (char *)(p_item->p_key));
-    printf("\": \"");
-    // NOTE: Assuming p_value is a string
-    printf("%.*s", (int)(p_item->value_size), (char *)(p_item->p_value));
-    printf("\"");
+    // NOTE: Assuming p_key and p_value are strings
+    printf(
+        "\"%.*s\": \"%.*s\"",
+        (int)(p_item->key_size),
+        (char *)(p_item->p_key),
+        (int)(p_item->value_size),
+        (char *)(p_item->p_value)
+    );
 
 cleanup:
     return status;
