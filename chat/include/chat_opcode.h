@@ -44,6 +44,59 @@ typedef enum field_offset
     FIELD_OFFSET_RETCODE = 1,
 } field_offset_t;
 
+typedef struct __attribute__((packed)) ping_hdr
+{
+    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint32_t session_id;
+} ping_hdr_t;
+
+typedef struct __attribute__((packed)) echo_hdr
+{
+    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint16_t payload_size;
+    uint32_t session_id;
+} echo_hdr_t;
+
+typedef struct __attribute__((packed)) quit_hdr
+{
+    uint8_t padding[FIELD_SIZE_PADDING];
+} quit_hdr_t;
+
+typedef struct __attribute__((packed)) login_hdr
+{
+    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint16_t username_size;
+    uint16_t password_size;
+    uint32_t session_id;
+} login_hdr_t;
+
+typedef struct __attribute__((packed)) logout_hdr
+{
+    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint32_t session_id;
+} logout_hdr_t;
+
+typedef struct __attribute__((packed)) msg_send_hdr
+{
+    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint16_t msg_size;
+    uint32_t session_id;
+} msg_send_hdr_t;
+
+typedef struct __attribute__((packed)) join_hdr
+{
+    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint16_t room_name_size;
+    uint32_t session_id;
+} join_hdr_t;
+
+typedef struct __attribute__((packed)) msg_recv_hdr_out
+{
+    uint8_t  opcode;
+    uint8_t  retcode;
+    uint16_t msg_size;
+} msg_recv_hdr_out_t;
+
 /*!
  * @brief Default opcode in case of unknown
  *
