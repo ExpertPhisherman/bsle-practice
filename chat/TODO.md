@@ -4,7 +4,7 @@
 ## Server
 
 - Reduce function sizes
-- Add functions to free and reset session members
+- Add functions to free and reset session struct members
 - Send direct messages between users (via server)
 - Add file transfer within direct messages
 - List active users
