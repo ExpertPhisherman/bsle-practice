@@ -10,7 +10,6 @@
 
 extern uint16_t const max_port;
 extern uint16_t const default_lport;
-extern int const      default_backlog;
 extern size_t const   creds_capacity;
 extern size_t const   rooms_capacity;
 
@@ -21,7 +20,6 @@ main (int argc, char * argv[])
 
     int        opt;
     uint16_t   lport     = default_lport;
-    int        backlog   = default_backlog;
     bool       b_verbose = false;
     server_t * p_server  = NULL;
 
@@ -30,7 +28,6 @@ main (int argc, char * argv[])
         .lport         = lport,
         .sockfd        = -1,
         .epollfd       = -1,
-        .backlog       = backlog,
         .b_verbose     = b_verbose,
         .p_tm          = NULL,
         .p_registry    = NULL,
@@ -40,10 +37,9 @@ main (int argc, char * argv[])
         .p_appdata     = NULL,
     };
 
-    while (-1 != (opt = getopt(argc, argv, "vp:b:")))
+    while (-1 != (opt = getopt(argc, argv, "vp:")))
     {
         // Enforce command line integer sizes
-        int64_t  i64;
         uint64_t u64;
 
         switch (opt)
@@ -52,36 +48,19 @@ main (int argc, char * argv[])
             b_verbose = true;
             break;
 
-        case 'b':
-            i64 = strtol(optarg, NULL, 10);
-            if ((1 <= i64) && (INT_MAX >= i64))
+            case 'p':
+                u64 = strtoul(optarg, NULL, 10);
+                if (u64 > max_port)
             {
-                backlog = (int)i64;
-            }
-            else
-            {
-                fprintf(stderr, "Backlog must be [1-%d]\n", INT_MAX);
+                    fprintf(stderr, "Port must be [0-%hu]\n", max_port);
                 status = STATUS_FAILURE;
                 goto cleanup;
             }
-            break;
-
-        case 'p':
-            u64 = strtoul(optarg, NULL, 10);
-            if (max_port >= u64)
-            {
-                lport = (uint16_t)u64;
-            }
-            else
-            {
-                fprintf(stderr, "Port must be [1-%hu]\n", max_port);
-                status = STATUS_FAILURE;
-                goto cleanup;
-            }
+                lport = u64;
             break;
 
         default:
-            fprintf(stderr, "Usage: %s [-v] [-b backlog] [-p port]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-v] [-p port]\n", argv[0]);
             status = STATUS_FAILURE;
             goto cleanup;
         }
@@ -95,7 +74,6 @@ main (int argc, char * argv[])
     }
 
     hints.lport         = lport;
-    hints.backlog       = backlog;
     hints.b_verbose     = b_verbose;
     hints.p_client_run  = chat_client_run;
     hints.p_client_init = chat_client_init;

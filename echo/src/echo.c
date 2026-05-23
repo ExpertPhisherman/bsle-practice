@@ -11,7 +11,6 @@
 extern _Atomic sig_atomic_t g_keep_running;
 
 uint16_t const default_lport = 4444u;
-int const default_backlog = 10;
 uint32_t const max_payload_size = 4096u;
 uint32_t const chunk_size = 512u;
 uint32_t const max_clients = 1000u;

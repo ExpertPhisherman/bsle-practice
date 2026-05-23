@@ -40,7 +40,6 @@ typedef struct server
 {
     uint16_t        lport;         // Local port
     char          * p_lhost;       // Pointer to local host IP address
-    int             backlog;       // Number of connection requests to queue
     bool            b_verbose;     // Verbosity
     int             sockfd;        // Server socket file descriptor
     int             epollfd;       // Epoll file descriptor
