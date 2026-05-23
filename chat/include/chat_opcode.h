@@ -100,9 +100,9 @@ typedef struct __attribute__((packed)) msg_recv_hdr_out
 /*!
  * @brief Default opcode in case of unknown
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
@@ -115,9 +115,9 @@ status_t opcode_default(
 /*!
  * @brief Respond with PONG
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
@@ -130,9 +130,9 @@ status_t opcode_ping(
 /*!
  * @brief Return the provided message
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
@@ -145,9 +145,9 @@ status_t opcode_echo(
 /*!
  * @brief Close client connection
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
@@ -160,9 +160,9 @@ status_t opcode_quit(
 /*!
  * @brief Log in with credentials
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
@@ -175,9 +175,9 @@ status_t opcode_login(
 /*!
  * @brief Log out
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
@@ -190,9 +190,9 @@ status_t opcode_logout(
 /*!
  * @brief Send message to all users in room
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
@@ -205,9 +205,9 @@ status_t opcode_msg_send(
 /*!
  * @brief Join room or create it if it doesn't exist
  *
- * @param[in] p_session  Pointer to session
- * @param[in] p_request  Pointer to request
- * @param[in] p_response Pointer to response
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
  *
  * @return Status of operation
  */
