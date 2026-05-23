@@ -139,11 +139,11 @@ status_t display_unicode(
  * @param[in] p_stream     Pointer to stream to write to
  * @param[in] p_buf        Pointer to buffer to read from
  * @param[in] size         Size of buffer in bytes
- * @param[in] p_sep        String inserted between each byte, default space
- * @param[in] p_end        String appended after last byte, default newline
+ * @param[in] p_sep        String inserted between each byte
+ * @param[in] p_end        String appended after last byte
  * @param[in] p_ischartype Pointer to character type check function
- * @param[in] p_fmt_true   String when function returns non-zero, default "%c"
- * @param[in] p_fmt_false  String when function returns zero, default empty
+ * @param[in] p_fmt_true   String when function returns non-zero
+ * @param[in] p_fmt_false  String when function returns zero
  * @param[in] b_flush      Whether to forcibly flush the stream
  *
  * @return Status of operation
