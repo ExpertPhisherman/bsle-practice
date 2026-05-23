@@ -115,16 +115,10 @@ typedef struct state
  * @brief Create chat server
  *
  * @param[in] p_hints        Pointer to server hints
- * @param[in] creds_capacity Number of buckets in credential storage
- * @param[in] rooms_capacity Number of buckets in room storage
  *
  * @return Pointer to chat server
  */
-server_t * chat_server_create(
-    server_t * p_hints,
-    size_t     creds_capacity,
-    size_t     rooms_capacity
-);
+server_t * chat_server_create(server_t * p_hints);
 
 /*!
  * @brief Destroy chat server

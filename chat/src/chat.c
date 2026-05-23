@@ -8,25 +8,20 @@
 
 #include "chat.h"
 
-int const      default_backlog     = SOMAXCONN;
-uint16_t const default_lport       = 3333u;
-uint32_t const max_packet_size     = 4096u;
-uint32_t const chunk_size          = 512u;
-uint32_t const max_clients         = 100u;
-uint32_t const worker_threads      = 8u;
-uint32_t const epoll_max_events    = 64u;
-size_t const   creds_capacity      = 17u;
-size_t const   rooms_capacity      = 17u;
+uint16_t const default_lport   = 3333u;
+uint32_t const max_packet_size = 4096u;
+uint32_t const chunk_size      = 512u;
+size_t const   creds_capacity  = 17u;
+size_t const   rooms_capacity  = 17u;
 
 /*!
  * @brief Create application data
  *
- * @param[in] creds_capacity Number of buckets in credential storage
- * @param[in] rooms_capacity Number of buckets in room storage
+ * @param[in] void
  *
  * @return Pointer to application data
  */
-static appdata_t * appdata_create(size_t creds_capacity, size_t rooms_capacity);
+static appdata_t * appdata_create(void);
 
 /*!
  * @brief Destroy application data
@@ -53,11 +48,7 @@ static status_t handle_request(
 );
 
 server_t *
-chat_server_create (
-    server_t * p_hints,
-    size_t     creds_capacity,
-    size_t     rooms_capacity
-)
+chat_server_create (server_t * p_hints)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -76,7 +67,7 @@ chat_server_create (
         goto cleanup;
     }
 
-    p_server->p_appdata = appdata_create(creds_capacity, rooms_capacity);
+    p_server->p_appdata = appdata_create();
     if (NULL == p_server->p_appdata)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -408,7 +399,7 @@ cleanup:
 }
 
 static appdata_t *
-appdata_create (size_t creds_capacity, size_t rooms_capacity)
+appdata_create (void)
 {
     status_t status = STATUS_SUCCESS;
 

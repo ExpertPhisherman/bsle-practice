@@ -10,8 +10,6 @@
 
 extern uint16_t const max_port;
 extern uint16_t const default_lport;
-extern size_t const   creds_capacity;
-extern size_t const   rooms_capacity;
 
 int
 main (int argc, char * argv[])
@@ -44,25 +42,25 @@ main (int argc, char * argv[])
 
         switch (opt)
         {
-        case 'v':
-            b_verbose = true;
-            break;
+            case 'v':
+                b_verbose = true;
+                break;
 
             case 'p':
                 u64 = strtoul(optarg, NULL, 10);
                 if (u64 > max_port)
-            {
+                {
                     fprintf(stderr, "Port must be [0-%hu]\n", max_port);
+                    status = STATUS_FAILURE;
+                    goto cleanup;
+                }
+                lport = u64;
+                break;
+
+            default:
+                fprintf(stderr, "Usage: %s [-v] [-p port]\n", argv[0]);
                 status = STATUS_FAILURE;
                 goto cleanup;
-            }
-                lport = u64;
-            break;
-
-        default:
-                fprintf(stderr, "Usage: %s [-v] [-p port]\n", argv[0]);
-            status = STATUS_FAILURE;
-            goto cleanup;
         }
     }
 
@@ -79,7 +77,7 @@ main (int argc, char * argv[])
     hints.p_client_init = chat_client_init;
     hints.p_client_free = chat_client_free;
 
-    p_server = chat_server_create(&hints, creds_capacity, rooms_capacity);
+    p_server = chat_server_create(&hints);
     if (NULL == p_server)
     {
         status = STATUS_ALLOC_FAILURE;
