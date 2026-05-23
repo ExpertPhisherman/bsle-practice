@@ -425,9 +425,8 @@ class ChatClient(Client):
             return False
 
         self.request = struct.pack(
-            "!BBxxHHI",
+            "!BxHHI",
             OPCODE_LOGIN,
-            0,
             len(username_enc),
             len(password_enc),
             self.session_id
