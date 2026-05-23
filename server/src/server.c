@@ -385,11 +385,8 @@ server_run (server_t * p_server)
                     p_client->sockfd
                 );
 
-                if (!(p_client->b_running))
-                {
-                    client_destroy(p_server, p_client);
-                    p_client = NULL;
-                }
+                client_destroy(p_server, p_client);
+                p_client = NULL;
                 continue;
             }
 
@@ -404,8 +401,6 @@ server_run (server_t * p_server)
 
             p_pair->p_server = p_server;
             p_pair->p_client = p_client;
-
-            p_client->b_running = true;
 
             if (!tpool_add_work(p_server->p_tm, client_run_wrapper, p_pair))
             {
@@ -535,7 +530,6 @@ client_run_wrapper (void * p_arg)
     if (NULL == p_server->p_client_run)
     {
         fprintf(stderr, "App not loaded\n");
-        p_client->b_running = false;
         client_destroy(p_server, p_client);
         goto cleanup;
     }
@@ -554,12 +548,9 @@ client_run_wrapper (void * p_arg)
             );
         }
 
-        p_client->b_running = false;
         client_destroy(p_server, p_client);
         goto cleanup;
     }
-
-    p_client->b_running = false;
 
     // Re-arm so the next request triggers a new dispatch
     struct epoll_event client_ev = {0};
@@ -609,7 +600,6 @@ client_create (server_t * p_server)
     p_client->sockfd           = -1;
     p_client->registry_idx     = -1;
     p_client->p_clientdata     = NULL;
-    p_client->b_running        = false;
 
     if (0 != pthread_mutex_init(&(p_client->lock), NULL))
     {
