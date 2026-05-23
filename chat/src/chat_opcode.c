@@ -8,8 +8,8 @@
 
 #include "chat_opcode.h"
 
-extern uint32_t const max_packet_size;
-extern uint32_t const chunk_size;
+extern uint32_t const g_max_packet_size;
+extern uint32_t const g_chunk_size;
 
 /*!
  * @brief Validate client session
@@ -201,13 +201,13 @@ opcode_echo (
 
     p_request->size += FIELD_SIZE_SESSION_ID;
 
-    if ((p_request->size + payload_size) > max_packet_size)
+    if ((p_request->size + payload_size) > g_max_packet_size)
     {
         // Zero out response size field
         p_response->retcode = RETCODE_OVERFLOW;
-        fprintf(stderr, "Echo request size exceeds max_packet_size\n");
+        fprintf(stderr, "Echo request size exceeds g_max_packet_size\n");
         memset(p_response_packet + p_response->size, 0, FIELD_SIZE_SIZE);
-        sockutil_drain(sockfd, payload_size, chunk_size);
+        sockutil_drain(sockfd, payload_size, g_chunk_size);
         payload_size = 0u;
     }
 
@@ -217,7 +217,7 @@ opcode_echo (
         // Zero out response size field
         status = STATUS_SUCCESS;
         memset(p_response_packet + p_response->size, 0, FIELD_SIZE_SIZE);
-        sockutil_drain(sockfd, payload_size, chunk_size);
+        sockutil_drain(sockfd, payload_size, g_chunk_size);
         payload_size = 0u;
     }
 
@@ -447,10 +447,10 @@ opcode_login (
     char const * p_username_msg = "Username: 3-16 alphanumeric or underscore";
     char const * p_password_msg = "Password: 8-128 printable characters excluding space";
 
-    if ((p_request->size + username_size + password_size) > max_packet_size)
+    if ((p_request->size + username_size + password_size) > g_max_packet_size)
     {
-        fprintf(stderr, "Login request size exceeds max_packet_size\n");
-        sockutil_drain(sockfd, username_size + password_size, chunk_size);
+        fprintf(stderr, "Login request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
 
         p_response->retcode   = RETCODE_OVERFLOW;
         session_id = 0u;
@@ -461,7 +461,7 @@ opcode_login (
     if (!((3u <= username_size) && (16u >= username_size)))
     {
         fprintf(stderr, "%s\n", p_username_msg);
-        sockutil_drain(sockfd, username_size + password_size, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
 
         p_response->retcode   = RETCODE_FAILURE;
         session_id = 0u;
@@ -471,7 +471,7 @@ opcode_login (
     if (!((8u <= password_size) && (128u >= password_size)))
     {
         fprintf(stderr, "%s\n", p_password_msg);
-        sockutil_drain(sockfd, username_size + password_size, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
 
         p_response->retcode   = RETCODE_FAILURE;
         session_id = 0u;
@@ -482,7 +482,7 @@ opcode_login (
     if (NULL == p_username)
     {
         fprintf(stderr, "calloc failed in opcode_login\n");
-        sockutil_drain(sockfd, username_size + password_size, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
 
         p_response->retcode   = RETCODE_FAILURE;
         session_id = 0u;
@@ -493,7 +493,7 @@ opcode_login (
     if (NULL == p_password)
     {
         fprintf(stderr, "calloc failed in opcode_login\n");
-        sockutil_drain(sockfd, username_size + password_size, chunk_size);
+        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
 
         p_response->retcode   = RETCODE_FAILURE;
         session_id = 0u;
@@ -920,11 +920,11 @@ opcode_msg_send (
 
     p_request->size += FIELD_SIZE_SESSION_ID;
 
-    if ((p_request->size + message_size) > max_packet_size)
+    if ((p_request->size + message_size) > g_max_packet_size)
     {
         p_response->retcode = RETCODE_OVERFLOW;
-        fprintf(stderr, "Message send request size exceeds max_packet_size\n");
-        sockutil_drain(sockfd, message_size, chunk_size);
+        fprintf(stderr, "msg send request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, message_size, g_chunk_size);
         goto cleanup;
     }
 
@@ -1194,11 +1194,11 @@ opcode_join (
 
     p_request->size += FIELD_SIZE_SESSION_ID;
 
-    if ((p_request->size + room_name_size) > max_packet_size)
+    if ((p_request->size + room_name_size) > g_max_packet_size)
     {
         p_response->retcode = RETCODE_OVERFLOW;
-        fprintf(stderr, "Join request size exceeds max_packet_size\n");
-        sockutil_drain(sockfd, room_name_size, chunk_size);
+        fprintf(stderr, "Join request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, room_name_size, g_chunk_size);
         goto cleanup;
     }
 
