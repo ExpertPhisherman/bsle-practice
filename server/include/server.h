@@ -59,6 +59,7 @@ typedef struct client
     int64_t           registry_idx; // Index of client in registry
     void            * p_clientdata; // Pointer to per-client application state
     pthread_mutex_t   lock;         // Mutex lock while sending to client
+    _Atomic bool      b_running;    // Boolean if worker thread is running
 } client_t;
 
 typedef struct server_client_pair

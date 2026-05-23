@@ -9,7 +9,6 @@
 #include "main.h"
 
 extern uint16_t const max_port;
-extern _Atomic sig_atomic_t g_keep_running;
 extern uint16_t const default_lport;
 
 int

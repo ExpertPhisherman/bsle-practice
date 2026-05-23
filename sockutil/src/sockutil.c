@@ -8,7 +8,7 @@
 
 #include "sockutil.h"
 
-extern _Atomic sig_atomic_t g_keep_running;
+extern _Atomic bool gb_running;
 
 status_t
 sockutil_sendall (int sockfd, void * p_buf, size_t size)
@@ -29,7 +29,7 @@ sockutil_sendall (int sockfd, void * p_buf, size_t size)
         {
             if (EINTR == errno)
             {
-                if (!g_keep_running)
+                if (!gb_running)
                 {
                     status = STATUS_SERVER_DISCONNECT;
                     goto cleanup;
@@ -71,7 +71,7 @@ sockutil_recvall (int sockfd, void * p_buf, size_t size)
         {
             if (EINTR == errno)
             {
-                if (!g_keep_running)
+                if (!gb_running)
                 {
                     status = STATUS_SERVER_DISCONNECT;
                     goto cleanup;
@@ -85,7 +85,7 @@ sockutil_recvall (int sockfd, void * p_buf, size_t size)
         }
         else if (0 == recvd)
         {
-            status = g_keep_running ?
+            status = gb_running ?
                 STATUS_CLIENT_DISCONNECT :
                 STATUS_SERVER_DISCONNECT;
             goto cleanup;

@@ -14,7 +14,7 @@ static uint32_t const epoll_max_events = 64u;
 
 uint16_t const max_port = 65535u;
 
-_Atomic sig_atomic_t g_keep_running = 1;
+_Atomic bool gb_running = true;
 
 /*!
  * @brief Gracefully shutdown server on SIGINT
@@ -124,8 +124,8 @@ server_create (server_t * p_hints)
 
     struct sigaction sa_int = {0};
 
-    sa_int.sa_handler       = handle_sigint;
-    sa_int.sa_flags         = 0;
+    sa_int.sa_handler = handle_sigint;
+    sa_int.sa_flags   = 0;
     sigemptyset(&(sa_int.sa_mask));
 
     if (-1 == sigaction(SIGINT, &sa_int, NULL))
@@ -316,7 +316,7 @@ server_run (server_t * p_server)
         goto cleanup;
     }
 
-    while (g_keep_running)
+    while (gb_running)
     {
         int nfds = epoll_wait(
             p_server->epollfd,
@@ -384,8 +384,12 @@ server_run (server_t * p_server)
                     p_client->rport,
                     p_client->sockfd
                 );
-                client_destroy(p_server, p_client);
-                p_client = NULL;
+
+                if (!(p_client->b_running))
+                {
+                    client_destroy(p_server, p_client);
+                    p_client = NULL;
+                }
                 continue;
             }
 
@@ -400,6 +404,8 @@ server_run (server_t * p_server)
 
             p_pair->p_server = p_server;
             p_pair->p_client = p_client;
+
+            p_client->b_running = true;
 
             if (!tpool_add_work(p_server->p_tm, client_run_wrapper, p_pair))
             {
@@ -500,7 +506,7 @@ static void
 handle_sigint (int signo)
 {
     UNUSED(signo);
-    g_keep_running = 0;
+    gb_running = false;
     return;
 }
 
@@ -521,7 +527,7 @@ client_run_wrapper (void * p_arg)
     free(p_pair);
     p_pair = NULL;
 
-    if (NULL == p_server)
+    if ((NULL == p_server) || (NULL == p_client))
     {
         goto cleanup;
     }
@@ -529,6 +535,7 @@ client_run_wrapper (void * p_arg)
     if (NULL == p_server->p_client_run)
     {
         fprintf(stderr, "App not loaded\n");
+        p_client->b_running = false;
         client_destroy(p_server, p_client);
         goto cleanup;
     }
@@ -547,9 +554,12 @@ client_run_wrapper (void * p_arg)
             );
         }
 
+        p_client->b_running = false;
         client_destroy(p_server, p_client);
         goto cleanup;
     }
+
+    p_client->b_running = false;
 
     // Re-arm so the next request triggers a new dispatch
     struct epoll_event client_ev = {0};
@@ -594,11 +604,12 @@ client_create (server_t * p_server)
     }
 
     // Initialise to safe sentinel values
-    p_client->rport        = 0u;
-    p_client->p_rhost      = NULL;
-    p_client->sockfd       = -1;
-    p_client->registry_idx = -1;
-    p_client->p_clientdata = NULL;
+    p_client->rport            = 0u;
+    p_client->p_rhost          = NULL;
+    p_client->sockfd           = -1;
+    p_client->registry_idx     = -1;
+    p_client->p_clientdata     = NULL;
+    p_client->b_running        = false;
 
     if (0 != pthread_mutex_init(&(p_client->lock), NULL))
     {
@@ -621,7 +632,7 @@ client_create (server_t * p_server)
     {
         if (EINTR == errno)
         {
-            status = g_keep_running ?
+            status = gb_running ?
                 STATUS_SOCKET_FAILURE :
                 STATUS_SERVER_DISCONNECT;
             goto cleanup;

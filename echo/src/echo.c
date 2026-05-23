@@ -8,7 +8,7 @@
 
 #include "echo.h"
 
-extern _Atomic sig_atomic_t g_keep_running;
+extern _Atomic bool gb_running;
 
 uint16_t const default_lport = 4444u;
 uint32_t const max_payload_size = 4096u;
@@ -120,7 +120,7 @@ client_run (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    while (g_keep_running)
+    while (gb_running)
     {
         memset(request.p_payload, 0, max_payload_size);
         memset(response.p_payload, 0, max_payload_size);
