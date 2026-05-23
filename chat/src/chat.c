@@ -210,33 +210,31 @@ chat_client_init (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    p_state = malloc(sizeof(*p_state));
+    p_state = calloc(1u, sizeof(*p_state));
     if (NULL == p_state)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
     p_client->p_clientdata = p_state;
 
-    memset(p_state, 0, sizeof(*p_state));
-
     p_state->session.p_server = p_server;
     p_state->session.p_client = p_client;
     p_state->session.sockfd   = p_client->sockfd;
 
-    p_state->request.p_packet = malloc(max_packet_size);
+    p_state->request.p_packet = calloc(1u, max_packet_size);
     if (NULL == p_state->request.p_packet)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    p_state->response.p_packet = malloc(max_packet_size);
+    p_state->response.p_packet = calloc(1u, max_packet_size);
     if (NULL == p_state->response.p_packet)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
