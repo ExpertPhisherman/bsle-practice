@@ -467,9 +467,12 @@ class ChatClient(Client):
     def do_msg_send(self, line: str) -> bool:
         line_enc = line.encode("utf-8")
 
+        message_enc = line_enc
+
         # Prepend sender username to message
         # NOTE: This is neither enforced nor done by the server
-        message_enc = self.username.encode("utf-8") + b": " + line_enc
+        if self.username is not None:
+            message_enc = self.username.encode("utf-8") + b": " + message_enc
 
         self.request = struct.pack(
             "!BxHI",
