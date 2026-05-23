@@ -8,9 +8,9 @@
 
 #include "server.h"
 
-extern uint32_t const max_clients;
-extern uint32_t const worker_threads;
-extern uint32_t const epoll_max_events;
+static uint32_t const max_clients      = 128u;
+static uint32_t const worker_threads   = 8u;
+static uint32_t const epoll_max_events = 64u;
 
 uint16_t const max_port = 65535u;
 
@@ -146,7 +146,6 @@ server_create (server_t * p_hints)
     // Initialise to safe sentinel values before copying hints
     p_server->lport         = 0u;
     p_server->p_lhost       = NULL;
-    p_server->backlog       = -1;
     p_server->b_verbose     = false;
     p_server->sockfd        = -1;
     p_server->epollfd       = -1;
@@ -160,7 +159,11 @@ server_create (server_t * p_hints)
     *p_server = *p_hints;
 
     // Catch privileged port as non-root user
-    if ((1024u > (p_server->lport)) && (0 != geteuid()))
+    if (
+        (1u <= p_server->lport) &&
+        (1023u >= p_server->lport) &&
+        (0 != geteuid())
+    )
     {
         fprintf(
             stderr,
@@ -232,7 +235,7 @@ server_create (server_t * p_hints)
     getsockname(sockfd, (struct sockaddr *)&server_addr, &sin_size);
     p_server->lport = ntohs(server_addr.sin_port);
 
-    if (-1 == listen(sockfd, p_server->backlog))
+    if (-1 == listen(sockfd, SOMAXCONN))
     {
         perror("listen");
         status = STATUS_SOCKET_FAILURE;
