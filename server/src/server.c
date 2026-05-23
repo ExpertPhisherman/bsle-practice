@@ -339,14 +339,16 @@ server_run (server_t * p_server)
 
         for (size_t idx = 0u; idx < (size_t)nfds; idx++)
         {
-            if (p_events[idx].data.ptr == p_server)
+            struct epoll_event event = p_events[idx];
+
+            if (event.data.ptr == p_server)
             {
                 // NOTE: Server socket is readable
-
                 // Accept new client
                 client_t * p_client = client_create(p_server);
                 if (NULL == p_client)
                 {
+                    fprintf(stderr, "client_create failed\n");
                     continue;
                 }
 
@@ -371,11 +373,11 @@ server_run (server_t * p_server)
             }
 
             // NOTE: Client socket is readable
-            client_t * p_client = p_events[idx].data.ptr;
+            client_t * p_client = event.data.ptr;
 
             uint32_t const err_events = EPOLLHUP | EPOLLERR | EPOLLRDHUP;
 
-            if (0u != (p_events[idx].events & err_events))
+            if (0u != (event.events & err_events))
             {
                 fprintf(
                     stderr,
