@@ -70,22 +70,6 @@ class Client(cmd.Cmd):
             packet += data
         return packet
 
-    def preloop(self) -> None:
-        # Wait to receive a potential shutdown
-        time.sleep(0.01)
-
-        self.sock.setblocking(False)
-        try:
-            data = self.sock.recv(1, socket.MSG_PEEK)
-            if len(data) == 0:
-                print("[!] Rejected by server")
-                sys.exit(1)
-        except BlockingIOError:
-            # NOTE: Socket is open and empty
-            self.sock.setblocking(True)
-
-    preloop.__doc__ = cmd.Cmd.preloop.__doc__
-
     def cmdloop(self, intro=None) -> None:
         try:
             super().cmdloop(intro)
