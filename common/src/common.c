@@ -86,6 +86,8 @@ fprint (
 {
     status_t status = STATUS_SUCCESS;
 
+    char const * p_fmt = NULL;
+
     if (NULL == p_buf)
     {
         status = STATUS_NULL_ARG;
@@ -109,15 +111,7 @@ fprint (
             fprintf(p_stream, "%s", p_sep);
         }
 
-        char const * p_fmt = NULL;
-        if (0 != p_ischartype(chr))
-        {
-            p_fmt = p_fmt_true;
-        }
-        else
-        {
-            p_fmt = p_fmt_false;
-        }
+        p_fmt = (0 != p_ischartype(chr)) ? p_fmt_true : p_fmt_false;
 
         // NOTE: fprintf expects string literal, ignore compiler warning
 #       pragma GCC diagnostic push
