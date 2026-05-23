@@ -220,11 +220,7 @@ server_create (server_t * p_hints)
     server_addr.sin_port        = htons(p_server->lport);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (-1 == bind(
-        sockfd,
-        (struct sockaddr *)&server_addr,
-        sin_size
-    ))
+    if (-1 == bind(sockfd, (struct sockaddr *)&server_addr, sin_size))
     {
         perror("bind");
         status = STATUS_SOCKET_FAILURE;
