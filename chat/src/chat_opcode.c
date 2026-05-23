@@ -157,10 +157,8 @@ opcode_echo (
     p_request->session_id = ntohl(p_hdr->session_id);
 
     // Copy size field into response
-    memcpy(
-        p_response_packet + p_response->size,
-        &p_hdr->payload_size,
-        FIELD_SIZE_SIZE
+    *(uint16_t *)(p_response_packet + p_response->size) = htons(
+        payload_size
     );
 
     p_request->size += sizeof(*p_hdr);
@@ -870,8 +868,8 @@ opcode_msg_send (
 
     msg_recv_hdr_out_t * p_msg_hdr = (msg_recv_hdr_out_t *)p_msg_packet;
 
-    p_msg_hdr->opcode       = OPCODE_MSG_RECV;
-    p_msg_hdr->retcode      = RETCODE_SUCCESS;
+    p_msg_hdr->opcode   = OPCODE_MSG_RECV;
+    p_msg_hdr->retcode  = RETCODE_SUCCESS;
     p_msg_hdr->msg_size = htons(msg_size);
 
     memcpy(p_msg_packet + sizeof(*p_msg_hdr), p_msg, msg_size);
