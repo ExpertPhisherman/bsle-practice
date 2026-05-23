@@ -114,7 +114,7 @@ typedef struct state
 /*!
  * @brief Create chat server
  *
- * @param[in] p_hints        Pointer to server hints
+ * @param[in] p_hints Pointer to server hints
  *
  * @return Pointer to chat server
  */
