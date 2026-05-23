@@ -10,11 +10,9 @@
 
 extern _Atomic bool gb_running;
 
-uint16_t const default_lport = 4444u;
-uint32_t const max_payload_size = 4096u;
-uint32_t const chunk_size = 512u;
-uint32_t const max_clients = 1000u;
-uint32_t const worker_threads = 8u;
+uint16_t const g_default_lport = 4444u;
+uint32_t const g_max_payload_size = 4096u;
+uint32_t const g_chunk_size = 512u;
 
 /*!
  * @brief Run client data recv/send loop
@@ -102,7 +100,7 @@ client_run (server_t * p_server, client_t * p_client)
 
     request.opcode = 0x00;
     request.size = 0u;
-    request.p_payload = malloc(max_payload_size);
+    request.p_payload = malloc(g_max_payload_size);
     if (NULL == request.p_payload)
     {
         fprintf(stderr, "malloc failed\n");
@@ -112,7 +110,7 @@ client_run (server_t * p_server, client_t * p_client)
 
     response.status = 0x00;
     response.size = 0u;
-    response.p_payload = malloc(max_payload_size);
+    response.p_payload = malloc(g_max_payload_size);
     if (NULL == response.p_payload)
     {
         fprintf(stderr, "malloc failed\n");
@@ -122,17 +120,19 @@ client_run (server_t * p_server, client_t * p_client)
 
     while (gb_running)
     {
-        memset(request.p_payload, 0, max_payload_size);
-        memset(response.p_payload, 0, max_payload_size);
+        memset(request.p_payload, 0, g_max_payload_size);
+        memset(response.p_payload, 0, g_max_payload_size);
 
         status = recv_request(sockfd, &request);
         if (STATUS_OVERFLOW == status)
         {
             response.status = 0x01;
             response.size = htonl((uint32_t)snprintf(
-                response.p_payload, max_payload_size,
+                response.p_payload,
+                g_max_payload_size,
                 "Request payload size %u exceeds max_payload_size %u",
-                ntohl(request.size), max_payload_size
+                ntohl(request.size),
+                g_max_payload_size
             ));
             fprintf(stderr, "%s\n", response.p_payload);
 
@@ -205,7 +205,10 @@ client_run (server_t * p_server, client_t * p_client)
                 break;
         }
 
-        uint32_t host_response_size = strnlen(p_response_payload, max_payload_size);
+        uint32_t host_response_size = strnlen(
+            p_response_payload,
+            g_max_payload_size
+        );
         response.size = htonl(host_response_size);
         memcpy(response.p_payload, p_response_payload, host_response_size);
 
@@ -340,9 +343,9 @@ recv_request (int sockfd, request_t * p_request)
     uint32_t packet_size = header_size + payload_size;
 
     // Reject oversized payloads
-    if (payload_size > max_payload_size)
+    if (payload_size > g_max_payload_size)
     {
-        sockutil_drain(sockfd, payload_size, chunk_size);
+        sockutil_drain(sockfd, payload_size, g_chunk_size);
 
         status = STATUS_OVERFLOW;
         goto cleanup;

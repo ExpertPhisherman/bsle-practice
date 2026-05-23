@@ -8,11 +8,11 @@
 
 #include "chat.h"
 
-uint16_t const default_lport   = 3333u;
-uint32_t const max_packet_size = 4096u;
-uint32_t const chunk_size      = 512u;
-size_t const   creds_capacity  = 17u;
-size_t const   rooms_capacity  = 17u;
+uint16_t const g_default_lport   = 3333u;
+uint32_t const g_max_packet_size = 4096u;
+uint32_t const g_chunk_size      = 512u;
+size_t const   g_creds_capacity  = 17u;
+size_t const   g_rooms_capacity  = 17u;
 
 /*!
  * @brief Create application data
@@ -134,12 +134,12 @@ chat_client_run (server_t * p_server, client_t * p_client)
 
     p_request->opcode = OPCODE_DEFAULT;
     p_request->size   = FIELD_SIZE_OPCODE;
-    memset(p_request->p_packet, 0, max_packet_size);
+    memset(p_request->p_packet, 0, g_max_packet_size);
 
     p_response->opcode  = OPCODE_DEFAULT;
     p_response->retcode = RETCODE_FAILURE;
     p_response->size    = FIELD_SIZE_OPCODE + FIELD_SIZE_RETCODE;
-    memset(p_response->p_packet, 0, max_packet_size);
+    memset(p_response->p_packet, 0, g_max_packet_size);
 
     sockutil_recvall(sockfd, p_request->p_packet, FIELD_SIZE_OPCODE);
     p_request->opcode = (p_request->p_packet)[FIELD_OFFSET_OPCODE];
@@ -214,7 +214,7 @@ chat_client_init (server_t * p_server, client_t * p_client)
     p_state->session.p_client = p_client;
     p_state->session.sockfd   = p_client->sockfd;
 
-    p_state->request.p_packet = calloc(1u, max_packet_size);
+    p_state->request.p_packet = calloc(1u, g_max_packet_size);
     if (NULL == p_state->request.p_packet)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
@@ -222,7 +222,7 @@ chat_client_init (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    p_state->response.p_packet = calloc(1u, max_packet_size);
+    p_state->response.p_packet = calloc(1u, g_max_packet_size);
     if (NULL == p_state->response.p_packet)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
@@ -418,7 +418,7 @@ appdata_create (void)
 
     memset(p_appdata, 0, sizeof(*p_appdata));
 
-    p_cred_store = ht_create(creds_capacity);
+    p_cred_store = ht_create(g_creds_capacity);
     if (NULL == p_cred_store)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -433,7 +433,7 @@ appdata_create (void)
         goto cleanup;
     }
 
-    p_room_store = ht_create(rooms_capacity);
+    p_room_store = ht_create(g_rooms_capacity);
     if (NULL == p_room_store)
     {
         status = STATUS_ALLOC_FAILURE;

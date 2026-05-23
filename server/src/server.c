@@ -8,11 +8,11 @@
 
 #include "server.h"
 
-static uint32_t const max_clients      = 128u;
-static uint32_t const worker_threads   = 8u;
-static uint32_t const epoll_max_events = 64u;
+static uint32_t const g_max_clients      = 128u;
+static uint32_t const g_worker_threads   = 8u;
+static uint32_t const g_epoll_max_events = 64u;
 
-uint16_t const max_port = 65535u;
+uint16_t const g_max_port = 65535u;
 
 _Atomic bool gb_running = true;
 
@@ -188,7 +188,7 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    p_server->p_tm = tpool_create(worker_threads);
+    p_server->p_tm = tpool_create(g_worker_threads);
     if (NULL == p_server->p_tm)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -308,7 +308,7 @@ server_run (server_t * p_server)
         goto cleanup;
     }
 
-    p_events = calloc(epoll_max_events, sizeof(*p_events));
+    p_events = calloc(g_epoll_max_events, sizeof(*p_events));
     if (NULL == p_events)
     {
         fprintf(stderr, "calloc failed in server_run\n");
@@ -321,7 +321,7 @@ server_run (server_t * p_server)
         int nfds = epoll_wait(
             p_server->epollfd,
             p_events,
-            epoll_max_events,
+            g_epoll_max_events,
             -1
         );
 
@@ -766,7 +766,7 @@ registry_create (void)
     }
 
     p_registry->pp_clients = calloc(
-        max_clients,
+        g_max_clients,
         sizeof(*(p_registry->pp_clients))
     );
     if (NULL == p_registry->pp_clients)
@@ -810,7 +810,7 @@ registry_add (registry_t * p_registry, client_t * p_client)
     }
 
     pthread_mutex_lock(&(p_registry->lock));
-    for (size_t idx = 0u; idx < max_clients; idx++)
+    for (size_t idx = 0u; idx < g_max_clients; idx++)
     {
         if (NULL == (p_registry->pp_clients)[idx])
         {
@@ -891,7 +891,7 @@ registry_shutdown (registry_t * p_registry)
 
     // Unblock all workers blocked in recv()
     pthread_mutex_lock(&(p_registry->lock));
-    for (size_t idx = 0u; idx < max_clients; idx++)
+    for (size_t idx = 0u; idx < g_max_clients; idx++)
     {
         client_t * p_client = (p_registry->pp_clients)[idx];
         if (NULL == p_client)
@@ -950,7 +950,7 @@ destroy_all_clients (server_t * p_server)
 
     registry_t * p_registry = p_server->p_registry;
 
-    for (size_t idx = 0u; idx < max_clients; idx++)
+    for (size_t idx = 0u; idx < g_max_clients; idx++)
     {
         client_t * p_client = (p_registry->pp_clients)[idx];
         if (NULL == p_client)

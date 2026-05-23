@@ -8,8 +8,8 @@
 
 #include "main.h"
 
-extern uint16_t const max_port;
-extern uint16_t const default_lport;
+extern uint16_t const g_max_port;
+extern uint16_t const g_default_lport;
 
 int
 main (int argc, char * argv[])
@@ -17,7 +17,7 @@ main (int argc, char * argv[])
     status_t status = STATUS_SUCCESS;
 
     int        opt;
-    uint16_t   lport     = default_lport;
+    uint16_t   lport     = g_default_lport;
     bool       b_verbose = false;
     server_t * p_server  = NULL;
 
@@ -48,9 +48,9 @@ main (int argc, char * argv[])
 
             case 'p':
                 u64 = strtoul(optarg, NULL, 10);
-                if (u64 > max_port)
+                if (u64 > g_max_port)
                 {
-                    fprintf(stderr, "Port must be [0-%hu]\n", max_port);
+                    fprintf(stderr, "Port must be [0-%hu]\n", g_max_port);
                     status = STATUS_FAILURE;
                     goto cleanup;
                 }
