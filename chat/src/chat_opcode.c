@@ -924,7 +924,6 @@ opcode_msg_send (
         // Send msg to single session
         session_t * p_target = *(session_t **)(p_curr->p_data);
         if (
-            (p_target == p_session) ||
             (0u == p_target->session_id) ||
             (0u == p_target->username_size) ||
             (NULL == p_target->p_username) ||

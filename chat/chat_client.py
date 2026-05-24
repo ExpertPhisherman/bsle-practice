@@ -337,7 +337,8 @@ class ChatClient(Client):
         retcode = response[0]
 
         if retcode == RETCODE_SUCCESS:
-            print("Message sent")
+            # NOTE: Sender also receives message
+            pass
         elif retcode == RETCODE_SESSION_ERROR:
             print("Invalid session")
         elif retcode == RETCODE_OVERFLOW:
