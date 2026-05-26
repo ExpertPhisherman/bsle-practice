@@ -307,7 +307,7 @@ chat_client_free (server_t * p_server, client_t * p_client)
     );
     if (NULL != p_item)
     {
-        p_room = p_item->p_value;
+        p_room = *(room_t **)(p_item->p_value);
         sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
     }
 
@@ -367,7 +367,7 @@ room_create (uint8_t * p_name, uint16_t name_size)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        room_destroy(p_room);
+        room_destroy(&p_room);
         p_room = NULL;
     }
 
@@ -382,7 +382,9 @@ room_destroy (void * p_data)
         goto cleanup;
     }
 
-    room_t * p_room = p_data;
+    room_t * p_room = *(room_t **)p_data;
+
+    free(p_data);
     p_data = NULL;
 
     free(p_room->p_name);
@@ -459,21 +461,17 @@ appdata_create (void)
         p_room_store,
         p_room->p_name,
         p_room->name_size,
-        p_room,
-        sizeof(*p_room)
+        &p_room,
+        sizeof(p_room)
     );
     if (STATUS_SUCCESS != status)
     {
         fprintf(stderr, "ht_set failed\n");
 
-        room_destroy(p_room);
+        room_destroy(&p_room);
         p_room = NULL;
         goto cleanup;
     }
-
-    // Free room after hash table makes its own copy
-    free(p_room);
-    p_room = NULL;
 
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)

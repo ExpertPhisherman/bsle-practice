@@ -824,7 +824,7 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    p_room = p_item->p_value;
+    p_room = *(room_t **)(p_item->p_value);
 
     p_node = sll_get(p_room->p_sessions, &p_session, sizeof(p_session));
     if (NULL == p_node)
@@ -1011,22 +1011,18 @@ opcode_join (
             p_room_store,
             p_room->p_name,
             p_room->name_size,
-            p_room,
-            sizeof(*p_room)
+            &p_room,
+            sizeof(p_room)
         );
         if (STATUS_SUCCESS != status)
         {
             fprintf(stderr, "ht_set failed in opcode_join\n");
             p_response->retcode = RETCODE_FAILURE;
 
-            room_destroy(p_room);
+            room_destroy(&p_room);
             p_room = NULL;
             goto cleanup;
         }
-
-        // Free room after hash table makes its own copy
-        free(p_room);
-        p_room = NULL;
 
         if (p_server->b_verbose)
         {
@@ -1048,7 +1044,7 @@ opcode_join (
         }
     }
 
-    p_room = p_item->p_value;
+    p_room = *(room_t **)(p_item->p_value);
 
     // Join room
     status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
@@ -1170,7 +1166,7 @@ opcode_list (
                 while (NULL != p_curr)
                 {
                     p_item = p_curr->p_data;
-                    p_room = p_item->p_value;
+                    p_room = *(room_t **)(p_item->p_value);
                     msg_send(p_session, p_room->p_name, p_room->name_size);
                     p_curr = p_curr->p_next;
                 }
@@ -1185,7 +1181,7 @@ opcode_list (
             );
             if (NULL != p_item)
             {
-                p_room = p_item->p_value;
+                p_room = *(room_t **)(p_item->p_value);
                 p_curr = p_room->p_sessions->p_head;
                 while (NULL != p_curr)
                 {
@@ -1304,7 +1300,7 @@ user_leave (session_t * p_session, ht_t * p_room_store)
     );
     if (NULL != p_item)
     {
-        p_room = p_item->p_value;
+        p_room = *(room_t **)(p_item->p_value);
         sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
     }
 
