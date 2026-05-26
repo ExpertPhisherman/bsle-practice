@@ -487,6 +487,7 @@ appdata_create (void)
     pp_opcode_funcs[OPCODE_MSG_SEND] = opcode_msg_send;
     pp_opcode_funcs[OPCODE_MSG_RECV] = NULL;
     pp_opcode_funcs[OPCODE_JOIN]     = opcode_join;
+    pp_opcode_funcs[OPCODE_LIST]     = opcode_list;
 
     p_appdata->next_session_id = 1u;
 

@@ -826,14 +826,13 @@ opcode_msg_send (
     {
         // NOTE: Room doesn't exist
 
-        p_response->retcode = RETCODE_FAILURE;
-
         printf(
             "Room %.*s doesn't exist\n",
             p_session->room_name_size,
             p_session->p_room_name
         );
 
+        p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
 
@@ -844,8 +843,6 @@ opcode_msg_send (
     {
         // NOTE: Session is not member of room
 
-        p_response->retcode = RETCODE_FAILURE;
-
         printf(
             "Session of user %.*s is not member of room %.*s\n",
             p_session->username_size,
@@ -854,6 +851,7 @@ opcode_msg_send (
             p_session->p_room_name
         );
 
+        p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
 
@@ -1017,18 +1015,6 @@ opcode_join (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    // Remove p_session from room's sessions SLL
-    p_item = ht_get(
-        p_room_store,
-        p_session->p_room_name,
-        p_session->room_name_size
-    );
-    if (NULL != p_item)
-    {
-        p_room = p_item->p_value;
-        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
-    }
-
     user_leave(p_session, p_room_store);
 
     p_item = ht_get(p_room_store, p_room_name, room_name_size);
@@ -1122,6 +1108,54 @@ cleanup:
         pthread_mutex_unlock(&(p_appdata->lock));
         b_locked = false;
     }
+    return status;
+}
+
+status_t
+opcode_list (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    int       sockfd           = -1;
+    uint8_t * p_request_packet = NULL;
+
+    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    sockfd           = p_session->sockfd;
+    p_request_packet = p_request->p_packet;
+
+    if (NULL == p_request_packet)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode  = OPCODE_LIST;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    list_hdr_t * p_hdr = (list_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    p_request->session_id  = ntohl(p_hdr->session_id);
+    p_request->size       += sizeof(*p_hdr);
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+cleanup:
     return status;
 }
 

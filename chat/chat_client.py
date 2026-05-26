@@ -23,6 +23,7 @@ OPCODE_LOGOUT   = 0x05
 OPCODE_MSG_SEND = 0x06
 OPCODE_MSG_RECV = 0x07
 OPCODE_JOIN     = 0x08
+OPCODE_LIST     = 0x09
 
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
@@ -33,6 +34,9 @@ FIELD_SIZE_OPCODE     = 1
 FIELD_SIZE_RETCODE    = 1
 FIELD_SIZE_SIZE       = 2
 FIELD_SIZE_SESSION_ID = 4
+
+FLAG_ROOM = 0
+FLAG_USER = 1
 
 def with_parser(
     description: str,
@@ -114,6 +118,7 @@ class ChatClient(Client):
         self.opcode_funcs[OPCODE_MSG_SEND] = self.opcode_msg_send
         self.opcode_funcs[OPCODE_MSG_RECV] = self.opcode_msg_recv
         self.opcode_funcs[OPCODE_JOIN]     = self.opcode_join
+        self.opcode_funcs[OPCODE_LIST]     = self.opcode_list
 
     def _get_prompt(self) -> str:
         return f"{self.username}> " if self.username else "chat> "
@@ -368,6 +373,24 @@ class ChatClient(Client):
 
         return False
 
+    def opcode_list(self) -> bool:
+        response = self.recv_response(FIELD_SIZE_RETCODE)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("List success")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed list")
+        else:
+            print(f"Unknown return code: {retcode}")
+
+        return False
+
     def send_request(self) -> bool:
         """Send request to server"""
         if self.sock is None:
@@ -500,6 +523,26 @@ class ChatClient(Client):
         self.request += line_enc
 
         self.room_name = line
+
+        return self.send_request()
+
+    @with_parser(
+        description="List all available rooms or users in current room",
+        args={"flag": {"help": "rooms or users"}}
+    )
+    def do_list(self, line: str) -> bool:
+        flags = {"rooms": FLAG_ROOM, "users": FLAG_USER}
+
+        if line not in flags:
+            print(f"Invalid flag: {line}")
+            return False
+
+        self.request = struct.pack(
+            "!BBI",
+            OPCODE_LIST,
+            flags[line],
+            self.session_id
+        )
 
         return self.send_request()
 

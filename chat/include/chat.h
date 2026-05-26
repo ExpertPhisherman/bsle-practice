@@ -47,6 +47,7 @@ typedef enum opcode
     OPCODE_MSG_SEND = 0x06, // Send message to all users in room
     OPCODE_MSG_RECV = 0x07, // Receive single message
     OPCODE_JOIN     = 0x08, // Join or create room
+    OPCODE_LIST     = 0x09, // List all available rooms or users in current room
 } opcode_t;
 
 typedef enum retcode

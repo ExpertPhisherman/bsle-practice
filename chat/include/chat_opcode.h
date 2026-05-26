@@ -32,6 +32,7 @@ typedef struct response response_t;
 typedef enum field_size
 {
     FIELD_SIZE_OPCODE     = 1,
+    FIELD_SIZE_FLAG       = 1,
     FIELD_SIZE_PADDING    = 1,
     FIELD_SIZE_RETCODE    = 1,
     FIELD_SIZE_SIZE       = 2,
@@ -89,6 +90,12 @@ typedef struct __attribute__((packed)) join_hdr
     uint16_t room_name_size;
     uint32_t session_id;
 } join_hdr_t;
+
+typedef struct __attribute__((packed)) list_hdr
+{
+    uint8_t  flag[FIELD_SIZE_FLAG];
+    uint32_t session_id;
+} list_hdr_t;
 
 typedef struct __attribute__((packed)) msg_recv_hdr_out
 {
@@ -212,6 +219,21 @@ status_t opcode_msg_send(
  * @return Status of operation
  */
 status_t opcode_join(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief List all available rooms or users in current room
+ *
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_list(
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response
