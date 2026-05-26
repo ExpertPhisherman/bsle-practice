@@ -158,7 +158,7 @@ class ChatClient(Client):
 
     def listener(self) -> None:
         while True:
-            response = self.recv_response(1)
+            response = self.recv_response(FIELD_SIZE_RETCODE)
             if response is None:
                 self._quit_event.set()
                 loop = self._session.app.loop
@@ -182,7 +182,7 @@ class ChatClient(Client):
                     break
 
     def opcode_default(self) -> bool:
-        response = self.recv_response(1)
+        response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
 
@@ -196,7 +196,7 @@ class ChatClient(Client):
         return False
 
     def opcode_ping(self) -> bool:
-        response = self.recv_response(1)
+        response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
 
@@ -214,7 +214,7 @@ class ChatClient(Client):
         return False
 
     def opcode_echo(self) -> bool:
-        response = self.recv_response(3)
+        response = self.recv_response(FIELD_SIZE_RETCODE + FIELD_SIZE_SIZE)
         if response is None:
             return False
 
@@ -238,7 +238,7 @@ class ChatClient(Client):
         return False
 
     def opcode_join(self) -> bool:
-        response = self.recv_response(1)
+        response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
 
@@ -262,7 +262,7 @@ class ChatClient(Client):
         return False
 
     def opcode_quit(self) -> bool:
-        response = self.recv_response(1)
+        response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
 
@@ -277,7 +277,7 @@ class ChatClient(Client):
         return True
 
     def opcode_login(self) -> bool:
-        response = self.recv_response(5)
+        response = self.recv_response(FIELD_SIZE_RETCODE + FIELD_SIZE_SESSION_ID)
         if response is None:
             return False
 
@@ -308,7 +308,7 @@ class ChatClient(Client):
         return False
 
     def opcode_logout(self) -> bool:
-        response = self.recv_response(1)
+        response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
 
@@ -330,7 +330,7 @@ class ChatClient(Client):
         return False
 
     def opcode_msg_send(self) -> bool:
-        response = self.recv_response(1)
+        response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
 
@@ -351,7 +351,7 @@ class ChatClient(Client):
         return False
 
     def opcode_msg_recv(self) -> bool:
-        response = self.recv_response(3)
+        response = self.recv_response(FIELD_SIZE_RETCODE + FIELD_SIZE_SIZE)
         if response is None:
             return False
 
