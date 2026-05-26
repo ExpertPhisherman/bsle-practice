@@ -26,6 +26,55 @@ static status_t validate_session(
     response_t * p_response
 );
 
+/*!
+ * @brief Affect session with logout
+ *
+ * @param[in] p_session Pointer to session
+ *
+ * @return Status of operation
+ */
+static status_t user_logout(session_t * p_session);
+
+/*!
+ * @brief Affect session with leave room
+ *
+ * @param[in] p_session    Pointer to session
+ * @param[in] p_room_store Pointer to room storage
+ *
+ * @return Status of operation
+ */
+static status_t user_leave(session_t * p_session, ht_t * p_room_store);
+
+/*!
+ * @brief Check if credentials length is valid
+ *
+ * @param[in] username_size Size of username in bytes
+ * @param[in] password_size Size of password in bytes
+ *
+ * @return Boolean if credentials length is valid
+ */
+static bool user_creds_len_valid(
+    uint16_t username_size,
+    uint16_t password_size
+);
+
+/*!
+ * @brief Check if credentials content is valid
+ *
+ * @param[in] p_username    Pointer to username
+ * @param[in] username_size Size of username in bytes
+ * @param[in] p_password    Pointer to password
+ * @param[in] password_size Size of password in bytes
+ *
+ * @return Boolean if credentials content is valid
+ */
+static bool user_creds_content_valid(
+    char     * p_username,
+    uint16_t   username_size,
+    char     * p_password,
+    uint16_t   password_size
+);
+
 status_t
 opcode_default (
     session_t  * p_session,
@@ -266,7 +315,6 @@ opcode_login (
     ht_t      * p_cred_store      = NULL;
     ht_t      * p_room_store      = NULL;
     item_t    * p_item            = NULL;
-    room_t    * p_room            = NULL;
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
@@ -326,33 +374,8 @@ opcode_login (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    free(p_session->p_username);
-    p_session->p_username = NULL;
-
-    free(p_session->p_password);
-    p_session->p_password = NULL;
-
-    p_session->username_size = 0u;
-    p_session->password_size = 0u;
-
-    p_session->session_id = 0u;
-
-    // Remove p_session from room's sessions SLL
-    p_item = ht_get(
-        p_room_store,
-        p_session->p_room_name,
-        p_session->room_name_size
-    );
-    if (NULL != p_item)
-    {
-        p_room = p_item->p_value;
-        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
-    }
-
-    free(p_session->p_room_name);
-    p_session->p_room_name = NULL;
-
-    p_session->room_name_size = 0u;
+    user_logout(p_session);
+    user_leave(p_session, p_room_store);
 
     pthread_mutex_unlock(&(p_appdata->lock));
     b_locked = false;
@@ -367,35 +390,18 @@ opcode_login (
 
     p_request->size += sizeof(*p_hdr);
 
-    char const * p_username_msg = "Username: 3-16 alphanumeric or underscore";
-    char const * p_password_msg = "Password: 8-128 printable characters excluding space";
-
     if ((p_request->size + username_size + password_size) > g_max_packet_size)
     {
         fprintf(stderr, "Login request size exceeds g_max_packet_size\n");
         sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
-
         p_response->retcode = RETCODE_OVERFLOW;
         session_id = 0u;
         goto cpy_session_id;
     }
 
-    // Validate username and password length
-    if (!((3u <= username_size) && (16u >= username_size)))
+    if (!user_creds_len_valid(username_size, password_size))
     {
-        fprintf(stderr, "%s\n", p_username_msg);
         sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
-
-        p_response->retcode = RETCODE_FAILURE;
-        session_id = 0u;
-        goto cpy_session_id;
-    }
-
-    if (!((8u <= password_size) && (128u >= password_size)))
-    {
-        fprintf(stderr, "%s\n", p_password_msg);
-        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
-
         p_response->retcode = RETCODE_FAILURE;
         session_id = 0u;
         goto cpy_session_id;
@@ -406,7 +412,6 @@ opcode_login (
     {
         fprintf(stderr, "calloc failed in opcode_login\n");
         sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
-
         p_response->retcode = RETCODE_FAILURE;
         session_id = 0u;
         goto cpy_session_id;
@@ -417,7 +422,6 @@ opcode_login (
     {
         fprintf(stderr, "calloc failed in opcode_login\n");
         sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
-
         p_response->retcode = RETCODE_FAILURE;
         session_id = 0u;
         goto cpy_session_id;
@@ -452,31 +456,16 @@ opcode_login (
         );
     }
 
-    // Validate username and password content
-    for (size_t idx = 0u; idx < username_size; idx++)
+    if (!user_creds_content_valid(
+        p_username,
+        username_size,
+        p_password,
+        password_size
+    ))
     {
-        char chr = p_username[idx];
-        if (!(isalnum((unsigned char)chr) || ('_' == chr)))
-        {
-            fprintf(stderr, "%s\n", p_username_msg);
-
-            p_response->retcode = RETCODE_FAILURE;
-            session_id = 0u;
-            goto cpy_session_id;
-        }
-    }
-
-    for (size_t idx = 0u; idx < password_size; idx++)
-    {
-        char chr = p_password[idx];
-        if (!(isprint((unsigned char)chr) && (' ' != chr)))
-        {
-            fprintf(stderr, "%s\n", p_password_msg);
-
-            p_response->retcode = RETCODE_FAILURE;
-            session_id = 0u;
-            goto cpy_session_id;
-        }
+        p_response->retcode = RETCODE_FAILURE;
+        session_id = 0u;
+        goto cpy_session_id;
     }
 
     pthread_mutex_lock(&(p_appdata->lock));
@@ -492,7 +481,44 @@ opcode_login (
     // Authenticate login against hash table
     p_item = ht_get(p_cred_store, p_username, username_size);
 
-    if (NULL == p_item)
+    if (NULL != p_item)
+    {
+        // NOTE: User already exists
+
+        // Check if password doesn't match
+        if (!(
+            (p_item->value_size == password_size) &&
+            (0 == memcmp(p_item->p_value, p_password, password_size))
+        ))
+        {
+            // NOTE: Incorrect password
+
+            p_response->retcode = RETCODE_FAILURE;
+
+            session_id = 0u;
+
+            if (p_server->b_verbose)
+            {
+                printf(
+                    "Incorrect password for user: %.*s\n",
+                    username_size,
+                    p_username
+                );
+            }
+
+            goto cpy_session_id;
+        }
+
+        if (p_server->b_verbose)
+        {
+            printf(
+                "Successful login to user: %.*s\n",
+                p_session->username_size,
+                p_session->p_username
+            );
+        }
+    }
+    else
     {
         // NOTE: User doesn't exist
 
@@ -515,24 +541,6 @@ opcode_login (
             goto cpy_session_id;
         }
 
-        // NOTE: Successful user creation
-
-        p_response->retcode = RETCODE_SUCCESS;
-
-        session_id = (p_appdata->next_session_id)++;
-
-        p_session->session_id = session_id;
-
-        free(p_session->p_username);
-        p_session->p_username    = p_username;
-        p_session->username_size = username_size;
-        p_username               = NULL;
-
-        free(p_session->p_password);
-        p_session->p_password    = p_password;
-        p_session->password_size = password_size;
-        p_password               = NULL;
-
         if (p_server->b_verbose)
         {
             printf(
@@ -541,42 +549,10 @@ opcode_login (
                 p_session->p_username
             );
         }
-
-        goto cpy_session_id;
     }
 
-    // NOTE: User already exists
-
-    // Check if password doesn't match
-    if (!(
-        (p_item->value_size == password_size) &&
-        (0 == memcmp(p_item->p_value, p_password, password_size))
-    ))
-    {
-        // NOTE: Incorrect password
-
-        p_response->retcode = RETCODE_FAILURE;
-
-        session_id = 0u;
-
-        if (p_server->b_verbose)
-        {
-            printf(
-                "Incorrect password for user: %.*s\n",
-                username_size,
-                p_username
-            );
-        }
-
-        goto cpy_session_id;
-    }
-
-    // NOTE: Successful login
-
-    p_response->retcode = RETCODE_SUCCESS;
-
-    session_id = (p_appdata->next_session_id)++;
-
+    p_response->retcode   = RETCODE_SUCCESS;
+    session_id            = (p_appdata->next_session_id)++;
     p_session->session_id = session_id;
 
     free(p_session->p_username);
@@ -588,15 +564,6 @@ opcode_login (
     p_session->p_password    = p_password;
     p_session->password_size = password_size;
     p_password               = NULL;
-
-    if (p_server->b_verbose)
-    {
-        printf(
-            "Successful login to user: %.*s\n",
-            p_session->username_size,
-            p_session->p_username
-        );
-    }
 
 cpy_session_id:
     // Copy session ID into response
@@ -637,14 +604,12 @@ opcode_logout (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t * p_appdata         = NULL;
-    ht_t      * p_room_store      = NULL;
-    item_t    * p_item            = NULL;
-    room_t    * p_room            = NULL;
-    int         sockfd            = -1;
-    server_t  * p_server          = NULL;
-    uint8_t   * p_request_packet  = NULL;
-    bool        b_locked          = false;
+    appdata_t * p_appdata        = NULL;
+    ht_t      * p_room_store     = NULL;
+    int         sockfd           = -1;
+    server_t  * p_server         = NULL;
+    uint8_t   * p_request_packet = NULL;
+    bool        b_locked         = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -707,33 +672,8 @@ opcode_logout (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    free(p_session->p_username);
-    p_session->p_username = NULL;
-
-    free(p_session->p_password);
-    p_session->p_password = NULL;
-
-    p_session->username_size = 0u;
-    p_session->password_size = 0u;
-
-    p_session->session_id = 0u;
-
-    // Remove p_session from room's sessions SLL
-    p_item = ht_get(
-        p_room_store,
-        p_session->p_room_name,
-        p_session->room_name_size
-    );
-    if (NULL != p_item)
-    {
-        p_room = p_item->p_value;
-        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
-    }
-
-    free(p_session->p_room_name);
-    p_session->p_room_name = NULL;
-
-    p_session->room_name_size = 0u;
+    user_logout(p_session);
+    user_leave(p_session, p_room_store);
 
 cleanup:
     if (b_locked)
@@ -1070,11 +1010,7 @@ opcode_join (
         goto cleanup;
     }
 
-    memcpy(
-        p_room_name,
-        p_request_packet + p_request->size,
-        room_name_size
-    );
+    memcpy(p_room_name, p_request_packet + p_request->size, room_name_size);
 
     p_request->size += room_name_size;
 
@@ -1093,10 +1029,7 @@ opcode_join (
         sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
     }
 
-    free(p_session->p_room_name);
-    p_session->p_room_name = NULL;
-
-    p_session->room_name_size = 0u;
+    user_leave(p_session, p_room_store);
 
     p_item = ht_get(p_room_store, p_room_name, room_name_size);
     if (NULL == p_item)
@@ -1233,6 +1166,151 @@ validate_session (
 
 cleanup:
     return status;
+}
+
+static status_t
+user_logout (session_t * p_session)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_session)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    free(p_session->p_username);
+    p_session->p_username = NULL;
+
+    free(p_session->p_password);
+    p_session->p_password = NULL;
+
+    p_session->username_size = 0u;
+    p_session->password_size = 0u;
+    p_session->session_id    = 0u;
+
+cleanup:
+    return status;
+}
+
+static status_t
+user_leave (session_t * p_session, ht_t * p_room_store)
+{
+    status_t status = STATUS_SUCCESS;
+
+    item_t * p_item = NULL;
+    room_t * p_room = NULL;
+
+    if ((NULL == p_session) || (NULL == p_room_store))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    // Remove p_session from room's sessions SLL
+    p_item = ht_get(
+        p_room_store,
+        p_session->p_room_name,
+        p_session->room_name_size
+    );
+    if (NULL != p_item)
+    {
+        p_room = p_item->p_value;
+        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
+    }
+
+    free(p_session->p_room_name);
+    p_session->p_room_name = NULL;
+
+    p_session->room_name_size = 0u;
+
+cleanup:
+    return status;
+}
+
+static bool
+user_creds_len_valid (
+    uint16_t username_size,
+    uint16_t password_size
+)
+{
+    bool b_valid = true;
+
+    // Validate username and password length
+    if (!((3u <= username_size) && (16u >= username_size)))
+    {
+        fprintf(
+            stderr,
+            "Username: 3-16 alphanumeric or underscore\n"
+        );
+
+        b_valid = false;
+        goto cleanup;
+    }
+
+    if (!((8u <= password_size) && (128u >= password_size)))
+    {
+        fprintf(
+            stderr,
+            "Password: 8-128 printable characters excluding space\n"
+        );
+
+        b_valid = false;
+        goto cleanup;
+    }
+
+cleanup:
+    return b_valid;
+}
+
+static bool
+user_creds_content_valid (
+    char     * p_username,
+    uint16_t   username_size,
+    char     * p_password,
+    uint16_t   password_size
+)
+{
+    bool b_valid = true;
+
+    if ((NULL == p_username) || (NULL == p_password))
+    {
+        goto cleanup;
+    }
+
+    // Validate username and password content
+    for (size_t idx = 0u; idx < username_size; idx++)
+    {
+        char chr = p_username[idx];
+        if (!(isalnum((unsigned char)chr) || ('_' == chr)))
+        {
+            fprintf(
+                stderr,
+                "Username: 3-16 alphanumeric or underscore\n"
+            );
+
+            b_valid = false;
+            goto cleanup;
+        }
+    }
+
+    for (size_t idx = 0u; idx < password_size; idx++)
+    {
+        char chr = p_password[idx];
+        if (!(isprint((unsigned char)chr) && (' ' != chr)))
+        {
+            fprintf(
+                stderr,
+                "Password: 8-128 printable characters excluding space\n"
+            );
+
+            b_valid = false;
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    return b_valid;
 }
 
 /*** end of file ***/
