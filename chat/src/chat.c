@@ -335,20 +335,20 @@ room_create (uint8_t * p_name, uint16_t name_size)
     room_t * p_room     = NULL;
     sll_t  * p_sessions = NULL;
 
-    p_room = malloc(sizeof(*p_room));
+    p_room = calloc(1u, sizeof(*p_room));
     if (NULL == p_room)
     {
+        fprintf(stderr, "calloc failed in room_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    memset(p_room, 0, sizeof(*p_room));
-
     p_room->name_size = name_size;
 
-    p_room->p_name = malloc(name_size);
+    p_room->p_name = calloc(1u, name_size);
     if (NULL == p_room->p_name)
     {
+        fprintf(stderr, "calloc failed in room_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -403,20 +403,19 @@ appdata_create (void)
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t     * p_appdata         = NULL;
-    ht_t          * p_cred_store      = NULL;
-    ht_t          * p_room_store      = NULL;
-    room_t        * p_room            = NULL;
-    opcode_func_t * pp_opcode_funcs   = NULL;
+    appdata_t     * p_appdata       = NULL;
+    ht_t          * p_cred_store    = NULL;
+    ht_t          * p_room_store    = NULL;
+    room_t        * p_room          = NULL;
+    opcode_func_t * pp_opcode_funcs = NULL;
 
-    p_appdata = malloc(sizeof(*p_appdata));
+    p_appdata = calloc(1u, sizeof(*p_appdata));
     if (NULL == p_appdata)
     {
+        fprintf(stderr, "calloc failed in appdata_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-
-    memset(p_appdata, 0, sizeof(*p_appdata));
 
     p_cred_store = ht_create(g_creds_capacity);
     if (NULL == p_cred_store)
@@ -479,6 +478,7 @@ appdata_create (void)
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
     {
+        fprintf(stderr, "calloc failed in appdata_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }

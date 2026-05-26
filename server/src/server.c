@@ -135,10 +135,10 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    p_server = malloc(sizeof(*p_server));
+    p_server = calloc(1u, sizeof(*p_server));
     if (NULL == p_server)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in server_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -260,10 +260,10 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    char * p_lhost = malloc(INET_ADDRSTRLEN);
+    char * p_lhost = calloc(1u, INET_ADDRSTRLEN);
     if (NULL == p_lhost)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in server_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -392,10 +392,10 @@ server_run (server_t * p_server)
                 continue;
             }
 
-            server_client_pair_t * p_pair = malloc(sizeof(*p_pair));
+            server_client_pair_t * p_pair = calloc(1u, sizeof(*p_pair));
             if (NULL == p_pair)
             {
-                fprintf(stderr, "malloc failed\n");
+                fprintf(stderr, "calloc failed in server_run\n");
                 client_destroy(p_server, p_client);
                 p_client = NULL;
                 continue;
@@ -588,10 +588,10 @@ client_create (server_t * p_server)
         goto cleanup;
     }
 
-    p_client = malloc(sizeof(*p_client));
+    p_client = calloc(1u, sizeof(*p_client));
     if (NULL == p_client)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in client_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -639,10 +639,10 @@ client_create (server_t * p_server)
     uint16_t rport = ntohs(client_addr.sin_port);
     p_client->rport = rport;
 
-    p_rhost = malloc(INET_ADDRSTRLEN);
+    p_rhost = calloc(1u, INET_ADDRSTRLEN);
     if (NULL == p_rhost)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in client_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -759,10 +759,10 @@ registry_create (void)
 {
     status_t status = STATUS_SUCCESS;
 
-    registry_t * p_registry = malloc(sizeof(*p_registry));
+    registry_t * p_registry = calloc(1u, sizeof(*p_registry));
     if (NULL == p_registry)
     {
-        fprintf(stderr, "malloc failed\n");
+        fprintf(stderr, "calloc failed in registry_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -773,7 +773,7 @@ registry_create (void)
     );
     if (NULL == p_registry->pp_clients)
     {
-        fprintf(stderr, "calloc failed\n");
+        fprintf(stderr, "calloc failed in registry_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }

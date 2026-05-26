@@ -548,7 +548,7 @@ opcode_login (
 
         if (STATUS_SUCCESS != status)
         {
-            fprintf(stderr, "ht_set failed\n");
+            fprintf(stderr, "ht_set failed in opcode_login\n");
             status = STATUS_SUCCESS;
 
             p_response->retcode = RETCODE_FAILURE;
@@ -1002,7 +1002,7 @@ opcode_join (
         if (NULL == p_room)
         {
             status = STATUS_ALLOC_FAILURE;
-            fprintf(stderr, "room_create failed\n");
+            fprintf(stderr, "room_create failed in opcode_join\n");
             p_response->retcode = RETCODE_FAILURE;
             goto cleanup;
         }
@@ -1016,7 +1016,7 @@ opcode_join (
         );
         if (STATUS_SUCCESS != status)
         {
-            fprintf(stderr, "ht_set failed\n");
+            fprintf(stderr, "ht_set failed in opcode_join\n");
             p_response->retcode = RETCODE_FAILURE;
 
             room_destroy(p_room);
@@ -1042,7 +1042,7 @@ opcode_join (
         p_item = ht_get(p_room_store, p_room_name, room_name_size);
         if (NULL == p_item)
         {
-            fprintf(stderr, "ht_get failed\n");
+            fprintf(stderr, "ht_get failed in opcode_join\n");
             p_response->retcode = RETCODE_FAILURE;
             goto cleanup;
         }
@@ -1054,7 +1054,7 @@ opcode_join (
     status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
     if (STATUS_SUCCESS != status)
     {
-        fprintf(stderr, "sll_append failed\n");
+        fprintf(stderr, "sll_append failed in opcode_join\n");
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
