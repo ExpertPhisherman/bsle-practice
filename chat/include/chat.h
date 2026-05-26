@@ -63,12 +63,12 @@ typedef struct session
     server_t * p_server;       // Pointer to server
     client_t * p_client;       // Pointer to client
     int        sockfd;         // Client socket file descriptor
-    char     * p_username;     // Pointer to username
-    char     * p_password;     // Pointer to password
+    uint8_t  * p_username;     // Pointer to username
+    uint8_t  * p_password;     // Pointer to password
     uint16_t   username_size;  // Size of username in bytes
     uint16_t   password_size;  // Size of password in bytes
     uint32_t   session_id;     // Unique session ID assigned after login
-    char     * p_room_name;    // Pointer to current room name
+    uint8_t  * p_room_name;    // Pointer to current room name
     uint16_t   room_name_size; // Size of room name in bytes
 } session_t;
 
@@ -90,7 +90,7 @@ typedef struct response
 
 typedef struct room
 {
-    char     * p_name;     // Pointer to name
+    uint8_t  * p_name;     // Pointer to name
     uint16_t   name_size;  // Size of name in bytes
     sll_t    * p_sessions; // Pointer to list of members' sessions
     bool       b_private;  // Boolean if room is private (direct message)
@@ -168,7 +168,7 @@ status_t chat_client_free(server_t * p_server, client_t * p_client);
  *
  * @return Pointer to room
  */
-room_t * room_create(char * p_name, uint16_t name_size);
+room_t * room_create(uint8_t * p_name, uint16_t name_size);
 
 /*!
  * @brief Destroy room

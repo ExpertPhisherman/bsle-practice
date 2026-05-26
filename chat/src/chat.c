@@ -328,7 +328,7 @@ cleanup:
 }
 
 room_t *
-room_create (char * p_name, uint16_t name_size)
+room_create (uint8_t * p_name, uint16_t name_size)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -426,7 +426,13 @@ appdata_create (void)
     }
     p_appdata->p_cred_store = p_cred_store;
 
-    status = ht_set(p_cred_store, (char *)"admin", 5u, (char *)"password", 8u);
+    status = ht_set(
+        p_cred_store,
+        (uint8_t *)"admin",
+        5u,
+        (uint8_t *)"password",
+        8u
+    );
     if (STATUS_SUCCESS != status)
     {
         fprintf(stderr, "ht_set failed\n");
@@ -443,7 +449,7 @@ appdata_create (void)
 
     p_room_store->p_destroy_value = room_destroy;
 
-    p_room = room_create((char *)"general", 7u);
+    p_room = room_create((uint8_t *)"general", 7u);
     if (NULL == p_room)
     {
         status = STATUS_ALLOC_FAILURE;

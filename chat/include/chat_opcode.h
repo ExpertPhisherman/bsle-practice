@@ -45,27 +45,33 @@ typedef enum field_offset
     FIELD_OFFSET_RETCODE = 1,
 } field_offset_t;
 
+typedef enum list_flag
+{
+    LIST_FLAG_ROOM = 0x00,
+    LIST_FLAG_USER = 0x01,
+} list_flag_t;
+
 typedef struct __attribute__((packed)) ping_hdr
 {
-    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint8_t  padding;
     uint32_t session_id;
 } ping_hdr_t;
 
 typedef struct __attribute__((packed)) echo_hdr
 {
-    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint8_t  padding;
     uint16_t payload_size;
     uint32_t session_id;
 } echo_hdr_t;
 
 typedef struct __attribute__((packed)) quit_hdr
 {
-    uint8_t padding[FIELD_SIZE_PADDING];
+    uint8_t padding;
 } quit_hdr_t;
 
 typedef struct __attribute__((packed)) login_hdr
 {
-    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint8_t  padding;
     uint16_t username_size;
     uint16_t password_size;
     uint32_t session_id;
@@ -73,27 +79,27 @@ typedef struct __attribute__((packed)) login_hdr
 
 typedef struct __attribute__((packed)) logout_hdr
 {
-    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint8_t  padding;
     uint32_t session_id;
 } logout_hdr_t;
 
 typedef struct __attribute__((packed)) msg_send_hdr
 {
-    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint8_t  padding;
     uint16_t msg_size;
     uint32_t session_id;
 } msg_send_hdr_t;
 
 typedef struct __attribute__((packed)) join_hdr
 {
-    uint8_t  padding[FIELD_SIZE_PADDING];
+    uint8_t  padding;
     uint16_t room_name_size;
     uint32_t session_id;
 } join_hdr_t;
 
 typedef struct __attribute__((packed)) list_hdr
 {
-    uint8_t  flag[FIELD_SIZE_FLAG];
+    uint8_t  flag;
     uint32_t session_id;
 } list_hdr_t;
 

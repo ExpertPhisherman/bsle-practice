@@ -35,8 +35,8 @@ FIELD_SIZE_RETCODE    = 1
 FIELD_SIZE_SIZE       = 2
 FIELD_SIZE_SESSION_ID = 4
 
-FLAG_ROOM = 0
-FLAG_USER = 1
+LIST_FLAG_ROOM = 0x00
+LIST_FLAG_USER = 0x01
 
 def with_parser(
     description: str,
@@ -196,7 +196,7 @@ class ChatClient(Client):
         if retcode == RETCODE_SUCCESS:
             print("Unknown operation code")
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -214,7 +214,7 @@ class ChatClient(Client):
         elif retcode == RETCODE_FAILURE:
             print("Failed ping")
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -238,7 +238,7 @@ class ChatClient(Client):
         elif retcode == RETCODE_FAILURE:
             print("Failed echo")
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -262,7 +262,7 @@ class ChatClient(Client):
             print("Exceeds maximum packet size")
         else:
             self.room_name = None
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -276,7 +276,7 @@ class ChatClient(Client):
         if retcode == RETCODE_SUCCESS:
             print("Goodbye!")
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         self._quit_event.set()
         return True
@@ -308,7 +308,7 @@ class ChatClient(Client):
             self.username   = None
             self.password   = None
             self.room_name  = None
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -330,7 +330,7 @@ class ChatClient(Client):
         elif retcode == RETCODE_FAILURE:
             print("Failed logout")
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -351,7 +351,7 @@ class ChatClient(Client):
         elif retcode == RETCODE_FAILURE:
             print("Failed message send")
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -369,7 +369,7 @@ class ChatClient(Client):
         if retcode == RETCODE_SUCCESS:
             print(payload.decode("utf-8"))
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -387,7 +387,7 @@ class ChatClient(Client):
         elif retcode == RETCODE_FAILURE:
             print("Failed list")
         else:
-            print(f"Unknown return code: {retcode}")
+            print(f"Unknown return code: {retcode:02x}")
 
         return False
 
@@ -531,7 +531,7 @@ class ChatClient(Client):
         args={"flag": {"help": "rooms or users"}}
     )
     def do_list(self, line: str) -> bool:
-        flags = {"rooms": FLAG_ROOM, "users": FLAG_USER}
+        flags = {"rooms": LIST_FLAG_ROOM, "users": LIST_FLAG_USER}
 
         if line not in flags:
             print(f"Invalid flag: {line}")

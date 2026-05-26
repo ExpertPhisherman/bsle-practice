@@ -69,10 +69,25 @@ static bool user_creds_len_valid(
  * @return Boolean if credentials content is valid
  */
 static bool user_creds_content_valid(
-    char     * p_username,
+    uint8_t  * p_username,
     uint16_t   username_size,
-    char     * p_password,
+    uint8_t  * p_password,
     uint16_t   password_size
+);
+
+/*!
+ * @brief Send message to session
+ *
+ * @param[in] p_session Pointer to session
+ * @param[in] p_msg     Pointer to message
+ * @param[in] msg_size  Size of message in bytes
+ *
+ * @return Status of operation
+ */
+static status_t msg_send (
+    session_t * p_session,
+    uint8_t   * p_msg,
+    uint16_t    msg_size
 );
 
 status_t
@@ -322,8 +337,8 @@ opcode_login (
     uint32_t    session_id        = 0u;
     uint16_t    username_size     = 0u;
     uint16_t    password_size     = 0u;
-    char      * p_username        = NULL;
-    char      * p_password        = NULL;
+    uint8_t   * p_username        = NULL;
+    uint8_t   * p_password        = NULL;
     bool        b_locked          = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
@@ -701,8 +716,7 @@ opcode_msg_send (
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
     room_t    * p_room            = NULL;
-    char      * p_msg         = NULL;
-    uint8_t   * p_msg_packet  = NULL;
+    uint8_t   * p_msg             = NULL;
     bool        b_locked          = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
@@ -784,35 +798,9 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    p_msg = calloc(1u, msg_size);
-    if (NULL == p_msg)
-    {
-        p_response->retcode = RETCODE_FAILURE;
-        fprintf(stderr, "calloc failed in opcode_msg_send\n");
-        goto cleanup;
-    }
-
-    memcpy(p_msg, p_request_packet + p_request->size, msg_size);
+    p_msg = p_request_packet + p_request->size;
 
     p_request->size += msg_size;
-
-    uint32_t msg_packet_size = sizeof(msg_recv_hdr_out_t) + msg_size;
-
-    p_msg_packet = calloc(1u, msg_packet_size);
-    if (NULL == p_msg_packet)
-    {
-        p_response->retcode = RETCODE_FAILURE;
-        fprintf(stderr, "calloc failed in opcode_msg_send\n");
-        goto cleanup;
-    }
-
-    msg_recv_hdr_out_t * p_msg_hdr = (msg_recv_hdr_out_t *)p_msg_packet;
-
-    p_msg_hdr->opcode   = OPCODE_MSG_RECV;
-    p_msg_hdr->retcode  = RETCODE_SUCCESS;
-    p_msg_hdr->msg_size = htons(msg_size);
-
-    memcpy(p_msg_packet + sizeof(*p_msg_hdr), p_msg, msg_size);
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
@@ -878,13 +866,7 @@ opcode_msg_send (
             continue;
         }
 
-        pthread_mutex_lock(&(p_target->p_client->lock));
-        sockutil_sendall(
-            p_target->sockfd,
-            p_msg_packet,
-            msg_packet_size
-        );
-        pthread_mutex_unlock(&(p_target->p_client->lock));
+        msg_send(p_target, p_msg, msg_size);
 
         p_curr = p_curr->p_next;
     }
@@ -903,12 +885,6 @@ opcode_msg_send (
     }
 
 cleanup:
-    free(p_msg_packet);
-    p_msg_packet = NULL;
-
-    free(p_msg);
-    p_msg = NULL;
-
     if (b_locked)
     {
         pthread_mutex_unlock(&(p_appdata->lock));
@@ -933,7 +909,7 @@ opcode_join (
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
     room_t    * p_room            = NULL;
-    char      * p_room_name       = NULL;
+    uint8_t   * p_room_name       = NULL;
     uint16_t    room_name_size    = 0u;
     bool        b_locked          = false;
 
@@ -1120,8 +1096,16 @@ opcode_list (
 {
     status_t status = STATUS_SUCCESS;
 
-    int       sockfd           = -1;
-    uint8_t * p_request_packet = NULL;
+    appdata_t * p_appdata        = NULL;
+    ht_t      * p_room_store     = NULL;
+    item_t    * p_item           = NULL;
+    room_t    * p_room           = NULL;
+    node_t    * p_curr           = NULL;
+    session_t * p_target         = NULL;
+    int         sockfd           = -1;
+    server_t  * p_server         = NULL;
+    uint8_t   * p_request_packet = NULL;
+    bool        b_locked         = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
@@ -1129,10 +1113,25 @@ opcode_list (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_request_packet = p_request->p_packet;
+    sockfd            = p_session->sockfd;
+    p_server          = p_session->p_server;
+    p_request_packet  = p_request->p_packet;
 
     if (NULL == p_request_packet)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_appdata = p_server->p_appdata;
+    if (NULL == p_appdata)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_room_store = p_appdata->p_room_store;
+    if (NULL == p_room_store)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -1155,7 +1154,63 @@ opcode_list (
         goto cleanup;
     }
 
+    switch (p_hdr->flag)
+    {
+        case LIST_FLAG_ROOM:
+            for (size_t idx = 0u; idx < p_room_store->capacity; idx++)
+            {
+                sll_t * p_sll = (p_room_store->pp_buckets)[idx];
+
+                if (NULL == p_sll)
+                {
+                    continue;
+                }
+
+                p_curr = p_sll->p_head;
+                while (NULL != p_curr)
+                {
+                    p_item = p_curr->p_data;
+                    p_room = p_item->p_value;
+                    msg_send(p_session, p_room->p_name, p_room->name_size);
+                    p_curr = p_curr->p_next;
+                }
+            }
+            break;
+
+        case LIST_FLAG_USER:
+            p_item = ht_get(
+                p_room_store,
+                p_session->p_room_name,
+                p_session->room_name_size
+            );
+            if (NULL != p_item)
+            {
+                p_room = p_item->p_value;
+                p_curr = p_room->p_sessions->p_head;
+                while (NULL != p_curr)
+                {
+                    p_target = *(session_t **)(p_curr->p_data);
+                    msg_send(
+                        p_session,
+                        p_target->p_username,
+                        p_target->username_size
+                    );
+                    p_curr = p_curr->p_next;
+                }
+            }
+            break;
+
+        default:
+            fprintf(stderr, "Unknown list flag: %02hhx\n", p_hdr->flag);
+            break;
+    }
+
 cleanup:
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+        b_locked = false;
+    }
     return status;
 }
 
@@ -1299,9 +1354,9 @@ cleanup:
 
 static bool
 user_creds_content_valid (
-    char     * p_username,
+    uint8_t  * p_username,
     uint16_t   username_size,
-    char     * p_password,
+    uint8_t  * p_password,
     uint16_t   password_size
 )
 {
@@ -1315,8 +1370,8 @@ user_creds_content_valid (
     // Validate username and password content
     for (size_t idx = 0u; idx < username_size; idx++)
     {
-        char chr = p_username[idx];
-        if (!(isalnum((unsigned char)chr) || ('_' == chr)))
+        uint8_t chr = p_username[idx];
+        if (!(isalnum(chr) || ('_' == chr)))
         {
             fprintf(
                 stderr,
@@ -1330,8 +1385,8 @@ user_creds_content_valid (
 
     for (size_t idx = 0u; idx < password_size; idx++)
     {
-        char chr = p_password[idx];
-        if (!(isprint((unsigned char)chr) && (' ' != chr)))
+        uint8_t chr = p_password[idx];
+        if (!(isprint(chr) && (' ' != chr)))
         {
             fprintf(
                 stderr,
@@ -1345,6 +1400,50 @@ user_creds_content_valid (
 
 cleanup:
     return b_valid;
+}
+
+static status_t
+msg_send (
+    session_t * p_session,
+    uint8_t   * p_msg,
+    uint16_t    msg_size
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    uint8_t            * p_packet = NULL;
+    msg_recv_hdr_out_t   hdr      = {0};
+
+    if ((NULL == p_session) || (NULL == p_msg))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_packet = calloc(1u, sizeof(hdr) + msg_size);
+    if (NULL == p_packet)
+    {
+        fprintf(stderr, "calloc failed in msg_send\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    hdr.opcode   = OPCODE_MSG_RECV;
+    hdr.retcode  = RETCODE_SUCCESS;
+    hdr.msg_size = htons(msg_size);
+
+    memcpy(p_packet, &hdr, sizeof(hdr));
+    memcpy(p_packet + sizeof(hdr), p_msg, msg_size);
+
+    pthread_mutex_lock(&(p_session->p_client->lock));
+    sockutil_sendall(p_session->sockfd, p_packet, sizeof(hdr) + msg_size);
+    pthread_mutex_unlock(&(p_session->p_client->lock));
+
+    free(p_packet);
+    p_packet = NULL;
+
+cleanup:
+    return status;
 }
 
 /*** end of file ***/
