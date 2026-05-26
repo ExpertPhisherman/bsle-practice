@@ -158,7 +158,7 @@ class ChatClient(Client):
 
     def listener(self) -> None:
         while True:
-            response = self.recv_response(FIELD_SIZE_RETCODE)
+            response = self.recv_response(FIELD_SIZE_OPCODE)
             if response is None:
                 self._quit_event.set()
                 loop = self._session.app.loop
