@@ -1179,20 +1179,22 @@ opcode_list (
                 p_session->p_room_name,
                 p_session->room_name_size
             );
-            if (NULL != p_item)
+            if (NULL == p_item)
             {
-                p_room = *(room_t **)(p_item->p_value);
-                p_curr = p_room->p_sessions->p_head;
-                while (NULL != p_curr)
-                {
-                    p_target = *(session_t **)(p_curr->p_data);
-                    msg_send(
-                        p_session,
-                        p_target->p_username,
-                        p_target->username_size
-                    );
-                    p_curr = p_curr->p_next;
-                }
+                p_response->retcode = RETCODE_FAILURE;
+                break;
+            }
+            p_room = *(room_t **)(p_item->p_value);
+            p_curr = p_room->p_sessions->p_head;
+            while (NULL != p_curr)
+            {
+                p_target = *(session_t **)(p_curr->p_data);
+                msg_send(
+                    p_session,
+                    p_target->p_username,
+                    p_target->username_size
+                );
+                p_curr = p_curr->p_next;
             }
             break;
 
