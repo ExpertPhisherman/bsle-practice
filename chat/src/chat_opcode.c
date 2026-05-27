@@ -422,7 +422,7 @@ opcode_login (
         goto cpy_session_id;
     }
 
-    p_username = calloc(1u, username_size);
+    p_username = calloc(username_size, sizeof(*p_username));
     if (NULL == p_username)
     {
         fprintf(stderr, "calloc failed in opcode_login\n");
@@ -432,7 +432,7 @@ opcode_login (
         goto cpy_session_id;
     }
 
-    p_password = calloc(1u, password_size);
+    p_password = calloc(password_size, sizeof(*p_password));
     if (NULL == p_password)
     {
         fprintf(stderr, "calloc failed in opcode_login\n");
@@ -976,7 +976,7 @@ opcode_join (
         goto cleanup;
     }
 
-    p_room_name = calloc(1u, room_name_size);
+    p_room_name = calloc(room_name_size, sizeof(*p_room_name));
     if (NULL == p_room_name)
     {
         p_response->retcode = RETCODE_FAILURE;
@@ -1418,7 +1418,7 @@ msg_send (
         goto cleanup;
     }
 
-    p_packet = calloc(1u, sizeof(hdr) + msg_size);
+    p_packet = calloc(sizeof(hdr) + msg_size, sizeof(*p_packet));
     if (NULL == p_packet)
     {
         fprintf(stderr, "calloc failed in msg_send\n");

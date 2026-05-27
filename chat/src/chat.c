@@ -193,7 +193,9 @@ chat_client_init (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    state_t * p_state = NULL;
+    state_t * p_state           = NULL;
+    uint8_t * p_request_packet  = NULL;
+    uint8_t * p_response_packet = NULL;
 
     if ((NULL == p_server) || (NULL == p_client))
     {
@@ -210,25 +212,29 @@ chat_client_init (server_t * p_server, client_t * p_client)
     }
     p_client->p_clientdata = p_state;
 
-    p_state->session.p_server = p_server;
-    p_state->session.p_client = p_client;
-    p_state->session.sockfd   = p_client->sockfd;
+    p_state->session.p_server  = p_server;
+    p_state->session.p_client  = p_client;
+    p_state->session.sockfd    = p_client->sockfd;
+    p_state->request.p_packet  = NULL;
+    p_state->response.p_packet = NULL;
 
-    p_state->request.p_packet = calloc(1u, g_max_packet_size);
-    if (NULL == p_state->request.p_packet)
+    p_request_packet = calloc(g_max_packet_size, sizeof(*p_request_packet));
+    if (NULL == p_request_packet)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_state->request.p_packet = p_request_packet;
 
-    p_state->response.p_packet = calloc(1u, g_max_packet_size);
-    if (NULL == p_state->response.p_packet)
+    p_response_packet = calloc(g_max_packet_size, sizeof(*p_response_packet));
+    if (NULL == p_response_packet)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+    p_state->response.p_packet = p_response_packet;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -345,7 +351,7 @@ room_create (uint8_t * p_name, uint16_t name_size)
 
     p_room->name_size = name_size;
 
-    p_room->p_name = calloc(1u, name_size);
+    p_room->p_name = calloc(name_size, sizeof(*(p_room->p_name)));
     if (NULL == p_room->p_name)
     {
         fprintf(stderr, "calloc failed in room_create\n");
