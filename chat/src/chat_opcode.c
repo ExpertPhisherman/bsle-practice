@@ -1156,7 +1156,6 @@ opcode_list (
             for (size_t idx = 0u; idx < p_room_store->capacity; idx++)
             {
                 sll_t * p_sll = (p_room_store->pp_buckets)[idx];
-
                 if (NULL == p_sll)
                 {
                     continue;
