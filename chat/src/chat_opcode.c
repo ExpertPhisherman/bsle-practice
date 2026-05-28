@@ -11,6 +11,11 @@
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;
 
+uint16_t const g_username_size_min = 3u;
+uint16_t const g_username_size_max = 16u;
+uint16_t const g_password_size_min = 8u;
+uint16_t const g_password_size_max = 128u;
+
 /*!
  * @brief Validate client session
  *
@@ -367,15 +372,6 @@ opcode_login (
     p_response->opcode  = OPCODE_LOGIN;
     p_response->retcode = RETCODE_SUCCESS;
 
-    pthread_mutex_lock(&(p_appdata->lock));
-    b_locked = true;
-
-    user_leave(p_session, p_room_store);
-    user_logout(p_session);
-
-    pthread_mutex_unlock(&(p_appdata->lock));
-    b_locked = false;
-
     login_hdr_t * p_hdr = (login_hdr_t *)(p_request_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
@@ -546,6 +542,9 @@ opcode_login (
             );
         }
     }
+
+    user_leave(p_session, p_room_store);
+    user_logout(p_session);
 
     p_response->retcode   = RETCODE_SUCCESS;
     session_id            = (p_appdata->next_session_id)++;
@@ -848,6 +847,9 @@ opcode_join (
     room_t    * p_room            = NULL;
     uint8_t   * p_room_name       = NULL;
     uint16_t    room_name_size    = 0u;
+    // uint8_t   * p_dm_name         = NULL;
+    // uint16_t    dm_name_size      = 0u;
+    // bool        b_private         = false;
     bool        b_locked          = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
@@ -887,6 +889,7 @@ opcode_join (
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
+    // b_private              = p_hdr->b_private;
     room_name_size         = ntohs(p_hdr->room_name_size);
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
@@ -913,20 +916,29 @@ opcode_join (
         goto cleanup;
     }
 
-    p_room_name = calloc(room_name_size, sizeof(*p_room_name));
-    if (NULL == p_room_name)
+    p_room_name      = p_request_packet + p_request->size;
+    p_request->size += room_name_size;
+
+    if (!ischartype_str((char *)p_room_name, room_name_size, isalnum))
     {
         p_response->retcode = RETCODE_FAILURE;
-        fprintf(stderr, "calloc failed in opcode_join\n");
+        fprintf(stderr, "Room name must be alphanumeric\n");
         goto cleanup;
     }
 
-    memcpy(p_room_name, p_request_packet + p_request->size, room_name_size);
-
-    p_request->size += room_name_size;
-
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
+
+    // TODO: Mutate room name to be canonical for private messaging
+    // "user1+user2"
+    // if (b_private)
+    // {
+    //     uint8_t * p_user1 = p_session->p_username;
+    //     uint8_t * p_user2 = p_room_name;
+
+    //     p_room_name    = p_dm_name;
+    //     room_name_size = dm_name_size;
+    // }
 
     user_leave(p_session, p_room_store);
 
@@ -943,6 +955,12 @@ opcode_join (
             p_response->retcode = RETCODE_FAILURE;
             goto cleanup;
         }
+
+        // TODO: Set room as private if private flag is received
+        // if (b_private)
+        // {
+        //     p_room->b_private = true;
+        // }
 
         status = sll_append(p_room_store, &p_room, sizeof(p_room));
         if (STATUS_SUCCESS != status)
@@ -977,6 +995,30 @@ opcode_join (
 
     p_room = *(room_t **)(p_node->p_data);
 
+    // Check if current user session is allowed to enter private room
+    // if (p_room->b_private)
+    // {
+    //     if (!((
+    //         (p_session->username_size == p_room->user1_size) &&
+    //         (0 == memcmp(
+    //             p_session->p_username,
+    //             p_room->p_user1,
+    //             p_session->username_size
+    //         ))
+    //         ) ||
+    //         ((p_session->username_size == p_room->user2_size) &&
+    //         (0 == memcmp(
+    //             p_session->p_username,
+    //             p_room->p_user2,
+    //             p_session->username_size
+    //         ))
+    //     )))
+    //     {
+    //         p_response->retcode = RETCODE_FAILURE;
+    //         goto cleanup;
+    //     }
+    // }
+
     // Join room
     status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
     if (STATUS_SUCCESS != status)
@@ -1000,9 +1042,6 @@ opcode_join (
     }
 
 cleanup:
-    free(p_room_name);
-    p_room_name = NULL;
-
     if (b_locked)
     {
         pthread_mutex_unlock(&(p_appdata->lock));
@@ -1028,6 +1067,7 @@ opcode_list (
     int         sockfd           = -1;
     server_t  * p_server         = NULL;
     uint8_t   * p_request_packet = NULL;
+    uint8_t     flag             = 0u;
     bool        b_locked         = false;
 
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
@@ -1067,6 +1107,7 @@ opcode_list (
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
+    flag                   = p_hdr->flag;
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
@@ -1080,7 +1121,7 @@ opcode_list (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    switch (p_hdr->flag)
+    switch (flag)
     {
         case LIST_FLAG_ROOM:
             p_curr = p_room_store->p_head;
@@ -1112,6 +1153,7 @@ opcode_list (
             break;
 
         default:
+            p_response->retcode = RETCODE_FAILURE;
             fprintf(stderr, "Unknown list flag: %02hhx\n", p_hdr->flag);
             break;
     }
@@ -1177,7 +1219,10 @@ user_creds_len_valid (
     bool b_valid = true;
 
     // Validate username and password length
-    if (!((3u <= username_size) && (16u >= username_size)))
+    if (!(
+        (g_username_size_min <= username_size) &&
+        (g_username_size_max >= username_size)
+    ))
     {
         fprintf(
             stderr,
@@ -1188,7 +1233,10 @@ user_creds_len_valid (
         goto cleanup;
     }
 
-    if (!((8u <= password_size) && (128u >= password_size)))
+    if (!(
+        (g_password_size_min <= password_size) &&
+        (g_password_size_max >= password_size)
+    ))
     {
         fprintf(
             stderr,

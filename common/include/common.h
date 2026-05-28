@@ -63,6 +63,21 @@ typedef void     (*destroy_func_t)(void * p_data);
 typedef int      (*ischartype_func_t)(int chr);
 
 /*!
+ * @brief Check if all characters in string are of character type
+ *
+ * @param[in] p_str  Pointer to string
+ * @param[in] size   Size of string in bytes
+ * @param[in] p_func Pointer to character type function
+ *
+ * @return Status of operation
+ */
+int ischartype_str(
+    char const        * p_str,
+    size_t              size,
+    ischartype_func_t   p_func
+);
+
+/*!
  * @brief Display bytes in hex
  *
  * @param[in] p_buf Pointer to buffer
@@ -73,7 +88,7 @@ typedef int      (*ischartype_func_t)(int chr);
  * @return Status of operation
  */
 status_t display_hex(
-    void       * p_buf,
+    void const * p_buf,
     size_t       size,
     char const * p_sep,
     char const * p_end
@@ -90,7 +105,7 @@ status_t display_hex(
  * @return Status of operation
  */
 status_t display_printable(
-    void       * p_buf,
+    void const * p_buf,
     size_t       size,
     char const * p_sep,
     char const * p_end
@@ -111,7 +126,7 @@ status_t display_printable(
  * @return Status of operation
  */
 status_t display_unicode(
-    void       * p_buf,
+    void const * p_buf,
     size_t       size,
     char const * p_sep,
     char const * p_end
@@ -150,7 +165,7 @@ status_t display_unicode(
  */
 status_t fprint(
     FILE              * p_stream,
-    void              * p_buf,
+    void const        * p_buf,
     size_t              size,
     char const        * p_sep,
     char const        * p_end,

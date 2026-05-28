@@ -60,15 +60,15 @@ typedef enum retcode
 
 typedef struct session
 {
-    server_t * p_server;       // Pointer to server
-    client_t * p_client;       // Pointer to client
-    int        sockfd;         // Client socket file descriptor
-    uint8_t  * p_username;     // Pointer to username
-    uint8_t  * p_password;     // Pointer to password
-    uint16_t   username_size;  // Size of username in bytes
-    uint16_t   password_size;  // Size of password in bytes
-    uint32_t   session_id;     // Unique session ID assigned after login
-    room_t   * p_room;         // Pointer to current room
+    server_t * p_server;      // Pointer to server
+    client_t * p_client;      // Pointer to client
+    int        sockfd;        // Client socket file descriptor
+    uint8_t  * p_username;    // Pointer to username
+    uint8_t  * p_password;    // Pointer to password
+    uint16_t   username_size; // Size of username in bytes
+    uint16_t   password_size; // Size of password in bytes
+    uint32_t   session_id;    // Unique session ID assigned after login
+    room_t   * p_room;        // Pointer to current room
 } session_t;
 
 typedef struct request

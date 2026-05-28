@@ -8,9 +8,37 @@
 
 #include "common.h"
 
+int
+ischartype_str (
+    char const        * p_str,
+    size_t              size,
+    ischartype_func_t   p_func
+)
+{
+    bool b_valid = true;
+
+    if ((NULL == p_str) || (NULL == p_func))
+    {
+        b_valid = false;
+        goto cleanup;
+    }
+
+    for (size_t idx = 0u; idx < size; idx++)
+    {
+        if (0 == p_func(p_str[idx]))
+        {
+            b_valid = false;
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    return b_valid;
+}
+
 status_t
 display_hex (
-    void       * p_buf,
+    void const * p_buf,
     size_t       size,
     char const * p_sep,
     char const * p_end
@@ -31,7 +59,7 @@ display_hex (
 
 status_t
 display_printable (
-    void       * p_buf,
+    void const * p_buf,
     size_t       size,
     char const * p_sep,
     char const * p_end
@@ -52,7 +80,7 @@ display_printable (
 
 status_t
 display_unicode (
-    void       * p_buf,
+    void const * p_buf,
     size_t       size,
     char const * p_sep,
     char const * p_end
@@ -74,7 +102,7 @@ display_unicode (
 status_t
 fprint (
     FILE              * p_stream,
-    void              * p_buf,
+    void const        * p_buf,
     size_t              size,
     char const        * p_sep,
     char const        * p_end,

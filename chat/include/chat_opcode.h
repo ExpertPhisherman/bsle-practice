@@ -92,7 +92,7 @@ typedef struct __attribute__((packed)) msg_send_hdr
 
 typedef struct __attribute__((packed)) join_hdr
 {
-    uint8_t  padding;
+    uint8_t  b_private;
     uint16_t room_name_size;
     uint32_t session_id;
 } join_hdr_t;
