@@ -366,7 +366,7 @@ room_create (char const * p_name, uint16_t name_size)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        room_destroy(&p_room);
+        room_destroy(p_room);
         p_room = NULL;
     }
 
@@ -381,10 +381,7 @@ room_destroy (void * p_data)
         goto cleanup;
     }
 
-    room_t * p_room = *(room_t **)p_data;
-
-    free(p_data);
-    p_data = NULL;
+    room_t * p_room = p_data;
 
     free(p_room->p_name);
     p_room->p_name = NULL;
@@ -500,7 +497,7 @@ appdata_create (void)
     }
     p_appdata->p_room_store = p_room_store;
 
-    p_room_store->p_destroy_node = room_destroy;
+    p_room_store->p_destroy_data = room_destroy;
     p_room_store->p_compare_node = compare_room;
 
     p_room = room_create("general", 7u);
@@ -515,7 +512,7 @@ appdata_create (void)
     {
         fprintf(stderr, "sll_append failed in appdata_create\n");
 
-        room_destroy(&p_room);
+        room_destroy(p_room);
         p_room = NULL;
         goto cleanup;
     }

@@ -509,8 +509,8 @@ opcode_login (
         {
             printf(
                 "Successful login to user: %.*s\n",
-                p_session->username_size,
-                p_session->p_username
+                username_size,
+                p_username
             );
         }
     }
@@ -541,8 +541,8 @@ opcode_login (
         {
             printf(
                 "Created new user: %.*s\n",
-                p_session->username_size,
-                p_session->p_username
+                username_size,
+                p_username
             );
         }
     }
@@ -950,7 +950,7 @@ opcode_join (
             fprintf(stderr, "sll_append failed in opcode_join\n");
             p_response->retcode = RETCODE_FAILURE;
 
-            room_destroy(&p_room);
+            room_destroy(p_room);
             p_room = NULL;
             goto cleanup;
         }
@@ -1076,6 +1076,9 @@ opcode_list (
         status = STATUS_SUCCESS;
         goto cleanup;
     }
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
 
     switch (p_hdr->flag)
     {

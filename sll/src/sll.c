@@ -25,7 +25,7 @@ sll_create (void)
     p_sll->len = 0u;
     p_sll->p_display_node = NULL;
     p_sll->p_compare_node = memcmp;
-    p_sll->p_destroy_node = free;
+    p_sll->p_destroy_data = NULL;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -41,7 +41,7 @@ sll_destroy (sll_t * p_sll)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_sll) || (NULL == p_sll->p_destroy_node))
+    if (NULL == p_sll)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -53,7 +53,12 @@ sll_destroy (sll_t * p_sll)
     {
         node_t * p_next = p_curr->p_next;
 
-        (p_sll->p_destroy_node)(p_curr->p_data);
+        if (NULL != p_sll->p_destroy_data)
+        {
+            (p_sll->p_destroy_data)(*(void **)(p_curr->p_data));
+        }
+
+        free(p_curr->p_data);
         p_curr->p_data = NULL;
 
         free(p_curr);
@@ -66,7 +71,7 @@ sll_destroy (sll_t * p_sll)
     p_sll->len = 0u;
     p_sll->p_display_node = NULL;
     p_sll->p_compare_node = NULL;
-    p_sll->p_destroy_node = NULL;
+    p_sll->p_destroy_data = NULL;
 
 cleanup:
     free(p_sll);
