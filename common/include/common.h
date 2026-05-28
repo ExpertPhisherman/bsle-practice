@@ -58,7 +58,7 @@ typedef int (*compare_func_t)(
     size_t size
 );
 
-typedef status_t (*display_func_t)(void * p_data);
+typedef status_t (*display_func_t)(void const * p_data);
 typedef void     (*destroy_func_t)(void * p_data);
 typedef int      (*ischartype_func_t)(int chr);
 

@@ -30,21 +30,21 @@ main (int argc, char * argv[])
     {
         char const * key = p_keys[idx];
         size_t key_size = strnlen(key, 256u);
-        ht_set(p_ht, (void *)key, key_size, (void *)key, 4u);
+        ht_set(p_ht, key, key_size, key, 4u);
     }
 
     item_t * p_item = NULL;
 
-    ht_set(p_ht, (void *)"obama", 5u, (void *)"TEST", 4u);
-    ht_set(p_ht, (void *)"obama", 5u, (void *)"pyramid", 7u);
-    ht_set(p_ht, (void *)"dragbolt", 8u, (void *)"pluh", 4u);
-    ht_del(p_ht, (void *)"femality", 8u);
+    ht_set(p_ht, "obama", 5u, "TEST", 4u);
+    ht_set(p_ht, "obama", 5u, "pyramid", 7u);
+    ht_set(p_ht, "dragbolt", 8u, "pluh", 4u);
+    ht_del(p_ht, "femality", 8u);
 
-    p_item = ht_get(p_ht, (void *)"obama", 5u);
+    p_item = ht_get(p_ht, "obama", 5u);
     (p_ht->p_display_item)(p_item);
     printf("\n");
 
-    p_item = ht_get(p_ht, (void *)"dragbolt", 8u);
+    p_item = ht_get(p_ht, "dragbolt", 8u);
     (p_ht->p_display_item)(p_item);
     printf("\n");
 

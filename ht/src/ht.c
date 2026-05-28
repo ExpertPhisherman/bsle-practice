@@ -26,7 +26,7 @@
  *
  * @return 64-bit hash digest
  */
-static uint64_t djb2_hash(void * p_key, size_t key_size);
+static uint64_t djb2_hash(void const * p_key, size_t key_size);
 
 /*!
  * @brief Select SLL containing key in hash table
@@ -45,7 +45,7 @@ static sll_t * ht_select(ht_t * p_ht, item_t * p_item);
  *
  * @return Status of operation
  */
-static status_t display_item(void * p_data);
+static status_t display_item(void const * p_data);
 
 /*!
  * @brief Compare items
@@ -233,7 +233,7 @@ cleanup:
 }
 
 item_t *
-ht_get (ht_t * p_ht, void * p_key, size_t key_size)
+ht_get (ht_t * p_ht, void const * p_key, size_t key_size)
 {
     item_t * p_item = NULL;
 
@@ -246,7 +246,7 @@ ht_get (ht_t * p_ht, void * p_key, size_t key_size)
     {
         .p_hash_func = p_ht->p_hash_func,
         .hash        = (p_ht->p_hash_func)(p_key, key_size),
-        .p_key       = p_key,
+        .p_key       = (void *)p_key,
         .key_size    = key_size,
     };
 
@@ -266,11 +266,11 @@ cleanup:
 
 status_t
 ht_set (
-    ht_t * p_ht,
-    void * p_key,
-    size_t key_size,
-    void * p_value,
-    size_t value_size
+    ht_t       * p_ht,
+    void const * p_key,
+    size_t       key_size,
+    void const * p_value,
+    size_t       value_size
 )
 {
     status_t status = STATUS_SUCCESS;
@@ -366,7 +366,7 @@ cleanup:
 }
 
 status_t
-ht_del (ht_t * p_ht, void * p_key, size_t key_size)
+ht_del (ht_t * p_ht, void const * p_key, size_t key_size)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -386,7 +386,7 @@ ht_del (ht_t * p_ht, void * p_key, size_t key_size)
     {
         .p_hash_func = p_ht->p_hash_func,
         .hash        = (p_ht->p_hash_func)(p_key, key_size),
-        .p_key       = p_key,
+        .p_key       = (void *)p_key,
         .key_size    = key_size,
     };
 
@@ -429,7 +429,7 @@ cleanup:
 }
 
 static uint64_t
-djb2_hash (void * p_key, size_t key_size)
+djb2_hash (void const * p_key, size_t key_size)
 {
     uint64_t hash = 5381u;
 
@@ -462,7 +462,7 @@ cleanup:
 }
 
 static status_t
-display_item (void * p_data)
+display_item (void const * p_data)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -471,14 +471,14 @@ display_item (void * p_data)
         goto cleanup;
     }
 
-    item_t * p_item = p_data;
+    item_t * p_item = (item_t *)p_data;
 
     // NOTE: Assuming p_key and p_value are strings
     printf(
         "\"%.*s\": \"%.*s\"",
-        (int)(p_item->key_size),
+        (int   )(p_item->key_size),
         (char *)(p_item->p_key),
-        (int)(p_item->value_size),
+        (int   )(p_item->value_size),
         (char *)(p_item->p_value)
     );
 

@@ -327,7 +327,7 @@ cleanup:
 }
 
 room_t *
-room_create (uint8_t * p_name, uint16_t name_size)
+room_create (char const * p_name, uint16_t name_size)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -481,9 +481,9 @@ appdata_create (void)
 
     status = ht_set(
         p_cred_store,
-        (uint8_t *)"admin",
+        "admin",
         5u,
-        (uint8_t *)"password",
+        "password",
         8u
     );
     if (STATUS_SUCCESS != status)
@@ -503,7 +503,7 @@ appdata_create (void)
     p_room_store->p_destroy_node = room_destroy;
     p_room_store->p_compare_node = compare_room;
 
-    p_room = room_create((uint8_t *)"general", 7u);
+    p_room = room_create("general", 7u);
     if (NULL == p_room)
     {
         status = STATUS_ALLOC_FAILURE;

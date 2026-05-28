@@ -69,7 +69,7 @@ status_t sll_display(sll_t * p_sll, char const * p_sep);
  *
  * @return Pointer to found node
  */
-node_t * sll_get(sll_t * p_sll, void * p_data, size_t size);
+node_t * sll_get(sll_t * p_sll, void const * p_data, size_t size);
 
 /*!
  * @brief Insert data into SLL
@@ -80,7 +80,12 @@ node_t * sll_get(sll_t * p_sll, void * p_data, size_t size);
  * @param[in] idx    Index to insert data at
  * @return Status of operation
  */
-status_t sll_insert(sll_t * p_sll, void * p_data, size_t size, size_t idx);
+status_t sll_insert(
+    sll_t      * p_sll,
+    void const * p_data,
+    size_t       size,
+    size_t       idx
+);
 
 /*!
  * @brief Append data to SLL
@@ -90,7 +95,7 @@ status_t sll_insert(sll_t * p_sll, void * p_data, size_t size, size_t idx);
  * @param[in] size   Size of data in bytes
  * @return Status of operation
  */
-status_t sll_append(sll_t * p_sll, void * p_data, size_t size);
+status_t sll_append(sll_t * p_sll, void const * p_data, size_t size);
 
 /*!
  * @brief Remove data from SLL
@@ -101,7 +106,7 @@ status_t sll_append(sll_t * p_sll, void * p_data, size_t size);
  *
  * @return Status of operation
  */
-status_t sll_remove(sll_t * p_sll, void * p_data, size_t size);
+status_t sll_remove(sll_t * p_sll, void const * p_data, size_t size);
 
 #endif /* SLL_H */
 

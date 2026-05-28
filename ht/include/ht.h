@@ -24,7 +24,7 @@
 #include "common.h"
 #include "sll.h"
 
-typedef uint64_t (*hash_func_t)(void * p_key, size_t key_size);
+typedef uint64_t (*hash_func_t)(void const * p_key, size_t key_size);
 
 typedef struct item
 {
@@ -85,7 +85,7 @@ status_t ht_display(ht_t * p_ht, char const * p_sep);
  *
  * @return Pointer to found item
  */
-item_t * ht_get(ht_t * p_ht, void * p_key, size_t key_size);
+item_t * ht_get(ht_t * p_ht, void const * p_key, size_t key_size);
 
 /*!
  * @brief Set item at key in hash table
@@ -99,11 +99,11 @@ item_t * ht_get(ht_t * p_ht, void * p_key, size_t key_size);
  * @return Status of operation
  */
 status_t ht_set(
-    ht_t * p_ht,
-    void * p_key,
-    size_t key_size,
-    void * p_value,
-    size_t value_size
+    ht_t       * p_ht,
+    void const * p_key,
+    size_t       key_size,
+    void const * p_value,
+    size_t       value_size
 );
 
 /*!
@@ -115,7 +115,7 @@ status_t ht_set(
  *
  * @return Status of operation
  */
-status_t ht_del(ht_t * p_ht, void * p_key, size_t key_size);
+status_t ht_del(ht_t * p_ht, void const * p_key, size_t key_size);
 
 #endif /* HT_H */
 

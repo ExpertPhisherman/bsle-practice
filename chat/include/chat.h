@@ -167,7 +167,7 @@ status_t chat_client_free(server_t * p_server, client_t * p_client);
  *
  * @return Pointer to room
  */
-room_t * room_create(uint8_t * p_name, uint16_t name_size);
+room_t * room_create(char const * p_name, uint16_t name_size);
 
 /*!
  * @brief Destroy room

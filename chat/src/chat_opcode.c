@@ -935,7 +935,7 @@ opcode_join (
     {
         // NOTE: Room doesn't exist
 
-        p_room = room_create(p_room_name, room_name_size);
+        p_room = room_create((char *)p_room_name, room_name_size);
         if (NULL == p_room)
         {
             status = STATUS_ALLOC_FAILURE;
@@ -1090,6 +1090,11 @@ opcode_list (
             break;
 
         case LIST_FLAG_USER:
+            if (NULL == p_session->p_room)
+            {
+                p_response->retcode = RETCODE_FAILURE;
+                break;
+            }
             p_curr = p_session->p_room->p_sessions->p_head;
             while (NULL != p_curr)
             {

@@ -110,7 +110,7 @@ cleanup:
 }
 
 node_t *
-sll_get (sll_t * p_sll, void * p_data, size_t size)
+sll_get (sll_t * p_sll, void const * p_data, size_t size)
 {
     node_t * p_node = NULL;
 
@@ -138,7 +138,12 @@ cleanup:
 }
 
 status_t
-sll_insert (sll_t * p_sll, void * p_data, size_t size, size_t idx)
+sll_insert (
+    sll_t      * p_sll,
+    void const * p_data,
+    size_t       size,
+    size_t       idx
+)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -204,7 +209,7 @@ cleanup:
 }
 
 status_t
-sll_append (sll_t * p_sll, void * p_data, size_t size)
+sll_append (sll_t * p_sll, void const * p_data, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -221,7 +226,7 @@ cleanup:
 }
 
 status_t
-sll_remove (sll_t * p_sll, void * p_data, size_t size)
+sll_remove (sll_t * p_sll, void const * p_data, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
