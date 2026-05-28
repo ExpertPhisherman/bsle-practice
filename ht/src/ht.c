@@ -74,7 +74,7 @@ ht_create (size_t capacity)
         goto cleanup;
     }
 
-    p_ht = malloc(sizeof(*p_ht));
+    p_ht = calloc(1u, sizeof(*p_ht));
     if (NULL == p_ht)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -298,7 +298,7 @@ ht_set (
     };
 
     // Allocate hash table owned key and value
-    new_item.p_key = malloc(key_size);
+    new_item.p_key = calloc(1u, key_size);
     if (NULL == new_item.p_key)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -306,7 +306,7 @@ ht_set (
     }
     memcpy(new_item.p_key, p_key, key_size);
 
-    new_item.p_value = malloc(value_size);
+    new_item.p_value = calloc(1u, value_size);
     if (NULL == new_item.p_value)
     {
         status = STATUS_ALLOC_FAILURE;

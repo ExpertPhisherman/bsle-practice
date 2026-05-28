@@ -174,14 +174,14 @@ sll_insert (
         idx--;
     }
 
-    node_t * p_node = malloc(sizeof(*p_node));
+    node_t * p_node = calloc(1u, sizeof(*p_node));
     if (NULL == p_node)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    p_node->p_data = malloc(size);
+    p_node->p_data = calloc(1u, size);
     if (NULL == p_node->p_data)
     {
         free(p_node);

@@ -362,6 +362,7 @@ room_create (char const * p_name, uint16_t name_size)
     }
 
     p_room->p_sessions = p_sessions;
+    p_room->b_private  = false;
 
 cleanup:
     if (STATUS_SUCCESS != status)
