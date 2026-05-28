@@ -27,25 +27,6 @@ static status_t validate_session(
 );
 
 /*!
- * @brief Affect session with logout
- *
- * @param[in] p_session Pointer to session
- *
- * @return Status of operation
- */
-static status_t user_logout(session_t * p_session);
-
-/*!
- * @brief Affect session with leave room
- *
- * @param[in] p_session    Pointer to session
- * @param[in] p_room_store Pointer to room storage
- *
- * @return Status of operation
- */
-static status_t user_leave(session_t * p_session, ht_t * p_room_store);
-
-/*!
  * @brief Check if credentials length is valid
  *
  * @param[in] username_size Size of username in bytes
@@ -328,7 +309,7 @@ opcode_login (
 
     appdata_t * p_appdata         = NULL;
     ht_t      * p_cred_store      = NULL;
-    ht_t      * p_room_store      = NULL;
+    sll_t     * p_room_store      = NULL;
     item_t    * p_item            = NULL;
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
@@ -620,7 +601,7 @@ opcode_logout (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata        = NULL;
-    ht_t      * p_room_store     = NULL;
+    sll_t     * p_room_store     = NULL;
     int         sockfd           = -1;
     server_t  * p_server         = NULL;
     uint8_t   * p_request_packet = NULL;
@@ -709,9 +690,7 @@ opcode_msg_send (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata         = NULL;
-    ht_t      * p_room_store      = NULL;
-    item_t    * p_item            = NULL;
-    node_t    * p_node            = NULL;
+    sll_t     * p_room_store      = NULL;
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
@@ -782,7 +761,9 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    if (NULL == p_session->p_room_name)
+    p_room = p_session->p_room;
+
+    if (NULL == p_room)
     {
         p_response->retcode = RETCODE_FAILURE;
 
@@ -805,44 +786,6 @@ opcode_msg_send (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    p_item = ht_get(
-        p_room_store,
-        p_session->p_room_name,
-        p_session->room_name_size
-    );
-    if (NULL == p_item)
-    {
-        // NOTE: Room doesn't exist
-
-        printf(
-            "Room %.*s doesn't exist\n",
-            p_session->room_name_size,
-            p_session->p_room_name
-        );
-
-        p_response->retcode = RETCODE_FAILURE;
-        goto cleanup;
-    }
-
-    p_room = *(room_t **)(p_item->p_value);
-
-    p_node = sll_get(p_room->p_sessions, &p_session, sizeof(p_session));
-    if (NULL == p_node)
-    {
-        // NOTE: Session is not member of room
-
-        printf(
-            "Session of user %.*s is not member of room %.*s\n",
-            p_session->username_size,
-            p_session->p_username,
-            p_session->room_name_size,
-            p_session->p_room_name
-        );
-
-        p_response->retcode = RETCODE_FAILURE;
-        goto cleanup;
-    }
-
     // Send msg to all sessions in room
     node_t * p_curr = p_room->p_sessions->p_head;
     while (NULL != p_curr)
@@ -853,13 +796,7 @@ opcode_msg_send (
             (0u == p_target->session_id) ||
             (0u == p_target->username_size) ||
             (NULL == p_target->p_username) ||
-            (p_room->name_size != p_target->room_name_size) ||
-            (NULL == p_target->p_room_name) ||
-            (0 != memcmp(
-                p_target->p_room_name,
-                p_room->p_name,
-                p_room->name_size
-            ))
+            (p_room != p_target->p_room)
         )
         {
             p_curr = p_curr->p_next;
@@ -879,8 +816,8 @@ opcode_msg_send (
             p_session->p_username,
             msg_size,
             p_msg,
-            p_session->room_name_size,
-            p_session->p_room_name
+            p_room->name_size,
+            p_room->p_name
         );
     }
 
@@ -903,8 +840,8 @@ opcode_join (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata         = NULL;
-    ht_t      * p_room_store      = NULL;
-    item_t    * p_item            = NULL;
+    sll_t     * p_room_store      = NULL;
+    node_t    * p_node            = NULL;
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
@@ -993,8 +930,8 @@ opcode_join (
 
     user_leave(p_session, p_room_store);
 
-    p_item = ht_get(p_room_store, p_room_name, room_name_size);
-    if (NULL == p_item)
+    p_node = sll_get(p_room_store, p_room_name, room_name_size);
+    if (NULL == p_node)
     {
         // NOTE: Room doesn't exist
 
@@ -1007,16 +944,10 @@ opcode_join (
             goto cleanup;
         }
 
-        status = ht_set(
-            p_room_store,
-            p_room->p_name,
-            p_room->name_size,
-            &p_room,
-            sizeof(p_room)
-        );
+        status = sll_append(p_room_store, &p_room, sizeof(p_room));
         if (STATUS_SUCCESS != status)
         {
-            fprintf(stderr, "ht_set failed in opcode_join\n");
+            fprintf(stderr, "sll_append failed in opcode_join\n");
             p_response->retcode = RETCODE_FAILURE;
 
             room_destroy(&p_room);
@@ -1035,16 +966,16 @@ opcode_join (
             );
         }
 
-        p_item = ht_get(p_room_store, p_room_name, room_name_size);
-        if (NULL == p_item)
+        p_node = sll_get(p_room_store, p_room_name, room_name_size);
+        if (NULL == p_node)
         {
-            fprintf(stderr, "ht_get failed in opcode_join\n");
+            fprintf(stderr, "sll_get failed in opcode_join\n");
             p_response->retcode = RETCODE_FAILURE;
             goto cleanup;
         }
     }
 
-    p_room = *(room_t **)(p_item->p_value);
+    p_room = *(room_t **)(p_node->p_data);
 
     // Join room
     status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
@@ -1055,10 +986,7 @@ opcode_join (
         goto cleanup;
     }
 
-    free(p_session->p_room_name);
-    p_session->p_room_name    = p_room_name;
-    p_session->room_name_size = room_name_size;
-    p_room_name = NULL;
+    p_session->p_room = p_room;
 
     if (p_server->b_verbose)
     {
@@ -1066,8 +994,8 @@ opcode_join (
             "%.*s joined room: \"%.*s\"\n",
             p_session->username_size,
             p_session->p_username,
-            p_session->room_name_size,
-            p_session->p_room_name
+            p_room->name_size,
+            p_room->p_name
         );
     }
 
@@ -1093,8 +1021,7 @@ opcode_list (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata        = NULL;
-    ht_t      * p_room_store     = NULL;
-    item_t    * p_item           = NULL;
+    sll_t     * p_room_store     = NULL;
     room_t    * p_room           = NULL;
     node_t    * p_curr           = NULL;
     session_t * p_target         = NULL;
@@ -1153,38 +1080,17 @@ opcode_list (
     switch (p_hdr->flag)
     {
         case LIST_FLAG_ROOM:
-            for (size_t idx = 0u; idx < p_room_store->capacity; idx++)
+            p_curr = p_room_store->p_head;
+            while (NULL != p_curr)
             {
-                sll_t * p_sll = (p_room_store->pp_buckets)[idx];
-                if (NULL == p_sll)
-                {
-                    continue;
-                }
-
-                p_curr = p_sll->p_head;
-                while (NULL != p_curr)
-                {
-                    p_item = p_curr->p_data;
-                    p_room = *(room_t **)(p_item->p_value);
-                    msg_send(p_session, p_room->p_name, p_room->name_size);
-                    p_curr = p_curr->p_next;
-                }
+                p_room = *(room_t **)(p_curr->p_data);
+                msg_send(p_session, p_room->p_name, p_room->name_size);
+                p_curr = p_curr->p_next;
             }
             break;
 
         case LIST_FLAG_USER:
-            p_item = ht_get(
-                p_room_store,
-                p_session->p_room_name,
-                p_session->room_name_size
-            );
-            if (NULL == p_item)
-            {
-                p_response->retcode = RETCODE_FAILURE;
-                break;
-            }
-            p_room = *(room_t **)(p_item->p_value);
-            p_curr = p_room->p_sessions->p_head;
+            p_curr = p_session->p_room->p_sessions->p_head;
             while (NULL != p_curr)
             {
                 p_target = *(session_t **)(p_curr->p_data);
@@ -1249,66 +1155,6 @@ validate_session (
 
         status = STATUS_INVALID_SESSION;
     }
-
-cleanup:
-    return status;
-}
-
-static status_t
-user_logout (session_t * p_session)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if (NULL == p_session)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    free(p_session->p_username);
-    p_session->p_username = NULL;
-
-    free(p_session->p_password);
-    p_session->p_password = NULL;
-
-    p_session->username_size = 0u;
-    p_session->password_size = 0u;
-    p_session->session_id    = 0u;
-
-cleanup:
-    return status;
-}
-
-static status_t
-user_leave (session_t * p_session, ht_t * p_room_store)
-{
-    status_t status = STATUS_SUCCESS;
-
-    item_t * p_item = NULL;
-    room_t * p_room = NULL;
-
-    if ((NULL == p_session) || (NULL == p_room_store))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    // Remove p_session from room's sessions SLL
-    p_item = ht_get(
-        p_room_store,
-        p_session->p_room_name,
-        p_session->room_name_size
-    );
-    if (NULL != p_item)
-    {
-        p_room = *(room_t **)(p_item->p_value);
-        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
-    }
-
-    free(p_session->p_room_name);
-    p_session->p_room_name = NULL;
-
-    p_session->room_name_size = 0u;
 
 cleanup:
     return status;

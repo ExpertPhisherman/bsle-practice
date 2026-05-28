@@ -3,6 +3,7 @@
 
 ## Server
 
+- Make parameters const in hash table functions to avoid passing parameters that cast away const
 - Send direct messages between users (via server)
 - Add file transfer within direct messages
 - Add admin user role and abilities

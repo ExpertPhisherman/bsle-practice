@@ -68,8 +68,7 @@ typedef struct session
     uint16_t   username_size;  // Size of username in bytes
     uint16_t   password_size;  // Size of password in bytes
     uint32_t   session_id;     // Unique session ID assigned after login
-    uint8_t  * p_room_name;    // Pointer to current room name
-    uint16_t   room_name_size; // Size of room name in bytes
+    room_t   * p_room;         // Pointer to current room
 } session_t;
 
 typedef struct request
@@ -100,7 +99,7 @@ typedef struct appdata
 {
     uint32_t          next_session_id; // Next session ID to assign
     ht_t            * p_cred_store;    // Pointer to credential storage
-    ht_t            * p_room_store;    // Pointer to room storage
+    sll_t           * p_room_store;    // Pointer to room storage
     opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
     pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;
@@ -178,6 +177,25 @@ room_t * room_create(uint8_t * p_name, uint16_t name_size);
  * @return void
  */
 void room_destroy(void * p_data);
+
+/*!
+ * @brief Affect session with logout
+ *
+ * @param[in] p_session Pointer to session
+ *
+ * @return Status of operation
+ */
+status_t user_logout(session_t * p_session);
+
+/*!
+ * @brief Affect session with leave room
+ *
+ * @param[in] p_session    Pointer to session
+ * @param[in] p_room_store Pointer to room storage
+ *
+ * @return Status of operation
+ */
+status_t user_leave(session_t * p_session, sll_t * p_room_store);
 
 #endif /* CHAT_H */
 

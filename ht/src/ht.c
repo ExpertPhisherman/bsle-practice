@@ -179,6 +179,7 @@ ht_destroy (ht_t * p_ht)
         p_sll = NULL;
     }
 
+    p_ht->p_destroy_key   = NULL;
     p_ht->p_destroy_value = NULL;
 
     p_ht->capacity = 0u;

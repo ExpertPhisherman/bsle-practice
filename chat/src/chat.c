@@ -12,7 +12,6 @@ uint16_t const g_default_lport   = 3333u;
 uint32_t const g_max_packet_size = 4096u;
 uint32_t const g_chunk_size      = 512u;
 size_t const   g_creds_capacity  = 17u;
-size_t const   g_rooms_capacity  = 17u;
 
 /*!
  * @brief Create application data
@@ -31,6 +30,21 @@ static appdata_t * appdata_create(void);
  * @return Status of operation
  */
 static status_t appdata_destroy(appdata_t * p_appdata);
+
+/*!
+ * @brief Compare room
+ *
+ * @param[in] p_data1 Pointer to room
+ * @param[in] p_data2 Pointer to room name
+ * @param[in] size    Size of room name in bytes
+ *
+ * @return void
+ */
+static int compare_room(
+    void const * p_data1,
+    void const * p_data2,
+    size_t size
+);
 
 /*!
  * @brief Handle request and generate response
@@ -254,23 +268,20 @@ chat_client_free (server_t * p_server, client_t * p_client)
     request_t  * p_request    = NULL;
     response_t * p_response   = NULL;
     appdata_t  * p_appdata    = NULL;
-    ht_t       * p_room_store = NULL;
-    item_t     * p_item       = NULL;
-    room_t     * p_room       = NULL;
+    sll_t      * p_room_store = NULL;
     bool         b_locked     = false;
 
-    if ((NULL == p_server) || (NULL == p_client))
+    if (
+        (NULL == p_server) ||
+        (NULL == p_client) ||
+        (NULL == p_client->p_clientdata)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
     p_state = p_client->p_clientdata;
-    if (NULL == p_state)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_session  = &(p_state->session);
     p_request  = &(p_state->request);
@@ -290,12 +301,6 @@ chat_client_free (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    free(p_session->p_username);
-    p_session->p_username = NULL;
-
-    free(p_session->p_password);
-    p_session->p_password = NULL;
-
     free(p_request->p_packet);
     p_request->p_packet = NULL;
 
@@ -305,20 +310,8 @@ chat_client_free (server_t * p_server, client_t * p_client)
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    // Remove p_session from room's sessions SLL
-    p_item = ht_get(
-        p_room_store,
-        p_session->p_room_name,
-        p_session->room_name_size
-    );
-    if (NULL != p_item)
-    {
-        p_room = *(room_t **)(p_item->p_value);
-        sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
-    }
-
-    free(p_session->p_room_name);
-    p_session->p_room_name = NULL;
+    user_logout(p_session);
+    user_leave(p_session, p_room_store);
 
     free(p_state);
     p_state = NULL;
@@ -406,6 +399,59 @@ cleanup:
     return;
 }
 
+status_t
+user_logout (session_t * p_session)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_session)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    free(p_session->p_username);
+    p_session->p_username = NULL;
+
+    free(p_session->p_password);
+    p_session->p_password = NULL;
+
+    p_session->username_size = 0u;
+    p_session->password_size = 0u;
+    p_session->session_id    = 0u;
+
+cleanup:
+    return status;
+}
+
+status_t
+user_leave (session_t * p_session, sll_t * p_room_store)
+{
+    status_t status = STATUS_SUCCESS;
+
+    room_t * p_room = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_session->p_room) ||
+        (NULL == p_room_store)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_room = p_session->p_room;
+
+    // Remove p_session from room's sessions SLL
+    sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
+
+    p_session->p_room = NULL;
+
+cleanup:
+    return status;
+}
+
 static appdata_t *
 appdata_create (void)
 {
@@ -413,7 +459,7 @@ appdata_create (void)
 
     appdata_t     * p_appdata       = NULL;
     ht_t          * p_cred_store    = NULL;
-    ht_t          * p_room_store    = NULL;
+    sll_t         * p_room_store    = NULL;
     room_t        * p_room          = NULL;
     opcode_func_t * pp_opcode_funcs = NULL;
 
@@ -442,11 +488,11 @@ appdata_create (void)
     );
     if (STATUS_SUCCESS != status)
     {
-        fprintf(stderr, "ht_set failed\n");
+        fprintf(stderr, "ht_set failed in appdata_create\n");
         goto cleanup;
     }
 
-    p_room_store = ht_create(g_rooms_capacity);
+    p_room_store = sll_create();
     if (NULL == p_room_store)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -454,7 +500,8 @@ appdata_create (void)
     }
     p_appdata->p_room_store = p_room_store;
 
-    p_room_store->p_destroy_value = room_destroy;
+    p_room_store->p_destroy_node = room_destroy;
+    p_room_store->p_compare_node = compare_room;
 
     p_room = room_create((uint8_t *)"general", 7u);
     if (NULL == p_room)
@@ -463,16 +510,10 @@ appdata_create (void)
         goto cleanup;
     }
 
-    status = ht_set(
-        p_room_store,
-        p_room->p_name,
-        p_room->name_size,
-        &p_room,
-        sizeof(p_room)
-    );
+    status = sll_append(p_room_store, &p_room, sizeof(p_room));
     if (STATUS_SUCCESS != status)
     {
-        fprintf(stderr, "ht_set failed\n");
+        fprintf(stderr, "sll_append failed in appdata_create\n");
 
         room_destroy(&p_room);
         p_room = NULL;
@@ -532,7 +573,7 @@ appdata_destroy (appdata_t * p_appdata)
     ht_destroy(p_appdata->p_cred_store);
     p_appdata->p_cred_store = NULL;
 
-    ht_destroy(p_appdata->p_room_store);
+    sll_destroy(p_appdata->p_room_store);
     p_appdata->p_room_store = NULL;
 
     free(p_appdata->pp_opcode_funcs);
@@ -545,6 +586,47 @@ appdata_destroy (appdata_t * p_appdata)
 
 cleanup:
     return status;
+}
+
+static int
+compare_room (
+    void const * p_data1,
+    void const * p_data2,
+    size_t size
+)
+{
+    int result = 0;
+
+    room_t  * p_room      = *(room_t  **)p_data1;
+    uint8_t * p_room_name =  (uint8_t  *)p_data2;
+
+    if (((NULL == p_room) || (NULL == p_room->p_name)) && (NULL == p_room_name))
+    {
+        goto cleanup;
+    }
+
+    if ((NULL == p_room) || (NULL == p_room->p_name))
+    {
+        result = -1;
+        goto cleanup;
+    }
+
+    if (NULL == p_room_name)
+    {
+        result = 1;
+        goto cleanup;
+    }
+
+    if (p_room->name_size != size)
+    {
+        result = (p_room->name_size > size) ? 1 : -1;
+        goto cleanup;
+    }
+
+    result = memcmp(p_room->p_name, p_room_name, size);
+
+cleanup:
+    return result;
 }
 
 static status_t
