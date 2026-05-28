@@ -310,8 +310,8 @@ chat_client_free (server_t * p_server, client_t * p_client)
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_logout(p_session);
     user_leave(p_session, p_room_store);
+    user_logout(p_session);
 
     free(p_state);
     p_state = NULL;
@@ -360,9 +360,12 @@ room_create (char const * p_name, uint16_t name_size)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-
     p_room->p_sessions = p_sessions;
     p_room->b_private  = false;
+    p_room->p_user1    = NULL;
+    p_room->user1_size = 0u;
+    p_room->p_user2    = NULL;
+    p_room->user2_size = 0u;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -441,7 +444,7 @@ user_leave (session_t * p_session, sll_t * p_room_store)
 
     p_room = p_session->p_room;
 
-    // Remove p_session from room's sessions SLL
+    // Remove user session from room's sessions SLL
     sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
 
     p_session->p_room = NULL;

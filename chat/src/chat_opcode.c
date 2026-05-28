@@ -370,8 +370,8 @@ opcode_login (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_logout(p_session);
     user_leave(p_session, p_room_store);
+    user_logout(p_session);
 
     pthread_mutex_unlock(&(p_appdata->lock));
     b_locked = false;
@@ -668,8 +668,8 @@ opcode_logout (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_logout(p_session);
     user_leave(p_session, p_room_store);
+    user_logout(p_session);
 
 cleanup:
     if (b_locked)

@@ -93,6 +93,10 @@ typedef struct room
     uint16_t   name_size;  // Size of name in bytes
     sll_t    * p_sessions; // Pointer to list of members' sessions
     bool       b_private;  // Boolean if room is private (direct message)
+    uint8_t  * p_user1;    // Name of first allowed private user
+    uint16_t   user1_size; // Size of first allowed private user in bytes
+    uint8_t  * p_user2;    // Name of second allowed private user
+    uint16_t   user2_size; // Size of second allowed private user in bytes
 } room_t;
 
 typedef struct appdata
@@ -108,7 +112,7 @@ typedef struct state
 {
     session_t  session;  // Session
     request_t  request;  // Request reused across iterations
-    response_t response; // Respose reused across iterations
+    response_t response; // Response reused across iterations
 } state_t;
 
 /*!
