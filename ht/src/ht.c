@@ -86,8 +86,8 @@ ht_create (size_t capacity)
     p_ht->p_hash_func     = djb2_hash;
     p_ht->p_display_item  = display_item;
     p_ht->p_compare_item  = compare_item;
-    p_ht->p_destroy_key   = free;
-    p_ht->p_destroy_value = free;
+    p_ht->p_destroy_key   = NULL;
+    p_ht->p_destroy_value = NULL;
 
     p_ht->pp_buckets = calloc(capacity, sizeof(*(p_ht->pp_buckets)));
     if (NULL == p_ht->pp_buckets)
@@ -127,11 +127,7 @@ ht_destroy (ht_t * p_ht)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (
-        (NULL == p_ht) ||
-        (NULL == p_ht->p_destroy_key) ||
-        (NULL == p_ht->p_destroy_value)
-    )
+    if (NULL == p_ht)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -166,10 +162,20 @@ ht_destroy (ht_t * p_ht)
             item_t * p_item = p_curr->p_data;
             if (NULL != p_item)
             {
-                (p_ht->p_destroy_key)(p_item->p_key);
+                if (NULL != p_ht->p_destroy_key)
+                {
+                    (p_ht->p_destroy_key)(*(void **)(p_item->p_key));
+                }
+
+                if (NULL != p_ht->p_destroy_value)
+                {
+                    (p_ht->p_destroy_value)(*(void **)(p_item->p_value));
+                }
+
+                free(p_item->p_key);
                 p_item->p_key = NULL;
 
-                (p_ht->p_destroy_value)(p_item->p_value);
+                free(p_item->p_value);
                 p_item->p_value = NULL;
             }
             p_curr = p_curr->p_next;
@@ -279,8 +285,7 @@ ht_set (
         (NULL == p_ht) ||
         (NULL == p_key) ||
         (NULL == p_value) ||
-        (NULL == p_ht->p_hash_func) ||
-        (NULL == p_ht->p_destroy_value)
+        (NULL == p_ht->p_hash_func)
     )
     {
         status = STATUS_NULL_ARG;
@@ -324,7 +329,12 @@ ht_set (
         item_t * p_item = p_node->p_data;
 
         // Destroy old value
-        (p_ht->p_destroy_value)(p_item->p_value);
+        if (NULL != p_ht->p_destroy_value)
+        {
+            (p_ht->p_destroy_value)(*(void **)(p_item->p_value));
+        }
+
+        free(p_item->p_value);
         p_item->p_value = NULL;
 
         // Set new value
@@ -373,9 +383,7 @@ ht_del (ht_t * p_ht, void const * p_key, size_t key_size)
     if (
         (NULL == p_ht) ||
         (NULL == p_key) ||
-        (NULL == p_ht->p_hash_func) ||
-        (NULL == p_ht->p_destroy_key) ||
-        (NULL == p_ht->p_destroy_value)
+        (NULL == p_ht->p_hash_func)
     )
     {
         status = STATUS_NULL_ARG;
@@ -412,10 +420,20 @@ ht_del (ht_t * p_ht, void const * p_key, size_t key_size)
         goto cleanup;
     }
 
-    (p_ht->p_destroy_key)(p_key_cpy);
+    if (NULL != p_ht->p_destroy_key)
+    {
+        (p_ht->p_destroy_key)(*(void **)(p_key_cpy));
+    }
+
+    if (NULL != p_ht->p_destroy_value)
+    {
+        (p_ht->p_destroy_value)(*(void **)(p_val_cpy));
+    }
+
+    free(p_key_cpy);
     p_key_cpy = NULL;
 
-    (p_ht->p_destroy_value)(p_val_cpy);
+    free(p_val_cpy);
     p_val_cpy = NULL;
 
     // Decrement length if last node removed
