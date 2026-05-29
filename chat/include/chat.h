@@ -183,6 +183,21 @@ room_t * room_create(char const * p_name, uint16_t name_size);
 void room_destroy(void * p_data);
 
 /*!
+ * @brief Affect session with login
+ *
+ * @param[in] p_session         Pointer to session
+ * @param[in] p_cred_store      Pointer to credential storage
+ * @param[in] p_next_session_id Pointer to next session ID to assign
+ *
+ * @return Session ID
+ */
+uint32_t user_login(
+    session_t * p_session,
+    ht_t      * p_cred_store,
+    uint32_t  * p_next_session_id
+);
+
+/*!
  * @brief Affect session with logout
  *
  * @param[in] p_session Pointer to session

@@ -8,10 +8,14 @@
 
 #include "chat.h"
 
-uint16_t const g_default_lport   = 3333u;
-uint32_t const g_max_packet_size = 4096u;
-uint32_t const g_chunk_size      = 512u;
-size_t const   g_creds_capacity  = 17u;
+uint16_t const g_default_lport     = 3333u;
+uint32_t const g_max_packet_size   = 4096u;
+uint32_t const g_chunk_size        = 512u;
+size_t const   g_creds_capacity    = 17u;
+uint16_t const g_username_size_min = 3u;
+uint16_t const g_username_size_max = 16u;
+uint16_t const g_password_size_min = 8u;
+uint16_t const g_password_size_max = 128u;
 
 /*!
  * @brief Create application data
@@ -38,7 +42,7 @@ static status_t appdata_destroy(appdata_t * p_appdata);
  * @param[in] p_data2 Pointer to room name
  * @param[in] size    Size of room name in bytes
  *
- * @return void
+ * @return Difference between rooms
  */
 static int compare_room(
     void const * p_data1,
@@ -210,6 +214,8 @@ chat_client_init (server_t * p_server, client_t * p_client)
     state_t * p_state           = NULL;
     uint8_t * p_request_packet  = NULL;
     uint8_t * p_response_packet = NULL;
+    uint8_t * p_username        = NULL;
+    uint8_t * p_password        = NULL;
 
     if ((NULL == p_server) || (NULL == p_client))
     {
@@ -231,6 +237,27 @@ chat_client_init (server_t * p_server, client_t * p_client)
     p_state->session.sockfd    = p_client->sockfd;
     p_state->request.p_packet  = NULL;
     p_state->response.p_packet = NULL;
+
+    p_state->session.username_size = 0u;
+    p_state->session.password_size = 0u;
+
+    p_username = calloc(g_username_size_max, sizeof(*p_username));
+    if (NULL == p_username)
+    {
+        fprintf(stderr, "calloc failed in chat_client_init\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_state->session.p_username = p_username;
+
+    p_password = calloc(g_password_size_max, sizeof(*p_password));
+    if (NULL == p_password)
+    {
+        fprintf(stderr, "calloc failed in chat_client_init\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_state->session.p_password = p_password;
 
     p_request_packet = calloc(g_max_packet_size, sizeof(*p_request_packet));
     if (NULL == p_request_packet)
@@ -313,6 +340,12 @@ chat_client_free (server_t * p_server, client_t * p_client)
     user_leave(p_session, p_room_store);
     user_logout(p_session);
 
+    free(p_session->p_username);
+    p_session->p_username = NULL;
+
+    free(p_session->p_password);
+    p_session->p_password = NULL;
+
     free(p_state);
     p_state = NULL;
 
@@ -390,6 +423,12 @@ room_destroy (void * p_data)
     free(p_room->p_name);
     p_room->p_name = NULL;
 
+    free(p_room->p_user1);
+    p_room->p_user1 = NULL;
+
+    free(p_room->p_user2);
+    p_room->p_user2 = NULL;
+
     sll_destroy(p_room->p_sessions);
     p_room->p_sessions = NULL;
 
@@ -398,6 +437,102 @@ room_destroy (void * p_data)
 
 cleanup:
     return;
+}
+
+uint32_t
+user_login (
+    session_t * p_session,
+    ht_t      * p_cred_store,
+    uint32_t  * p_next_session_id
+)
+{
+    uint32_t session_id = 0u;
+
+    server_t * p_server      = NULL;
+    item_t   * p_item        = NULL;
+    uint16_t   username_size = 0u;
+    uint16_t   password_size = 0u;
+    uint8_t  * p_username    = NULL;
+    uint8_t  * p_password    = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_cred_store)
+    )
+    {
+        goto cleanup;
+    }
+
+    p_server      = p_session->p_server;
+    username_size = p_session->username_size;
+    password_size = p_session->password_size;
+    p_username    = p_session->p_username;
+    p_password    = p_session->p_password;
+
+    // Authenticate login against hash table
+    p_item = ht_get(p_cred_store, p_username, username_size);
+
+    if (NULL != p_item)
+    {
+        // NOTE: User already exists
+
+        // Check if password doesn't match
+        if (!(
+            (p_item->value_size == password_size) &&
+            (0 == memcmp(p_item->p_value, p_password, password_size))
+        ))
+        {
+            // NOTE: Incorrect password
+
+            if (p_server->b_verbose)
+            {
+                printf(
+                    "Incorrect password for user: %.*s\n",
+                    username_size,
+                    p_username
+                );
+            }
+
+            goto cleanup;
+        }
+
+        if (p_server->b_verbose)
+        {
+            printf(
+                "Successful login to user: %.*s\n",
+                username_size,
+                p_username
+            );
+        }
+    }
+    else
+    {
+        // NOTE: User doesn't exist
+
+        // Create new user
+        ht_set(
+            p_cred_store,
+            p_username,
+            username_size,
+            p_password,
+            password_size
+        );
+
+        if (p_server->b_verbose)
+        {
+            printf(
+                "Created new user: %.*s\n",
+                username_size,
+                p_username
+            );
+        }
+    }
+
+    session_id = (*p_next_session_id)++;
+
+cleanup:
+    return session_id;
 }
 
 status_t
@@ -411,11 +546,8 @@ user_logout (session_t * p_session)
         goto cleanup;
     }
 
-    free(p_session->p_username);
-    p_session->p_username = NULL;
-
-    free(p_session->p_password);
-    p_session->p_password = NULL;
+    memset(p_session->p_username, 0, g_username_size_max);
+    memset(p_session->p_password, 0, g_password_size_max);
 
     p_session->username_size = 0u;
     p_session->password_size = 0u;

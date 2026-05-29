@@ -74,7 +74,6 @@ typedef struct __attribute__((packed)) login_hdr
     uint8_t  padding;
     uint16_t username_size;
     uint16_t password_size;
-    uint32_t session_id;
 } login_hdr_t;
 
 typedef struct __attribute__((packed)) logout_hdr
