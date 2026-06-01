@@ -87,7 +87,12 @@ opcode_default (
     int        sockfd   = -1;
     server_t * p_server = NULL;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -95,12 +100,6 @@ opcode_default (
 
     sockfd   = p_session->sockfd;
     p_server = p_session->p_server;
-
-    if (NULL == p_server)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_response->opcode  = OPCODE_DEFAULT;
     p_response->retcode = RETCODE_SUCCESS;
@@ -130,7 +129,12 @@ opcode_ping (
     int       sockfd           = -1;
     uint8_t * p_request_packet = NULL;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_request->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -138,12 +142,6 @@ opcode_ping (
 
     sockfd           = p_session->sockfd;
     p_request_packet = p_request->p_packet;
-
-    if (NULL == p_request_packet)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_response->opcode  = OPCODE_PING;
     p_response->retcode = RETCODE_SUCCESS;
@@ -179,7 +177,13 @@ opcode_echo (
     uint8_t * p_request_packet  = NULL;
     uint8_t * p_response_packet = NULL;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_request->p_packet) ||
+        (NULL == p_response->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -188,12 +192,6 @@ opcode_echo (
     sockfd            = p_session->sockfd;
     p_request_packet  = p_request->p_packet;
     p_response_packet = p_response->p_packet;
-
-    if ((NULL == p_request_packet) || (NULL == p_response_packet))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_response->opcode  = OPCODE_ECHO;
     p_response->retcode = RETCODE_SUCCESS;
@@ -268,7 +266,13 @@ opcode_quit (
     server_t * p_server          = NULL;
     uint8_t  * p_request_packet  = NULL;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_request->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -277,12 +281,6 @@ opcode_quit (
     sockfd            = p_session->sockfd;
     p_server          = p_session->p_server;
     p_request_packet  = p_request->p_packet;
-
-    if ((NULL == p_server) || (NULL == p_request_packet))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_response->opcode  = OPCODE_QUIT;
     p_response->retcode = RETCODE_SUCCESS;
@@ -312,8 +310,6 @@ opcode_login (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata         = NULL;
-    ht_t      * p_cred_store      = NULL;
-    sll_t     * p_room_store      = NULL;
     int         sockfd            = -1;
     server_t  * p_server          = NULL;
     uint8_t   * p_request_packet  = NULL;
@@ -325,7 +321,15 @@ opcode_login (
     uint8_t   * p_password        = NULL;
     bool        b_locked          = false;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet) ||
+        (NULL == p_response->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -335,40 +339,10 @@ opcode_login (
     p_server          = p_session->p_server;
     p_request_packet  = p_request->p_packet;
     p_response_packet = p_response->p_packet;
+    p_appdata         = p_server->p_appdata;
 
-    if (
-        (NULL == p_server) ||
-        (NULL == p_request_packet) ||
-        (NULL == p_response_packet)
-    )
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_appdata = p_server->p_appdata;
-    if (NULL == p_appdata)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_cred_store = p_appdata->p_cred_store;
-    if (NULL == p_cred_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_room_store = p_appdata->p_room_store;
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    user_leave(p_session, p_room_store);
-    user_logout(p_session);
+    user_leave(p_session, p_appdata);
+    user_logout(p_session, p_appdata);
 
     p_response->opcode  = OPCODE_LOGIN;
     p_response->retcode = RETCODE_SUCCESS;
@@ -461,32 +435,31 @@ opcode_login (
     p_session->username_size = username_size;
     p_session->password_size = password_size;
 
-    session_id = user_login(
-        p_session,
-        p_cred_store,
-        &(p_appdata->next_session_id)
-    );
+    session_id = user_login(p_session, p_appdata);
     if (0u == session_id)
     {
         p_response->retcode = RETCODE_FAILURE;
     }
 
 cleanup:
-    // Copy session ID into response
-    *(uint32_t *)(p_response_packet + p_response->size) = htonl(
-        session_id
-    );
+    if (
+        (NULL != p_session) &&
+        (NULL != p_response) &&
+        (NULL != p_response->p_packet)
+    )
+    {
+        // Copy session ID into response
+        *(uint32_t *)(p_response_packet + p_response->size) = htonl(session_id);
+        p_response->size      += FIELD_SIZE_SESSION_ID;
+        p_session->session_id  = session_id;
 
-    p_response->size += FIELD_SIZE_SESSION_ID;
-
-    p_session->session_id = session_id;
-
-    // Always set response size so packet sends entirely
-    p_response->size = (
-        FIELD_SIZE_OPCODE +
-        FIELD_SIZE_RETCODE +
-        FIELD_SIZE_SESSION_ID
-    );
+        // Always set response size so packet sends entirely
+        p_response->size = (
+            FIELD_SIZE_OPCODE +
+            FIELD_SIZE_RETCODE +
+            FIELD_SIZE_SESSION_ID
+        );
+    }
 
     if (b_locked)
     {
@@ -506,41 +479,28 @@ opcode_logout (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata        = NULL;
-    sll_t     * p_room_store     = NULL;
     int         sockfd           = -1;
     server_t  * p_server         = NULL;
     uint8_t   * p_request_packet = NULL;
     bool        b_locked         = false;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_server          = p_session->p_server;
-    p_request_packet  = p_request->p_packet;
-
-    if ((NULL == p_server) || (NULL == p_request_packet))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_appdata = p_server->p_appdata;
-    if (NULL == p_appdata)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_room_store = p_appdata->p_room_store;
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
 
     p_response->opcode  = OPCODE_LOGOUT;
     p_response->retcode = RETCODE_SUCCESS;
@@ -573,8 +533,8 @@ opcode_logout (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_leave(p_session, p_room_store);
-    user_logout(p_session);
+    user_leave(p_session, p_appdata);
+    user_logout(p_session, p_appdata);
 
 cleanup:
     if (b_locked)
@@ -594,44 +554,31 @@ opcode_msg_send (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t * p_appdata         = NULL;
-    sll_t     * p_room_store      = NULL;
-    int         sockfd            = -1;
-    server_t  * p_server          = NULL;
-    uint8_t   * p_request_packet  = NULL;
-    room_t    * p_room            = NULL;
-    uint8_t   * p_msg             = NULL;
-    bool        b_locked          = false;
+    appdata_t * p_appdata        = NULL;
+    int         sockfd           = -1;
+    server_t  * p_server         = NULL;
+    uint8_t   * p_request_packet = NULL;
+    room_t    * p_room           = NULL;
+    uint8_t   * p_msg            = NULL;
+    bool        b_locked         = false;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_server          = p_session->p_server;
-    p_request_packet  = p_request->p_packet;
-
-    if ((NULL == p_server) || (NULL == p_request_packet))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_appdata = p_server->p_appdata;
-    if (NULL == p_appdata)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_room_store = p_appdata->p_room_store;
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
 
     p_response->opcode  = OPCODE_MSG_SEND;
     p_response->retcode = RETCODE_SUCCESS;
@@ -758,17 +705,26 @@ opcode_join (
     // bool        b_private         = false;
     bool        b_locked          = false;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_server          = p_session->p_server;
-    p_request_packet  = p_request->p_packet;
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
 
-    if ((NULL == p_server) || (NULL == p_request_packet))
+    if (NULL == p_room_store)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -776,20 +732,6 @@ opcode_join (
 
     p_response->opcode  = OPCODE_JOIN;
     p_response->retcode = RETCODE_SUCCESS;
-
-    p_appdata = p_server->p_appdata;
-    if (NULL == p_appdata)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_room_store = p_appdata->p_room_store;
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     join_hdr_t * p_hdr = (join_hdr_t *)(p_request_packet + p_request->size);
 
@@ -846,7 +788,7 @@ opcode_join (
     //     room_name_size = dm_name_size;
     // }
 
-    user_leave(p_session, p_room_store);
+    user_leave(p_session, p_appdata);
 
     p_node = sll_get(p_room_store, p_room_name, room_name_size);
     if (NULL == p_node)
@@ -975,30 +917,25 @@ opcode_list (
     uint8_t     flag             = 0u;
     bool        b_locked         = false;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_server          = p_session->p_server;
-    p_request_packet  = p_request->p_packet;
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
 
-    if (NULL == p_request_packet)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_appdata = p_server->p_appdata;
-    if (NULL == p_appdata)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_room_store = p_appdata->p_room_store;
     if (NULL == p_room_store)
     {
         status = STATUS_NULL_ARG;
@@ -1083,18 +1020,18 @@ validate_session (
 
     server_t * p_server = NULL;
 
-    if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
     p_server = p_session->p_server;
-    if (NULL == p_server)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     if (
         (0u == p_session->session_id) ||
@@ -1103,7 +1040,7 @@ validate_session (
     {
         p_response->retcode = RETCODE_SESSION_ERROR;
 
-        if (p_session->p_server->b_verbose)
+        if (p_server->b_verbose)
         {
             fprintf(stderr, "Invalid session\n");
         }
@@ -1168,6 +1105,7 @@ user_creds_content_valid (
 
     if ((NULL == p_username) || (NULL == p_password))
     {
+        b_valid = false;
         goto cleanup;
     }
 

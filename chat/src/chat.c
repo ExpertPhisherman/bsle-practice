@@ -337,8 +337,8 @@ chat_client_free (server_t * p_server, client_t * p_client)
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_leave(p_session, p_room_store);
-    user_logout(p_session);
+    user_leave(p_session, p_appdata);
+    user_logout(p_session, p_appdata);
 
     free(p_session->p_username);
     p_session->p_username = NULL;
@@ -440,15 +440,12 @@ cleanup:
 }
 
 uint32_t
-user_login (
-    session_t * p_session,
-    ht_t      * p_cred_store,
-    uint32_t  * p_next_session_id
-)
+user_login (session_t * p_session, appdata_t * p_appdata)
 {
     uint32_t session_id = 0u;
 
     server_t * p_server      = NULL;
+    ht_t     * p_cred_store  = NULL;
     item_t   * p_item        = NULL;
     uint16_t   username_size = 0u;
     uint16_t   password_size = 0u;
@@ -457,14 +454,15 @@ user_login (
 
     if (
         (NULL == p_session) ||
-        (NULL == p_session->p_server) ||
-        (NULL == p_cred_store)
+        (NULL == p_appdata) ||
+        (NULL == p_appdata->p_cred_store)
     )
     {
         goto cleanup;
     }
 
     p_server      = p_session->p_server;
+    p_cred_store  = p_appdata->p_cred_store;
     username_size = p_session->username_size;
     password_size = p_session->password_size;
     p_username    = p_session->p_username;
@@ -529,18 +527,23 @@ user_login (
         }
     }
 
-    session_id = (*p_next_session_id)++;
+    session_id = (p_appdata->next_session_id)++;
 
 cleanup:
     return session_id;
 }
 
 status_t
-user_logout (session_t * p_session)
+user_logout (session_t * p_session, appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_session)
+    if (
+        (NULL == p_session) ||
+        (NULL == p_session->p_username) ||
+        (NULL == p_session->p_password) ||
+        (NULL == p_appdata)
+    )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -558,7 +561,7 @@ cleanup:
 }
 
 status_t
-user_leave (session_t * p_session, sll_t * p_room_store)
+user_leave (session_t * p_session, appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -566,8 +569,8 @@ user_leave (session_t * p_session, sll_t * p_room_store)
 
     if (
         (NULL == p_session) ||
-        (NULL == p_session->p_room) ||
-        (NULL == p_room_store)
+        (NULL == p_appdata) ||
+        (NULL == p_appdata->p_room_store)
     )
     {
         status = STATUS_NULL_ARG;
@@ -575,6 +578,10 @@ user_leave (session_t * p_session, sll_t * p_room_store)
     }
 
     p_room = p_session->p_room;
+    if (NULL == p_room)
+    {
+        goto cleanup;
+    }
 
     // Remove user session from room's sessions SLL
     sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));

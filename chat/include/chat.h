@@ -185,36 +185,32 @@ void room_destroy(void * p_data);
 /*!
  * @brief Affect session with login
  *
- * @param[in] p_session         Pointer to session
- * @param[in] p_cred_store      Pointer to credential storage
- * @param[in] p_next_session_id Pointer to next session ID to assign
+ * @param[in] p_session Pointer to session
+ * @param[in] p_appdata Pointer to application data
  *
  * @return Session ID
  */
-uint32_t user_login(
-    session_t * p_session,
-    ht_t      * p_cred_store,
-    uint32_t  * p_next_session_id
-);
+uint32_t user_login(session_t * p_session, appdata_t * p_appdata);
 
 /*!
  * @brief Affect session with logout
  *
  * @param[in] p_session Pointer to session
+ * @param[in] p_appdata Pointer to application data
  *
  * @return Status of operation
  */
-status_t user_logout(session_t * p_session);
+status_t user_logout(session_t * p_session, appdata_t * p_appdata);
 
 /*!
  * @brief Affect session with leave room
  *
- * @param[in] p_session    Pointer to session
- * @param[in] p_room_store Pointer to room storage
+ * @param[in] p_session Pointer to session
+ * @param[in] p_appdata Pointer to application data
  *
  * @return Status of operation
  */
-status_t user_leave(session_t * p_session, sll_t * p_room_store);
+status_t user_leave(session_t * p_session, appdata_t * p_appdata);
 
 #endif /* CHAT_H */
 
