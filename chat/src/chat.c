@@ -8,14 +8,16 @@
 
 #include "chat.h"
 
-uint16_t const g_default_lport     = 3333u;
-uint32_t const g_max_packet_size   = 4096u;
-uint32_t const g_chunk_size        = 512u;
-size_t const   g_creds_capacity    = 17u;
-uint16_t const g_username_size_min = 3u;
-uint16_t const g_username_size_max = 16u;
-uint16_t const g_password_size_min = 8u;
-uint16_t const g_password_size_max = 128u;
+uint16_t const g_default_lport      = 3333u;
+uint32_t const g_max_packet_size    = 4096u;
+uint32_t const g_chunk_size         = 512u;
+size_t const   g_creds_capacity     = 17u;
+size_t const   g_pm_reqs_capacity   = 17u;
+size_t const   g_file_reqs_capacity = 17u;
+uint16_t const g_username_size_min  = 3u;
+uint16_t const g_username_size_max  = 16u;
+uint16_t const g_password_size_min  = 8u;
+uint16_t const g_password_size_max  = 128u;
 
 /*!
  * @brief Create application data
@@ -367,8 +369,11 @@ room_create (char const * p_name, uint16_t name_size)
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t * p_room     = NULL;
-    sll_t  * p_sessions = NULL;
+    room_t  * p_room      = NULL;
+    sll_t   * p_sessions  = NULL;
+    ht_t    * p_pm_reqs   = NULL;
+    ht_t    * p_file_reqs = NULL;
+    uint8_t * p_plus_chr  = NULL;
 
     p_room = calloc(1u, sizeof(*p_room));
     if (NULL == p_room)
@@ -397,11 +402,40 @@ room_create (char const * p_name, uint16_t name_size)
         goto cleanup;
     }
     p_room->p_sessions = p_sessions;
+
+    p_pm_reqs = ht_create(g_pm_reqs_capacity);
+    if (NULL == p_pm_reqs)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_room->p_pm_reqs = p_pm_reqs;
+
+    p_file_reqs = ht_create(g_file_reqs_capacity);
+    if (NULL == p_file_reqs)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_room->p_file_reqs = p_file_reqs;
+
     p_room->b_private  = false;
     p_room->p_user1    = NULL;
     p_room->user1_size = 0u;
     p_room->p_user2    = NULL;
     p_room->user2_size = 0u;
+
+    // Check if '+' character is in room name
+    p_plus_chr = memchr(p_room->p_name, '+', name_size);
+
+    if (NULL != p_plus_chr)
+    {
+        p_room->b_private  = true;
+        p_room->p_user1    = p_room->p_name;
+        p_room->user1_size = p_plus_chr - p_room->p_user1;
+        p_room->p_user2    = p_plus_chr + 1u;
+        p_room->user2_size = p_room->p_name + name_size - p_room->p_user2;
+    }
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -426,14 +460,20 @@ room_destroy (void * p_data)
     free(p_room->p_name);
     p_room->p_name = NULL;
 
-    free(p_room->p_user1);
-    p_room->p_user1 = NULL;
-
-    free(p_room->p_user2);
-    p_room->p_user2 = NULL;
-
     sll_destroy(p_room->p_sessions);
     p_room->p_sessions = NULL;
+
+    ht_destroy(p_room->p_pm_reqs);
+    p_room->p_pm_reqs = NULL;
+
+    ht_destroy(p_room->p_file_reqs);
+    p_room->p_file_reqs = NULL;
+
+    p_room->b_private  = false;
+    p_room->p_user1    = NULL;
+    p_room->user1_size = 0u;
+    p_room->p_user2    = NULL;
+    p_room->user2_size = 0u;
 
     free(p_room);
     p_room = NULL;
