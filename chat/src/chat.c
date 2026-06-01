@@ -460,6 +460,8 @@ room_destroy (void * p_data)
     free(p_room->p_name);
     p_room->p_name = NULL;
 
+    p_room->name_size = 0u;
+
     sll_destroy(p_room->p_sessions);
     p_room->p_sessions = NULL;
 
