@@ -31,36 +31,6 @@ static status_t validate_session(
 );
 
 /*!
- * @brief Check if credentials length is valid
- *
- * @param[in] username_size Size of username in bytes
- * @param[in] password_size Size of password in bytes
- *
- * @return Boolean if credentials length is valid
- */
-static bool user_creds_len_valid(
-    uint16_t username_size,
-    uint16_t password_size
-);
-
-/*!
- * @brief Check if credentials content is valid
- *
- * @param[in] p_username    Pointer to username
- * @param[in] username_size Size of username in bytes
- * @param[in] p_password    Pointer to password
- * @param[in] password_size Size of password in bytes
- *
- * @return Boolean if credentials content is valid
- */
-static bool user_creds_content_valid(
-    uint8_t  * p_username,
-    uint16_t   username_size,
-    uint8_t  * p_password,
-    uint16_t   password_size
-);
-
-/*!
  * @brief Send message to session
  *
  * @param[in] p_session Pointer to session
@@ -341,8 +311,14 @@ opcode_login (
     p_response_packet = p_response->p_packet;
     p_appdata         = p_server->p_appdata;
 
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
     user_leave(p_session, p_appdata);
     user_logout(p_session, p_appdata);
+
+    pthread_mutex_unlock(&(p_appdata->lock));
+    b_locked = false;
 
     p_response->opcode  = OPCODE_LOGIN;
     p_response->retcode = RETCODE_SUCCESS;
@@ -354,6 +330,9 @@ opcode_login (
     username_size = ntohs(p_hdr->username_size);
     password_size = ntohs(p_hdr->password_size);
 
+    p_session->username_size = username_size;
+    p_session->password_size = password_size;
+
     p_request->size += sizeof(*p_hdr);
 
     if ((p_request->size + username_size + password_size) > g_max_packet_size)
@@ -364,7 +343,7 @@ opcode_login (
         goto cleanup;
     }
 
-    if (!user_creds_len_valid(username_size, password_size))
+    if (!user_creds_len_valid(p_session, NULL))
     {
         sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
         p_response->retcode = RETCODE_FAILURE;
@@ -411,12 +390,7 @@ opcode_login (
         );
     }
 
-    if (!user_creds_content_valid(
-        p_username,
-        username_size,
-        p_password,
-        password_size
-    ))
+    if (!user_creds_content_valid(p_session, NULL))
     {
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
@@ -431,9 +405,6 @@ opcode_login (
         fprintf(stderr, "Why so many sessions?\n");
         p_appdata->next_session_id = 1u;
     }
-
-    p_session->username_size = username_size;
-    p_session->password_size = password_size;
 
     session_id = user_login(p_session, p_appdata);
     if (0u == session_id)
@@ -1050,98 +1021,6 @@ validate_session (
 
 cleanup:
     return status;
-}
-
-static bool
-user_creds_len_valid (
-    uint16_t username_size,
-    uint16_t password_size
-)
-{
-    bool b_valid = true;
-
-    // Validate username and password length
-    if (!(
-        (g_username_size_min <= username_size) &&
-        (g_username_size_max >= username_size)
-    ))
-    {
-        fprintf(
-            stderr,
-            "Username: 3-16 alphanumeric or underscore\n"
-        );
-
-        b_valid = false;
-        goto cleanup;
-    }
-
-    if (!(
-        (g_password_size_min <= password_size) &&
-        (g_password_size_max >= password_size)
-    ))
-    {
-        fprintf(
-            stderr,
-            "Password: 8-128 printable characters excluding space\n"
-        );
-
-        b_valid = false;
-        goto cleanup;
-    }
-
-cleanup:
-    return b_valid;
-}
-
-static bool
-user_creds_content_valid (
-    uint8_t  * p_username,
-    uint16_t   username_size,
-    uint8_t  * p_password,
-    uint16_t   password_size
-)
-{
-    bool b_valid = true;
-
-    if ((NULL == p_username) || (NULL == p_password))
-    {
-        b_valid = false;
-        goto cleanup;
-    }
-
-    // Validate username and password content
-    for (size_t idx = 0u; idx < username_size; idx++)
-    {
-        uint8_t chr = p_username[idx];
-        if (!(isalnum(chr) || ('_' == chr)))
-        {
-            fprintf(
-                stderr,
-                "Username: 3-16 alphanumeric or underscore\n"
-            );
-
-            b_valid = false;
-            goto cleanup;
-        }
-    }
-
-    for (size_t idx = 0u; idx < password_size; idx++)
-    {
-        uint8_t chr = p_password[idx];
-        if (!(isprint(chr) && (' ' != chr)))
-        {
-            fprintf(
-                stderr,
-                "Password: 8-128 printable characters excluding space\n"
-            );
-
-            b_valid = false;
-            goto cleanup;
-        }
-    }
-
-cleanup:
-    return b_valid;
 }
 
 static status_t

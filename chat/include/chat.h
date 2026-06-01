@@ -212,6 +212,26 @@ status_t user_logout(session_t * p_session, appdata_t * p_appdata);
  */
 status_t user_leave(session_t * p_session, appdata_t * p_appdata);
 
+/*!
+ * @brief Check if credentials length is valid
+ *
+ * @param[in] p_session Pointer to session
+ * @param[in] p_appdata Pointer to application data
+ *
+ * @return Boolean if credentials length is valid
+ */
+bool user_creds_len_valid(session_t * p_session, appdata_t * p_appdata);
+
+/*!
+ * @brief Check if credentials content is valid
+ *
+ * @param[in] p_session Pointer to session
+ * @param[in] p_appdata Pointer to application data
+ *
+ * @return Boolean if credentials content is valid
+ */
+bool user_creds_content_valid(session_t * p_session, appdata_t * p_appdata);
+
 #endif /* CHAT_H */
 
 /*** end of file ***/

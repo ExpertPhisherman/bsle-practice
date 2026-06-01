@@ -572,6 +572,7 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
 
     if (
         (NULL == p_session) ||
+        (NULL == p_session->p_room) ||
         (NULL == p_appdata) ||
         (NULL == p_appdata->p_room_store)
     )
@@ -581,10 +582,6 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
     }
 
     p_room = p_session->p_room;
-    if (NULL == p_room)
-    {
-        goto cleanup;
-    }
 
     // Remove user session from room's sessions SLL
     sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
@@ -593,6 +590,122 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
 
 cleanup:
     return status;
+}
+
+bool
+user_creds_len_valid (session_t * p_session, appdata_t * p_appdata)
+{
+    bool b_valid = true;
+    UNUSED(p_appdata);
+
+    uint16_t username_size = 0u;
+    uint16_t password_size = 0u;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_session->p_username) ||
+        (NULL == p_session->p_password)
+    )
+    {
+        b_valid = false;
+        goto cleanup;
+    }
+
+    username_size = p_session->username_size;
+    password_size = p_session->password_size;
+
+    // Validate username and password length
+    if (!(
+        (g_username_size_min <= username_size) &&
+        (g_username_size_max >= username_size)
+    ))
+    {
+        fprintf(
+            stderr,
+            "Username: 3-16 alphanumeric or underscore\n"
+        );
+
+        b_valid = false;
+        goto cleanup;
+    }
+
+    if (!(
+        (g_password_size_min <= password_size) &&
+        (g_password_size_max >= password_size)
+    ))
+    {
+        fprintf(
+            stderr,
+            "Password: 8-128 printable characters excluding space\n"
+        );
+
+        b_valid = false;
+        goto cleanup;
+    }
+
+cleanup:
+    return b_valid;
+}
+
+bool
+user_creds_content_valid (session_t * p_session, appdata_t * p_appdata)
+{
+    bool b_valid = true;
+    UNUSED(p_appdata);
+
+    uint16_t   username_size = 0u;
+    uint16_t   password_size = 0u;
+    uint8_t  * p_username    = NULL;
+    uint8_t  * p_password    = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_session->p_username) ||
+        (NULL == p_session->p_password)
+    )
+    {
+        b_valid = false;
+        goto cleanup;
+    }
+
+    username_size = p_session->username_size;
+    password_size = p_session->password_size;
+    p_username    = p_session->p_username;
+    p_password    = p_session->p_password;
+
+    // Validate username and password content
+    for (size_t idx = 0u; idx < username_size; idx++)
+    {
+        uint8_t chr = p_username[idx];
+        if (!(isalnum(chr) || ('_' == chr)))
+        {
+            fprintf(
+                stderr,
+                "Username: 3-16 alphanumeric or underscore\n"
+            );
+
+            b_valid = false;
+            goto cleanup;
+        }
+    }
+
+    for (size_t idx = 0u; idx < password_size; idx++)
+    {
+        uint8_t chr = p_password[idx];
+        if (!(isprint(chr) && (' ' != chr)))
+        {
+            fprintf(
+                stderr,
+                "Password: 8-128 printable characters excluding space\n"
+            );
+
+            b_valid = false;
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    return b_valid;
 }
 
 static appdata_t *
