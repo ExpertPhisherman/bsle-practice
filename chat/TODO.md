@@ -3,7 +3,8 @@
 
 ## Server
 
-- Hash table inside every room that maps [receiver of request] -> [sender of request], so every user checks it before sending a new request to someone who already sent one to them
+- Hash table inside every room that maps session pointers [receiver of request] -> [sender of request], so every user checks it before sending a new request to someone who already sent one to them
+- Add headers for response packets
 - Send direct messages between users (via server)
 - Add file transfer within direct messages
 - Add admin user role and abilities
