@@ -151,15 +151,18 @@ chat_client_run (server_t * p_server, client_t * p_client)
     int sockfd = p_client->sockfd;
 
     p_request->opcode = OPCODE_DEFAULT;
-    p_request->size   = FIELD_SIZE_OPCODE;
+    p_request->size   = sizeof(p_request->opcode);
     memset(p_request->p_packet, 0, g_max_packet_size);
 
     p_response->opcode  = OPCODE_DEFAULT;
     p_response->retcode = RETCODE_FAILURE;
-    p_response->size    = FIELD_SIZE_OPCODE + FIELD_SIZE_RETCODE;
+    p_response->size    = (
+        sizeof(p_response->opcode) +
+        sizeof(p_response->retcode)
+    );
     memset(p_response->p_packet, 0, g_max_packet_size);
 
-    sockutil_recvall(sockfd, p_request->p_packet, FIELD_SIZE_OPCODE);
+    sockutil_recvall(sockfd, p_request->p_packet, p_request->size);
     p_request->opcode = (p_request->p_packet)[FIELD_OFFSET_OPCODE];
 
     status = handle_request(p_session, p_request, p_response);
