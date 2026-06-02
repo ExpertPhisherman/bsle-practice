@@ -660,6 +660,8 @@ user_join (session_t * p_session, appdata_t * p_appdata)
         goto cleanup;
     }
 
+    p_session->p_room = p_room;
+
 cleanup:
     return status;
 }
