@@ -314,7 +314,6 @@ opcode_login (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_leave(p_session, p_appdata);
     user_logout(p_session, p_appdata);
 
     pthread_mutex_unlock(&(p_appdata->lock));
@@ -504,7 +503,6 @@ opcode_logout (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_leave(p_session, p_appdata);
     user_logout(p_session, p_appdata);
 
 cleanup:
@@ -747,8 +745,6 @@ opcode_join (
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
-
-    user_leave(p_session, p_appdata);
 
     p_node = sll_get(p_room_store, p_room_name, room_name_size);
     if (NULL == p_node)

@@ -594,6 +594,8 @@ user_logout (session_t * p_session, appdata_t * p_appdata)
         goto cleanup;
     }
 
+    user_leave(p_session, p_appdata);
+
     memset(p_session->p_username, 0, g_username_size_max);
     memset(p_session->p_password, 0, g_password_size_max);
 
@@ -624,6 +626,8 @@ user_join (session_t * p_session, appdata_t * p_appdata)
     }
 
     p_room = p_session->p_room;
+
+    user_leave(p_session, p_appdata);
 
     // Check if current user session is allowed to enter private room
     if (p_room->b_private)
