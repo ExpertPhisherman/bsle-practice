@@ -205,6 +205,16 @@ uint32_t user_login(session_t * p_session, appdata_t * p_appdata);
 status_t user_logout(session_t * p_session, appdata_t * p_appdata);
 
 /*!
+ * @brief Affect session with join room
+ *
+ * @param[in] p_session Pointer to session
+ * @param[in] p_appdata Pointer to application data
+ *
+ * @return Status of operation
+ */
+status_t user_join(session_t * p_session, appdata_t * p_appdata);
+
+/*!
  * @brief Affect session with leave room
  *
  * @param[in] p_session Pointer to session

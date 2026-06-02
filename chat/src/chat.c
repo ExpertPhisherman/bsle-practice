@@ -606,6 +606,61 @@ cleanup:
 }
 
 status_t
+user_join (session_t * p_session, appdata_t * p_appdata)
+{
+    status_t status = STATUS_SUCCESS;
+
+    room_t * p_room = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_session->p_username) ||
+        (NULL == p_session->p_password) ||
+        (NULL == p_appdata)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_room = p_session->p_room;
+
+    // Check if current user session is allowed to enter private room
+    if (p_room->b_private)
+    {
+        if (!((
+            (p_session->username_size == p_room->user1_size) &&
+            (0 == memcmp(
+                p_session->p_username,
+                p_room->p_user1,
+                p_session->username_size
+            ))
+            ) ||
+            ((p_session->username_size == p_room->user2_size) &&
+            (0 == memcmp(
+                p_session->p_username,
+                p_room->p_user2,
+                p_session->username_size
+            ))
+        )))
+        {
+            status = STATUS_FAILURE;
+            goto cleanup;
+        }
+    }
+
+    status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
+    if (STATUS_SUCCESS != status)
+    {
+        fprintf(stderr, "sll_append failed in user_join\n");
+        goto cleanup;
+    }
+
+cleanup:
+    return status;
+}
+
+status_t
 user_leave (session_t * p_session, appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;

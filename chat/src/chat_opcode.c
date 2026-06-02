@@ -748,17 +748,6 @@ opcode_join (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    // TODO: Mutate room name to be canonical for private messaging
-    // "user1+user2"
-    // if (b_private)
-    // {
-    //     uint8_t * p_user1 = p_session->p_username;
-    //     uint8_t * p_user2 = p_room_name;
-
-    //     p_room_name    = p_dm_name;
-    //     room_name_size = dm_name_size;
-    // }
-
     user_leave(p_session, p_appdata);
 
     p_node = sll_get(p_room_store, p_room_name, room_name_size);
@@ -774,12 +763,6 @@ opcode_join (
             p_response->retcode = RETCODE_FAILURE;
             goto cleanup;
         }
-
-        // TODO: Set room as private if private flag is received
-        // if (b_private)
-        // {
-        //     p_room->b_private = true;
-        // }
 
         status = sll_append(p_room_store, &p_room, sizeof(p_room));
         if (STATUS_SUCCESS != status)
@@ -813,40 +796,14 @@ opcode_join (
 
     p_room = *(room_t **)(p_node->p_data);
 
-    // Check if current user session is allowed to enter private room
-    // if (p_room->b_private)
-    // {
-    //     if (!((
-    //         (p_session->username_size == p_room->user1_size) &&
-    //         (0 == memcmp(
-    //             p_session->p_username,
-    //             p_room->p_user1,
-    //             p_session->username_size
-    //         ))
-    //         ) ||
-    //         ((p_session->username_size == p_room->user2_size) &&
-    //         (0 == memcmp(
-    //             p_session->p_username,
-    //             p_room->p_user2,
-    //             p_session->username_size
-    //         ))
-    //     )))
-    //     {
-    //         p_response->retcode = RETCODE_FAILURE;
-    //         goto cleanup;
-    //     }
-    // }
+    p_session->p_room = p_room;
 
-    // Join room
-    status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
+    status = user_join(p_session, p_appdata);
     if (STATUS_SUCCESS != status)
     {
-        fprintf(stderr, "sll_append failed in opcode_join\n");
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
-
-    p_session->p_room = p_room;
 
     if (p_server->b_verbose)
     {
