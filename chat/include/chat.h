@@ -48,13 +48,17 @@ typedef enum opcode
     OPCODE_MSG_RECV = 0x07, // Receive single message
     OPCODE_JOIN     = 0x08, // Join or create room
     OPCODE_LIST     = 0x09, // List all available rooms or users in current room
+    OPCODE_REQUEST  = 0x0a, // Request PM or file transfer to user
+    OPCODE_RESPOND  = 0x0b, // Respond to PM or file transfer request from user
 } opcode_t;
 
 typedef enum retcode
 {
     RETCODE_SUCCESS       = 0x01, // Server action was successful
     RETCODE_SESSION_ERROR = 0x02, // Provided session ID was invalid or expired
-    RETCODE_OVERFLOW      = 0x03, // Exceeds max_packet_size
+    RETCODE_OVERFLOW      = 0x03, // Size exceeds g_max_packet_size
+    RETCODE_PENDING       = 0x04, // User already has a pending request
+    RETCODE_NOT_PENDING   = 0x04, // User has no pending request to respond to
     RETCODE_FAILURE       = 0xff, // Server action failed
 } retcode_t;
 

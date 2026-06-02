@@ -51,6 +51,24 @@ typedef enum list_flag
     LIST_FLAG_USER = 0x01,
 } list_flag_t;
 
+typedef enum req_flag_type
+{
+    REQ_FLAG_TYPE_PM   = 0x00,
+    REQ_FLAG_TYPE_FILE = 0x01,
+} req_flag_type_t;
+
+typedef enum resp_flag_type
+{
+    RESP_FLAG_TYPE_PM      = 0x00,
+    RESP_FLAG_TYPE_FILE    = 0x01,
+} resp_flag_type_t;
+
+typedef enum resp_flag_choice
+{
+    RESP_FLAG_CHOICE_ACCEPT  = 0x00,
+    RESP_FLAG_CHOICE_DECLINE = 0x01,
+} resp_flag_choice_t;
+
 typedef struct __attribute__((packed)) ping_hdr
 {
     uint8_t  padding;
@@ -101,6 +119,22 @@ typedef struct __attribute__((packed)) list_hdr
     uint8_t  flag;
     uint32_t session_id;
 } list_hdr_t;
+
+typedef struct __attribute__((packed)) req_hdr
+{
+    uint8_t  flag_type;
+    uint16_t username_size;
+    uint32_t session_id;
+} req_hdr_t;
+
+typedef struct __attribute__((packed)) resp_hdr
+{
+    uint8_t  padding;
+    uint8_t  flag_type;
+    uint8_t  flag_choice;
+    uint16_t username_size;
+    uint32_t session_id;
+} resp_hdr_t;
 
 typedef struct __attribute__((packed)) msg_recv_hdr_out
 {

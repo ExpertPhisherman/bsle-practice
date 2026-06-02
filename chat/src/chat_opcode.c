@@ -31,6 +31,21 @@ static status_t validate_session(
 );
 
 /*!
+ * @brief Check if username is in room
+ *
+ * @param[in] p_room        Pointer to room
+ * @param[in] p_username    Pointer to username
+ * @param[in] username_size Size of username in bytes
+ *
+ * @return Boolean if username is in room
+ */
+static bool username_in_room(
+    room_t   * p_room,
+    uint8_t  * p_username,
+    uint16_t   username_size
+);
+
+/*!
  * @brief Send message to session
  *
  * @param[in] p_session Pointer to session
@@ -40,9 +55,28 @@ static status_t validate_session(
  * @return Status of operation
  */
 static status_t msg_send (
-    session_t * p_session,
-    uint8_t   * p_msg,
-    uint16_t    msg_size
+    session_t     * p_session,
+    uint8_t const * p_msg,
+    uint16_t        msg_size
+);
+
+/*!
+ * @brief Send message to all sessions in room that have username
+ *
+ * @param[in] p_room        Pointer to room
+ * @param[in] p_username    Pointer to username
+ * @param[in] username_size Size of username in bytes
+ * @param[in] p_msg         Pointer to message
+ * @param[in] msg_size      Size of message in bytes
+ *
+ * @return Status of operation
+ */
+static status_t msg_send_username (
+    room_t        * p_room,
+    uint8_t       * p_username,
+    uint16_t        username_size,
+    uint8_t const * p_msg,
+    uint16_t        msg_size
 );
 
 status_t
@@ -349,34 +383,15 @@ opcode_login (
         goto cleanup;
     }
 
-    p_username = p_session->p_username;
-    p_password = p_session->p_password;
-
-    sockutil_recvall(
-        sockfd,
-        p_request_packet + p_request->size,
-        username_size
-    );
-
-    memcpy(
-        p_username,
-        p_request_packet + p_request->size,
-        username_size
-    );
+    p_username       = p_request_packet + p_request->size;
     p_request->size += username_size;
-
-    sockutil_recvall(
-        sockfd,
-        p_request_packet + p_request->size,
-        password_size
-    );
-
-    memcpy(
-        p_password,
-        p_request_packet + p_request->size,
-        password_size
-    );
+    p_password       = p_request_packet + p_request->size;
     p_request->size += password_size;
+
+    sockutil_recvall(sockfd, p_username, username_size);
+    memcpy(p_session->p_username, p_username, username_size);
+    sockutil_recvall(sockfd, p_password, password_size);
+    memcpy(p_session->p_password, p_password, password_size);
 
     if (p_server->b_verbose)
     {
@@ -933,6 +948,480 @@ cleanup:
     return status;
 }
 
+status_t
+opcode_request (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    appdata_t * p_appdata        = NULL;
+    sll_t     * p_room_store     = NULL;
+    room_t    * p_room           = NULL;
+    item_t    * p_item           = NULL;
+    int         sockfd           = -1;
+    server_t  * p_server         = NULL;
+    uint8_t   * p_request_packet = NULL;
+    ht_t      * p_pm_reqs        = NULL;
+    ht_t      * p_file_reqs      = NULL;
+    uint8_t     flag_type        = 0u;
+    uint16_t    username_size    = 0u;
+    uint8_t   * p_username       = NULL;
+    uint8_t   * p_msg            = NULL;
+    int         written          = -1;
+    bool        b_locked         = false;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
+
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode  = OPCODE_REQUEST;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    req_hdr_t * p_hdr = (req_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    flag_type              = p_hdr->flag_type;
+    username_size          = p_hdr->username_size;
+    p_request->session_id  = ntohl(p_hdr->session_id);
+    p_request->size       += sizeof(*p_hdr);
+
+    if ((p_request->size + username_size) > g_max_packet_size)
+    {
+        fprintf(stderr, "Request request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, username_size, g_chunk_size);
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
+    p_username       = p_request_packet + p_request->size;
+    p_request->size += username_size;
+
+    sockutil_recvall(sockfd, p_username, username_size);
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    p_room = p_session->p_room;
+    if (NULL == p_room)
+    {
+        fprintf(stderr, "Sending user not in room\n");
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    p_pm_reqs   = p_room->p_pm_reqs;
+    p_file_reqs = p_room->p_file_reqs;
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    if (!username_in_room(p_room, p_username, username_size))
+    {
+        fprintf(stderr, "Receiving user not in room\n");
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    p_msg = calloc(g_max_packet_size, sizeof(*p_msg));
+    if (NULL == p_msg)
+    {
+        fprintf(stderr, "calloc failed in opcode_request\n");
+        p_response->retcode = RETCODE_FAILURE;
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    switch (flag_type)
+    {
+        case REQ_FLAG_TYPE_PM:
+            p_item = ht_get(p_pm_reqs, p_username, username_size);
+            if (0u != p_item->value_size)
+            {
+                p_response->retcode = RETCODE_PENDING;
+                goto cleanup;
+            }
+
+            ht_set(
+                p_pm_reqs,
+                p_username,
+                username_size,
+                p_session->p_username,
+                p_session->username_size
+            );
+
+            written = snprintf(
+                (char *)p_msg,
+                g_max_packet_size,
+                "PM request recieved from %.*s",
+                p_session->username_size,
+                p_session->p_username
+            );
+
+            // Send notification
+            msg_send_username(
+                p_room,
+                p_username,
+                username_size,
+                p_msg,
+                written
+            );
+
+            break;
+
+        case REQ_FLAG_TYPE_FILE:
+            p_item = ht_get(p_file_reqs, p_username, username_size);
+            if (0u != p_item->value_size)
+            {
+                p_response->retcode = RETCODE_PENDING;
+                goto cleanup;
+            }
+
+            ht_set(
+                p_file_reqs,
+                p_username,
+                username_size,
+                p_session->p_username,
+                p_session->username_size
+            );
+
+            written = snprintf(
+                (char *)p_msg,
+                g_max_packet_size,
+                "File transfer request recieved from %.*s",
+                p_session->username_size,
+                p_session->p_username
+            );
+
+            // Send notification
+            msg_send_username(
+                p_room,
+                p_username,
+                username_size,
+                p_msg,
+                written
+            );
+
+            break;
+
+        default:
+            p_response->retcode = RETCODE_FAILURE;
+            fprintf(
+                stderr,
+                "Unknown request flag type: %02hhx\n",
+                p_hdr->flag_type
+            );
+            break;
+    }
+
+cleanup:
+    free(p_msg);
+    p_msg = NULL;
+
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+        b_locked = false;
+    }
+    return status;
+}
+
+status_t
+opcode_respond (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    appdata_t * p_appdata        = NULL;
+    sll_t     * p_room_store     = NULL;
+    room_t    * p_room           = NULL;
+    item_t    * p_item           = NULL;
+    int         sockfd           = -1;
+    server_t  * p_server         = NULL;
+    uint8_t   * p_request_packet = NULL;
+    ht_t      * p_pm_reqs        = NULL;
+    ht_t      * p_file_reqs      = NULL;
+    uint8_t     flag_type        = 0u;
+    uint16_t    username_size    = 0u;
+    uint8_t   * p_username       = NULL;
+    uint8_t   * p_msg            = NULL;
+    int         written          = -1;
+    bool        b_locked         = false;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
+
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode  = OPCODE_RESPOND;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    resp_hdr_t * p_hdr = (resp_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    flag_type              = p_hdr->flag_type;
+    username_size          = p_hdr->username_size;
+    p_request->session_id  = ntohl(p_hdr->session_id);
+    p_request->size       += sizeof(*p_hdr);
+
+    if ((p_request->size + username_size) > g_max_packet_size)
+    {
+        fprintf(stderr, "Respond request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, username_size, g_chunk_size);
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
+    p_username       = p_request_packet + p_request->size;
+    p_request->size += username_size;
+
+    sockutil_recvall(sockfd, p_username, username_size);
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    p_room = p_session->p_room;
+    if (NULL == p_room)
+    {
+        fprintf(stderr, "Sending user not in room\n");
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    p_pm_reqs   = p_room->p_pm_reqs;
+    p_file_reqs = p_room->p_file_reqs;
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    if (!username_in_room(p_room, p_username, username_size))
+    {
+        fprintf(stderr, "Receiving user not in room\n");
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    p_msg = calloc(g_max_packet_size, sizeof(*p_msg));
+    if (NULL == p_msg)
+    {
+        fprintf(stderr, "calloc failed in opcode_respond\n");
+        p_response->retcode = RETCODE_FAILURE;
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    switch (flag_type)
+    {
+        case RESP_FLAG_TYPE_PM:
+            // Get request sent to self
+            p_item = ht_get(
+                p_pm_reqs,
+                p_session->p_username,
+                p_session->username_size
+            );
+            if (0u == p_item->value_size)
+            {
+                fprintf(stderr, "No pending request from anyone\n");
+                p_response->retcode = RETCODE_NOT_PENDING;
+                goto cleanup;
+            }
+
+            // Verify sender of request is the username being responded to
+            if (
+                (p_item->value_size != username_size) ||
+                (0 != memcmp(p_item->p_value, p_username, username_size))
+            )
+            {
+                fprintf(
+                    stderr,
+                    "No pending request from %.*s\n",
+                    username_size,
+                    p_username
+                );
+                p_response->retcode = RETCODE_NOT_PENDING;
+                goto cleanup;
+            }
+
+            // TODO: Send notification if declined
+            if (0)
+            {
+                msg_send(p_session, (uint8_t *)"Responded: decline", 18u);
+
+                written = snprintf(
+                    (char *)p_msg,
+                    g_max_packet_size,
+                    "PM request declined by %.*s",
+                    p_session->username_size,
+                    p_session->p_username
+                );
+
+                // Send notification
+                msg_send_username(
+                    p_room,
+                    p_username,
+                    username_size,
+                    p_msg,
+                    written
+                );
+
+                goto cleanup;
+            }
+
+            // Reset request item for self
+            ht_set(
+                p_room->p_pm_reqs,
+                p_session->p_username,
+                p_session->username_size,
+                "",
+                0u
+            );
+
+            break;
+
+        case RESP_FLAG_TYPE_FILE:
+            // Get request sent to self
+            p_item = ht_get(
+                p_file_reqs,
+                p_session->p_username,
+                p_session->username_size
+            );
+            if (0u == p_item->value_size)
+            {
+                fprintf(stderr, "No pending request from anyone\n");
+                p_response->retcode = RETCODE_NOT_PENDING;
+                goto cleanup;
+            }
+
+            // Verify sender of request is the username being responded to
+            if (
+                (p_item->value_size != username_size) ||
+                (0 != memcmp(p_item->p_value, p_username, username_size))
+            )
+            {
+                fprintf(
+                    stderr,
+                    "No pending request from %.*s\n",
+                    username_size,
+                    p_username
+                );
+                p_response->retcode = RETCODE_NOT_PENDING;
+                goto cleanup;
+            }
+
+            // TODO: Send notification if declined
+            if (0)
+            {
+                msg_send(p_session, (uint8_t *)"Responded: decline", 18u);
+
+                written = snprintf(
+                    (char *)p_msg,
+                    g_max_packet_size,
+                    "File transfer request declined by %.*s",
+                    p_session->username_size,
+                    p_session->p_username
+                );
+
+                // Send notification
+                msg_send_username(
+                    p_room,
+                    p_username,
+                    username_size,
+                    p_msg,
+                    written
+                );
+
+                goto cleanup;
+            }
+
+            // Reset request item for self
+            ht_set(
+                p_room->p_file_reqs,
+                p_session->p_username,
+                p_session->username_size,
+                "",
+                0u
+            );
+
+            break;
+
+        default:
+            p_response->retcode = RETCODE_FAILURE;
+            fprintf(
+                stderr,
+                "Unknown respond flag type: %02hhx\n",
+                p_hdr->flag_type
+            );
+            break;
+    }
+
+cleanup:
+    free(p_msg);
+    p_msg = NULL;
+
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+        b_locked = false;
+    }
+    return status;
+}
+
 static status_t
 validate_session (
     session_t  * p_session,
@@ -976,11 +1465,52 @@ cleanup:
     return status;
 }
 
+static bool
+username_in_room (
+    room_t   * p_room,
+    uint8_t  * p_username,
+    uint16_t   username_size
+)
+{
+    bool b_result = false;
+
+    node_t    * p_curr    = NULL;
+    session_t * p_session = NULL;
+
+    if (
+        (NULL == p_room) ||
+        (NULL == p_room->p_sessions) ||
+        (NULL == p_username)
+    )
+    {
+        goto cleanup;
+    }
+
+    p_curr = p_room->p_sessions->p_head;
+    while (NULL != p_curr)
+    {
+        p_session = *(session_t **)(p_curr->p_data);
+        if (
+            (p_session->username_size == username_size) &&
+            (0 == memcmp(p_session->p_username, p_username, username_size))
+        )
+        {
+            b_result = true;
+            goto cleanup;
+        }
+
+        p_curr = p_curr->p_next;
+    }
+
+cleanup:
+    return b_result;
+}
+
 static status_t
 msg_send (
-    session_t * p_session,
-    uint8_t   * p_msg,
-    uint16_t    msg_size
+    session_t     * p_session,
+    uint8_t const * p_msg,
+    uint16_t        msg_size
 )
 {
     status_t status = STATUS_SUCCESS;
@@ -1015,6 +1545,50 @@ msg_send (
 
     free(p_packet);
     p_packet = NULL;
+
+cleanup:
+    return status;
+}
+
+static status_t
+msg_send_username (
+    room_t        * p_room,
+    uint8_t       * p_username,
+    uint16_t        username_size,
+    uint8_t const * p_msg,
+    uint16_t        msg_size
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    node_t    * p_curr    = NULL;
+    session_t * p_session = NULL;
+
+    if (
+        (NULL == p_room) ||
+        (NULL == p_room->p_sessions) ||
+        (NULL == p_username) ||
+        (NULL == p_msg)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_curr = p_room->p_sessions->p_head;
+    while (NULL != p_curr)
+    {
+        p_session = *(session_t **)(p_curr->p_data);
+        if (
+            (p_session->username_size == username_size) &&
+            (0 == memcmp(p_session->p_username, p_username, username_size))
+        )
+        {
+            msg_send(p_session, p_msg, msg_size);
+        }
+
+        p_curr = p_curr->p_next;
+    }
 
 cleanup:
     return status;

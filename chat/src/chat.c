@@ -653,12 +653,25 @@ user_join (session_t * p_session, appdata_t * p_appdata)
         }
     }
 
-    status = sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
-    if (STATUS_SUCCESS != status)
-    {
-        fprintf(stderr, "sll_append failed in user_join\n");
-        goto cleanup;
-    }
+    // Append user session to room's sessions SLL
+    sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
+
+    // Set empty item in user's requests
+    ht_set(
+        p_room->p_pm_reqs,
+        p_session->p_username,
+        p_session->username_size,
+        "",
+        0u
+    );
+
+    ht_set(
+        p_room->p_file_reqs,
+        p_session->p_username,
+        p_session->username_size,
+        "",
+        0u
+    );
 
     p_session->p_room = p_room;
 
@@ -688,6 +701,19 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
 
     // Remove user session from room's sessions SLL
     sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
+
+    // Delete item from user's requests
+    ht_del(
+        p_room->p_pm_reqs,
+        p_session->p_username,
+        p_session->username_size
+    );
+
+    ht_del(
+        p_room->p_file_reqs,
+        p_session->p_username,
+        p_session->username_size
+    );
 
     p_session->p_room = NULL;
 
