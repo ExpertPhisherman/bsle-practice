@@ -49,6 +49,7 @@ static bool username_in_room(
  * @brief Send message to session
  *
  * @param[in] p_session Pointer to session
+ * @param[in] flag      Flag for type of response
  * @param[in] p_msg     Pointer to message
  * @param[in] msg_size  Size of message in bytes
  *
@@ -56,6 +57,7 @@ static bool username_in_room(
  */
 static status_t msg_send (
     session_t     * p_session,
+    uint8_t         flag,
     uint8_t const * p_msg,
     uint16_t        msg_size
 );
@@ -66,6 +68,7 @@ static status_t msg_send (
  * @param[in] p_room        Pointer to room
  * @param[in] p_username    Pointer to username
  * @param[in] username_size Size of username in bytes
+ * @param[in] flag          Flag for type of response
  * @param[in] p_msg         Pointer to message
  * @param[in] msg_size      Size of message in bytes
  *
@@ -75,6 +78,7 @@ static status_t msg_send_username (
     room_t        * p_room,
     uint8_t       * p_username,
     uint16_t        username_size,
+    uint8_t         flag,
     uint8_t const * p_msg,
     uint16_t        msg_size
 );
@@ -639,7 +643,7 @@ opcode_msg_send (
             continue;
         }
 
-        msg_send(p_target, p_msg, msg_size);
+        msg_send(p_target, MSG_SEND_OUT_FLAG_MSG, p_msg, msg_size);
 
         p_curr = p_curr->p_next;
     }
@@ -911,7 +915,12 @@ opcode_list (
             while (NULL != p_curr)
             {
                 p_room = *(room_t **)(p_curr->p_data);
-                msg_send(p_session, p_room->p_name, p_room->name_size);
+                msg_send(
+                    p_session,
+                    MSG_SEND_OUT_FLAG_LIST,
+                    p_room->p_name,
+                    p_room->name_size
+                );
                 p_curr = p_curr->p_next;
             }
             break;
@@ -928,6 +937,7 @@ opcode_list (
                 p_target = *(session_t **)(p_curr->p_data);
                 msg_send(
                     p_session,
+                    MSG_SEND_OUT_FLAG_LIST,
                     p_target->p_username,
                     p_target->username_size
                 );
@@ -1095,6 +1105,7 @@ opcode_request (
                 p_room,
                 p_username,
                 username_size,
+                MSG_SEND_OUT_FLAG_NOTIF,
                 p_msg,
                 written
             );
@@ -1130,6 +1141,7 @@ opcode_request (
                 p_room,
                 p_username,
                 username_size,
+                MSG_SEND_OUT_FLAG_NOTIF,
                 p_msg,
                 written
             );
@@ -1170,6 +1182,7 @@ opcode_respond (
     appdata_t * p_appdata        = NULL;
     sll_t     * p_room_store     = NULL;
     room_t    * p_room           = NULL;
+    room_t    * p_new_room       = NULL;
     item_t    * p_item           = NULL;
     int         sockfd           = -1;
     server_t  * p_server         = NULL;
@@ -1181,6 +1194,14 @@ opcode_respond (
     uint16_t    username_size    = 0u;
     uint8_t   * p_username       = NULL;
     uint8_t   * p_msg            = NULL;
+    node_t    * p_curr           = NULL;
+    session_t * p_target         = NULL;
+    uint8_t   * p_room_name      = NULL;
+    uint8_t   * p_user1          = NULL;
+    uint16_t    user1_size       = 0u;
+    uint8_t   * p_user2          = NULL;
+    uint16_t    user2_size       = 0u;
+    uint16_t    room_name_size   = 0u;
     int         written          = -1;
     bool        b_locked         = false;
 
@@ -1306,10 +1327,15 @@ opcode_respond (
                 goto cleanup;
             }
 
-            // TODO: Send notification if declined
+            // Send notification if declined
             if (RESP_FLAG_CHOICE_DECLINE == flag_choice)
             {
-                msg_send(p_session, (uint8_t *)"Responded: decline", 18u);
+                msg_send(
+                    p_session,
+                    MSG_SEND_OUT_FLAG_NOTIF,
+                    (uint8_t *)"Responded: decline",
+                    18u
+                );
 
                 written = snprintf(
                     (char *)p_msg,
@@ -1324,14 +1350,116 @@ opcode_respond (
                     p_room,
                     p_username,
                     username_size,
+                    MSG_SEND_OUT_FLAG_NOTIF,
                     p_msg,
                     written
                 );
             }
             else
             {
-                // TODO: Create room and make both users join
-                ;
+                p_room_name = calloc(
+                    2u * g_username_size_max + 1u,
+                    sizeof(*p_room_name)
+                );
+                if (NULL == p_room_name)
+                {
+                    fprintf(stderr, "calloc failed in opcode_respond\n");
+                    status = STATUS_ALLOC_FAILURE;
+                    goto cleanup;
+                }
+
+                if (0 < memcmp(
+                    p_session->p_username,
+                    p_username,
+                    (
+                        p_session->username_size < username_size ?
+                        p_session->username_size :
+                        username_size
+                    )
+                ))
+                {
+                    // NOTE: p_session->p_username is greater than p_username
+                    p_user1    = p_username;
+                    user1_size = username_size;
+                    p_user2    = p_session->p_username;
+                    user2_size = p_session->username_size;
+                }
+                else
+                {
+                    // NOTE: p_session->p_username is less than p_username
+                    p_user1    = p_session->p_username;
+                    user1_size = p_session->username_size;
+                    p_user2    = p_username;
+                    user2_size = username_size;
+                }
+
+                memcpy(p_room_name, p_user1, user1_size);
+                p_room_name[user1_size] = '+';
+                memcpy(p_room_name + user1_size + 1u, p_user2, user2_size);
+
+                room_name_size = user1_size + 1u + user2_size;
+
+                // Create room and make both users join
+                p_new_room = room_create(
+                    (char *)p_room_name,
+                    room_name_size
+                );
+                if (NULL == p_new_room)
+                {
+                    status = STATUS_ALLOC_FAILURE;
+                    goto cleanup;
+                }
+
+                status = sll_append(
+                    p_room_store,
+                    &p_new_room,
+                    sizeof(p_new_room)
+                );
+                if (STATUS_SUCCESS != status)
+                {
+                    fprintf(stderr, "sll_append failed in opcode_respond\n");
+                    room_destroy(p_new_room);
+                    p_new_room = NULL;
+                    goto cleanup;
+                }
+
+                user_leave(p_session, p_appdata);
+                p_session->p_room = p_new_room;
+                user_join(p_session, p_appdata);
+                msg_send(
+                    p_session,
+                    MSG_SEND_OUT_FLAG_JOIN,
+                    p_room_name,
+                    room_name_size
+                );
+
+                p_curr = p_room->p_sessions->p_head;
+                while (NULL != p_curr)
+                {
+                    p_target = *(session_t **)(p_curr->p_data);
+                    if (
+                        (p_target->username_size == username_size) &&
+                        (0 == memcmp(
+                            p_target->p_username,
+                            p_username,
+                            username_size
+                        ))
+                    )
+                    {
+                        user_leave(p_target, p_appdata);
+                        p_target->p_room = p_new_room;
+                        user_join(p_target, p_appdata);
+                        msg_send(
+                            p_target,
+                            MSG_SEND_OUT_FLAG_JOIN,
+                            p_room_name,
+                            room_name_size
+                        );
+                        break;
+                    }
+
+                    p_curr = p_curr->p_next;
+                }
             }
 
             // Reset request item for self
@@ -1375,10 +1503,15 @@ opcode_respond (
                 goto cleanup;
             }
 
-            // TODO: Send notification if declined
+            // Send notification if declined
             if (RESP_FLAG_CHOICE_DECLINE == flag_choice)
             {
-                msg_send(p_session, (uint8_t *)"Responded: decline", 18u);
+                msg_send(
+                    p_session,
+                    MSG_SEND_OUT_FLAG_NOTIF,
+                    (uint8_t *)"Responded: decline",
+                    18u
+                );
 
                 written = snprintf(
                     (char *)p_msg,
@@ -1393,6 +1526,7 @@ opcode_respond (
                     p_room,
                     p_username,
                     username_size,
+                    MSG_SEND_OUT_FLAG_NOTIF,
                     p_msg,
                     written
                 );
@@ -1425,6 +1559,9 @@ opcode_respond (
     }
 
 cleanup:
+    free(p_room_name);
+    p_room_name = NULL;
+
     free(p_msg);
     p_msg = NULL;
 
@@ -1523,6 +1660,7 @@ cleanup:
 static status_t
 msg_send (
     session_t     * p_session,
+    uint8_t         flag,
     uint8_t const * p_msg,
     uint16_t        msg_size
 )
@@ -1548,6 +1686,7 @@ msg_send (
 
     hdr.opcode   = OPCODE_MSG_RECV;
     hdr.retcode  = RETCODE_SUCCESS;
+    hdr.flag     = flag;
     hdr.msg_size = htons(msg_size);
 
     memcpy(p_packet, &hdr, sizeof(hdr));
@@ -1569,6 +1708,7 @@ msg_send_username (
     room_t        * p_room,
     uint8_t       * p_username,
     uint16_t        username_size,
+    uint8_t         flag,
     uint8_t const * p_msg,
     uint16_t        msg_size
 )
@@ -1598,7 +1738,7 @@ msg_send_username (
             (0 == memcmp(p_session->p_username, p_username, username_size))
         )
         {
-            msg_send(p_session, p_msg, msg_size);
+            msg_send(p_session, flag, p_msg, msg_size);
         }
 
         p_curr = p_curr->p_next;

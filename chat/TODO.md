@@ -3,6 +3,9 @@
 
 ## Server
 
+- Add flag_choice to opcode_respond's response
+- Add function that handles both PM and file transfer requests
+- Add function that handles both PM and file transfer responses
 - Disallow PM or file transfer requests sent to self
 - Remove sender's name from all request values when they leave room
 - Send direct messages between users (via server)

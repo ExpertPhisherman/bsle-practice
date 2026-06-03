@@ -36,6 +36,7 @@ RETCODE_FAILURE       = 0xff
 
 FIELD_SIZE_OPCODE     = 1
 FIELD_SIZE_RETCODE    = 1
+FIELD_SIZE_FLAG       = 1
 FIELD_SIZE_SIZE       = 2
 FIELD_SIZE_SESSION_ID = 4
 
@@ -50,6 +51,11 @@ RESP_FLAG_TYPE_FILE = 0x01
 
 RESP_FLAG_CHOICE_ACCEPT  = 0x00
 RESP_FLAG_CHOICE_DECLINE = 0x01
+
+MSG_SEND_OUT_FLAG_MSG   = 0x00
+MSG_SEND_OUT_FLAG_NOTIF = 0x01
+MSG_SEND_OUT_FLAG_LIST  = 0x02
+MSG_SEND_OUT_FLAG_JOIN  = 0x03
 
 def with_parser(
     description: str,
@@ -378,18 +384,27 @@ class ChatClient(Client):
         return False
 
     def opcode_msg_recv(self) -> bool:
-        response = self.recv_response(FIELD_SIZE_RETCODE + FIELD_SIZE_SIZE)
+        response = self.recv_response(
+            FIELD_SIZE_RETCODE +
+            FIELD_SIZE_FLAG +
+            FIELD_SIZE_SIZE
+        )
         if response is None:
             return False
 
-        retcode, size = struct.unpack("!BH", response)
+        retcode, flag, size = struct.unpack("!BBH", response)
 
         payload = self.recv_response(size)
         if payload is None:
             return False
 
         if retcode == RETCODE_SUCCESS:
-            print(payload.decode("utf-8"))
+            if flag == MSG_SEND_OUT_FLAG_JOIN:
+                room_name = payload.decode("utf-8")
+                self.room_name = room_name
+                print(f"{self.username} joined room: \"{self.room_name}\"")
+            else:
+                print(payload.decode("utf-8"))
         else:
             print(f"Unknown return code: {retcode:02x}")
 

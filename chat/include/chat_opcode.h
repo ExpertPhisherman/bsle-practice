@@ -69,6 +69,14 @@ typedef enum resp_flag_choice
     RESP_FLAG_CHOICE_DECLINE = 0x01,
 } resp_flag_choice_t;
 
+typedef enum msg_send_out_flag
+{
+    MSG_SEND_OUT_FLAG_MSG   = 0x00,
+    MSG_SEND_OUT_FLAG_NOTIF = 0x01,
+    MSG_SEND_OUT_FLAG_LIST  = 0x02,
+    MSG_SEND_OUT_FLAG_JOIN  = 0x03,
+} msg_send_out_flag_t;
+
 typedef struct __attribute__((packed)) ping_hdr
 {
     uint8_t  padding;
@@ -139,6 +147,7 @@ typedef struct __attribute__((packed)) msg_recv_hdr_out
 {
     uint8_t  opcode;
     uint8_t  retcode;
+    uint8_t  flag;
     uint16_t msg_size;
 } msg_recv_hdr_out_t;
 

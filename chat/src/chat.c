@@ -171,7 +171,6 @@ chat_client_run (server_t * p_server, client_t * p_client)
     if (STATUS_SUCCESS != status)
     {
         fprintf(stderr, "handle_request failed\n");
-        goto cleanup;
     }
 
     (p_response->p_packet)[FIELD_OFFSET_OPCODE]  = p_response->opcode;
