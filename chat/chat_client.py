@@ -136,7 +136,14 @@ class ChatClient(Client):
         self.opcode_funcs[OPCODE_RESPOND]  = self.opcode_respond
 
     def _get_prompt(self) -> str:
-        return f"{self.username}> " if self.username else "chat> "
+        prompt = ""
+        prompt += "(" if self.username else ""
+        prompt += f"{self.username}" if self.username else "chat"
+        prompt += f"/{self.room_name}" if self.room_name else ""
+        prompt += ")" if self.username else ""
+        prompt += "> "
+
+        return prompt
 
     def cmdloop(self, intro=None) -> None:
         """Read and dispatch commands until quit."""
@@ -515,6 +522,7 @@ class ChatClient(Client):
         )
         self.request += username_enc + password_enc
 
+        self.room_name = None
         self.username = username
         self.password = password
 
