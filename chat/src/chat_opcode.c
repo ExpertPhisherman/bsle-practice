@@ -807,6 +807,8 @@ opcode_join (
 
     p_room = *(room_t **)(p_node->p_data);
 
+    user_leave(p_session, p_appdata);
+
     p_session->p_room = p_room;
 
     status = user_join(p_session, p_appdata);
@@ -1006,7 +1008,7 @@ opcode_request (
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
     flag_type              = p_hdr->flag_type;
-    username_size          = p_hdr->username_size;
+    username_size          = ntohs(p_hdr->username_size);
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
@@ -1040,6 +1042,8 @@ opcode_request (
 
     p_pm_reqs   = p_room->p_pm_reqs;
     p_file_reqs = p_room->p_file_reqs;
+
+    ht_display(p_pm_reqs, ", ");
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
@@ -1173,6 +1177,7 @@ opcode_respond (
     ht_t      * p_pm_reqs        = NULL;
     ht_t      * p_file_reqs      = NULL;
     uint8_t     flag_type        = 0u;
+    uint8_t     flag_choice      = 0u;
     uint16_t    username_size    = 0u;
     uint8_t   * p_username       = NULL;
     uint8_t   * p_msg            = NULL;
@@ -1212,7 +1217,8 @@ opcode_respond (
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
     flag_type              = p_hdr->flag_type;
-    username_size          = p_hdr->username_size;
+    flag_choice            = p_hdr->flag_choice;
+    username_size          = ntohs(p_hdr->username_size);
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
@@ -1246,6 +1252,8 @@ opcode_respond (
 
     p_pm_reqs   = p_room->p_pm_reqs;
     p_file_reqs = p_room->p_file_reqs;
+
+    ht_display(p_pm_reqs, ", ");
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
@@ -1299,7 +1307,7 @@ opcode_respond (
             }
 
             // TODO: Send notification if declined
-            if (0)
+            if (RESP_FLAG_CHOICE_DECLINE == flag_choice)
             {
                 msg_send(p_session, (uint8_t *)"Responded: decline", 18u);
 
@@ -1319,8 +1327,11 @@ opcode_respond (
                     p_msg,
                     written
                 );
-
-                goto cleanup;
+            }
+            else
+            {
+                // TODO: Create room and make both users join
+                ;
             }
 
             // Reset request item for self
@@ -1365,7 +1376,7 @@ opcode_respond (
             }
 
             // TODO: Send notification if declined
-            if (0)
+            if (RESP_FLAG_CHOICE_DECLINE == flag_choice)
             {
                 msg_send(p_session, (uint8_t *)"Responded: decline", 18u);
 
@@ -1385,8 +1396,11 @@ opcode_respond (
                     p_msg,
                     written
                 );
-
-                goto cleanup;
+            }
+            else
+            {
+                // TODO: Transfer file
+                ;
             }
 
             // Reset request item for self

@@ -24,10 +24,14 @@ OPCODE_MSG_SEND = 0x06
 OPCODE_MSG_RECV = 0x07
 OPCODE_JOIN     = 0x08
 OPCODE_LIST     = 0x09
+OPCODE_REQUEST  = 0x0a
+OPCODE_RESPOND  = 0x0b
 
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
 RETCODE_OVERFLOW      = 0x03
+RETCODE_PENDING       = 0x04
+RETCODE_NOT_PENDING   = 0x05
 RETCODE_FAILURE       = 0xff
 
 FIELD_SIZE_OPCODE     = 1
@@ -37,6 +41,15 @@ FIELD_SIZE_SESSION_ID = 4
 
 LIST_FLAG_ROOM = 0x00
 LIST_FLAG_USER = 0x01
+
+REQ_FLAG_TYPE_PM   = 0x00
+REQ_FLAG_TYPE_FILE = 0x01
+
+RESP_FLAG_TYPE_PM   = 0x00
+RESP_FLAG_TYPE_FILE = 0x01
+
+RESP_FLAG_CHOICE_ACCEPT  = 0x00
+RESP_FLAG_CHOICE_DECLINE = 0x01
 
 def with_parser(
     description: str,
@@ -119,6 +132,8 @@ class ChatClient(Client):
         self.opcode_funcs[OPCODE_MSG_RECV] = self.opcode_msg_recv
         self.opcode_funcs[OPCODE_JOIN]     = self.opcode_join
         self.opcode_funcs[OPCODE_LIST]     = self.opcode_list
+        self.opcode_funcs[OPCODE_REQUEST]  = self.opcode_request
+        self.opcode_funcs[OPCODE_RESPOND]  = self.opcode_respond
 
     def _get_prompt(self) -> str:
         return f"{self.username}> " if self.username else "chat> "
@@ -391,6 +406,50 @@ class ChatClient(Client):
 
         return False
 
+    def opcode_request(self) -> bool:
+        response = self.recv_response(FIELD_SIZE_RETCODE)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("Request success")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
+        elif retcode == RETCODE_PENDING:
+            print("Pending request to user already exists")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed request")
+        else:
+            print(f"Unknown return code: {retcode:02x}")
+
+        return False
+
+    def opcode_respond(self) -> bool:
+        response = self.recv_response(FIELD_SIZE_RETCODE)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("Respond success")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
+        elif retcode == RETCODE_NOT_PENDING:
+            print("Pending request from user does not exist")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed respond")
+        else:
+            print(f"Unknown return code: {retcode:02x}")
+
+        return False
+
     def send_request(self) -> bool:
         """Send request to server"""
         if self.sock is None:
@@ -542,6 +601,110 @@ class ChatClient(Client):
             flags[line],
             self.session_id
         )
+
+        return self.send_request()
+
+    @with_parser(
+        description="Request PM or file transfer to user",
+        args={
+            "flag_type": {"help": "pm or file"},
+            "username" : {"help": "username to send request to"}
+        }
+    )
+    def do_request(self, line: str) -> bool:
+        try:
+            args = self.do_request.parser.parse_args(line.split())
+        except SystemExit:
+            return False
+
+        flag_type = args.flag_type
+        username  = args.username
+
+        flag_types = {"pm": REQ_FLAG_TYPE_PM, "file": REQ_FLAG_TYPE_FILE}
+        username_enc = username.encode("utf-8")
+
+        if flag_type not in flag_types:
+            print(f"Invalid flag type: {flag_type}")
+            return False
+
+        self.request = struct.pack(
+            "!BBHI",
+            OPCODE_REQUEST,
+            flag_types[flag_type],
+            len(username_enc),
+            self.session_id
+        )
+        self.request += username_enc
+
+        return self.send_request()
+
+    @with_parser(
+        description="Accept PM or file transfer request from user",
+        args={
+            "flag_type": {"help": "pm or file"},
+            "username" : {"help": "username to send response to"}
+        }
+    )
+    def do_accept(self, line: str) -> bool:
+        try:
+            args = self.do_accept.parser.parse_args(line.split())
+        except SystemExit:
+            return False
+
+        flag_type = args.flag_type
+        username  = args.username
+
+        flag_types = {"pm": RESP_FLAG_TYPE_PM, "file": RESP_FLAG_TYPE_FILE}
+        username_enc = username.encode("utf-8")
+
+        if flag_type not in flag_types:
+            print(f"Invalid flag type: {flag_type}")
+            return False
+
+        self.request = struct.pack(
+            "!BBBHI",
+            OPCODE_RESPOND,
+            flag_types[flag_type],
+            RESP_FLAG_CHOICE_ACCEPT,
+            len(username_enc),
+            self.session_id
+        )
+        self.request += username_enc
+
+        return self.send_request()
+
+    @with_parser(
+        description="Decline PM or file transfer request from user",
+        args={
+            "flag_type": {"help": "pm or file"},
+            "username" : {"help": "username to send response to"}
+        }
+    )
+    def do_decline(self, line: str) -> bool:
+        try:
+            args = self.do_decline.parser.parse_args(line.split())
+        except SystemExit:
+            return False
+
+        flag_type = args.flag_type
+        username  = args.username
+
+        flag_types = {"pm": RESP_FLAG_TYPE_PM, "file": RESP_FLAG_TYPE_FILE}
+        username_enc = username.encode("utf-8")
+
+        if flag_type not in flag_types:
+            print(f"Invalid flag type: {flag_type}")
+            return False
+
+        self.request = struct.pack(
+            "!BBBHI",
+            OPCODE_RESPOND,
+            flag_types[flag_type],
+            RESP_FLAG_CHOICE_DECLINE,
+            len(username_enc),
+            self.session_id
+        )
+        self.request += username_enc
 
         return self.send_request()
 

@@ -342,7 +342,6 @@ chat_client_free (server_t * p_server, client_t * p_client)
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    user_leave(p_session, p_appdata);
     user_logout(p_session, p_appdata);
 
     free(p_session->p_username);
@@ -626,8 +625,6 @@ user_join (session_t * p_session, appdata_t * p_appdata)
     }
 
     p_room = p_session->p_room;
-
-    user_leave(p_session, p_appdata);
 
     // Check if current user session is allowed to enter private room
     if (p_room->b_private)
@@ -924,6 +921,8 @@ appdata_create (void)
     pp_opcode_funcs[OPCODE_MSG_RECV] = NULL;
     pp_opcode_funcs[OPCODE_JOIN]     = opcode_join;
     pp_opcode_funcs[OPCODE_LIST]     = opcode_list;
+    pp_opcode_funcs[OPCODE_REQUEST]  = opcode_request;
+    pp_opcode_funcs[OPCODE_RESPOND]  = opcode_respond;
 
     p_appdata->next_session_id = 1u;
 

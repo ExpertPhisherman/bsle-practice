@@ -4,6 +4,7 @@
 ## Server
 
 - Disallow PM or file transfer requests sent to self
+- Remove sender's name from all request values when they leave room
 - Send direct messages between users (via server)
 - Add file transfer within direct messages
 - Add admin user role and abilities

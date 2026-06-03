@@ -59,8 +59,8 @@ typedef enum req_flag_type
 
 typedef enum resp_flag_type
 {
-    RESP_FLAG_TYPE_PM      = 0x00,
-    RESP_FLAG_TYPE_FILE    = 0x01,
+    RESP_FLAG_TYPE_PM   = 0x00,
+    RESP_FLAG_TYPE_FILE = 0x01,
 } resp_flag_type_t;
 
 typedef enum resp_flag_choice
@@ -129,7 +129,6 @@ typedef struct __attribute__((packed)) req_hdr
 
 typedef struct __attribute__((packed)) resp_hdr
 {
-    uint8_t  padding;
     uint8_t  flag_type;
     uint8_t  flag_choice;
     uint16_t username_size;
@@ -273,6 +272,36 @@ status_t opcode_join(
  * @return Status of operation
  */
 status_t opcode_list(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Request PM or file transfer to user
+ *
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_request(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Respond to PM or file transfer request from user
+ *
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_respond(
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response
