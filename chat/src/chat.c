@@ -610,7 +610,9 @@ user_join (session_t * p_session, appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t * p_room = NULL;
+    room_t    * p_room   = NULL;
+    node_t    * p_curr   = NULL;
+    session_t * p_target = NULL;
 
     if (
         (NULL == p_session) ||
@@ -649,6 +651,28 @@ user_join (session_t * p_session, appdata_t * p_appdata)
         }
     }
 
+    p_curr = p_room->p_sessions->p_head;
+    while (NULL != p_curr)
+    {
+        p_target = *(session_t **)(p_curr->p_data);
+
+        if (
+            (p_target->username_size == p_session->username_size) &&
+            (0 == memcmp(
+                p_target->p_username,
+                p_session->p_username,
+                p_target->username_size
+            ))
+        )
+        {
+            // NOTE: User is already in room
+            p_session->p_room = NULL;
+            goto cleanup;
+        }
+
+        p_curr = p_curr->p_next;
+    }
+
     // Append user session to room's sessions SLL
     sll_append(p_room->p_sessions, &p_session, sizeof(p_session));
 
@@ -668,8 +692,6 @@ user_join (session_t * p_session, appdata_t * p_appdata)
         "",
         0u
     );
-
-    p_session->p_room = p_room;
 
 cleanup:
     return status;

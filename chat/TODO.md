@@ -3,13 +3,12 @@
 
 ## Server
 
-- Add flag_choice to opcode_respond's response
+- Auth, room joining, file transfer, chat messages go in to own source files
 - Add function that handles both PM and file transfer requests
 - Add function that handles both PM and file transfer responses
 - Disallow PM or file transfer requests sent to self
 - Remove sender's name from all request values when they leave room
 - Send direct messages between users (via server)
-- Add file transfer within direct messages
 - Add admin user role and abilities
 - Add more descriptive return codes besides RETCODE_FAILURE
 - Reduce function sizes

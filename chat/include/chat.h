@@ -59,6 +59,7 @@ typedef enum retcode
     RETCODE_OVERFLOW      = 0x03, // Size exceeds g_max_packet_size
     RETCODE_PENDING       = 0x04, // User already has a pending request
     RETCODE_NOT_PENDING   = 0x05, // User has no pending request to respond to
+    RETCODE_DUPLICATE     = 0x06, // User already exists in room
     RETCODE_FAILURE       = 0xff, // Server action failed
 } retcode_t;
 

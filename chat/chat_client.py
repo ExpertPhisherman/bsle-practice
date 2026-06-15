@@ -32,6 +32,7 @@ RETCODE_SESSION_ERROR = 0x02
 RETCODE_OVERFLOW      = 0x03
 RETCODE_PENDING       = 0x04
 RETCODE_NOT_PENDING   = 0x05
+RETCODE_DUPLICATE     = 0x06
 RETCODE_FAILURE       = 0xff
 
 FIELD_SIZE_OPCODE     = 1
@@ -288,6 +289,9 @@ class ChatClient(Client):
         elif retcode == RETCODE_OVERFLOW:
             self.room_name = None
             print("Exceeds maximum packet size")
+        elif retcode == RETCODE_DUPLICATE:
+            self.room_name = None
+            print("User already exists in room")
         else:
             self.room_name = None
             print(f"Unknown return code: {retcode:02x}")
