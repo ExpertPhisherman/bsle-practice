@@ -3,6 +3,7 @@
 
 ## Server
 
+- Add foreach function for SLL and hash table
 - Auth, room joining, file transfer, chat messages go in to own source files
 - Add function that handles both PM and file transfer requests
 - Add function that handles both PM and file transfer responses

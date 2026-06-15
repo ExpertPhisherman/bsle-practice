@@ -610,9 +610,7 @@ user_join (session_t * p_session, appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t    * p_room   = NULL;
-    node_t    * p_curr   = NULL;
-    session_t * p_target = NULL;
+    room_t * p_room = NULL;
 
     if (
         (NULL == p_session) ||
@@ -651,26 +649,15 @@ user_join (session_t * p_session, appdata_t * p_appdata)
         }
     }
 
-    p_curr = p_room->p_sessions->p_head;
-    while (NULL != p_curr)
+    if (username_in_room(
+        p_room,
+        p_session->p_username,
+        p_session->username_size
+    ))
     {
-        p_target = *(session_t **)(p_curr->p_data);
-
-        if (
-            (p_target->username_size == p_session->username_size) &&
-            (0 == memcmp(
-                p_target->p_username,
-                p_session->p_username,
-                p_target->username_size
-            ))
-        )
-        {
-            // NOTE: User is already in room
-            p_session->p_room = NULL;
-            goto cleanup;
-        }
-
-        p_curr = p_curr->p_next;
+        // NOTE: User is already in room
+        p_session->p_room = NULL;
+        goto cleanup;
     }
 
     // Append user session to room's sessions SLL
@@ -737,6 +724,47 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
 
 cleanup:
     return status;
+}
+
+bool
+username_in_room (
+    room_t   * p_room,
+    uint8_t  * p_username,
+    uint16_t   username_size
+)
+{
+    bool b_result = false;
+
+    node_t    * p_curr    = NULL;
+    session_t * p_session = NULL;
+
+    if (
+        (NULL == p_room) ||
+        (NULL == p_room->p_sessions) ||
+        (NULL == p_username)
+    )
+    {
+        goto cleanup;
+    }
+
+    p_curr = p_room->p_sessions->p_head;
+    while (NULL != p_curr)
+    {
+        p_session = *(session_t **)(p_curr->p_data);
+        if (
+            (p_session->username_size == username_size) &&
+            (0 == memcmp(p_session->p_username, p_username, username_size))
+        )
+        {
+            b_result = true;
+            goto cleanup;
+        }
+
+        p_curr = p_curr->p_next;
+    }
+
+cleanup:
+    return b_result;
 }
 
 bool

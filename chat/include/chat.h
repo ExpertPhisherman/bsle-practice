@@ -230,6 +230,21 @@ status_t user_join(session_t * p_session, appdata_t * p_appdata);
 status_t user_leave(session_t * p_session, appdata_t * p_appdata);
 
 /*!
+ * @brief Check if username is in room
+ *
+ * @param[in] p_room        Pointer to room
+ * @param[in] p_username    Pointer to username
+ * @param[in] username_size Size of username in bytes
+ *
+ * @return Boolean if username is in room
+ */
+bool username_in_room(
+    room_t   * p_room,
+    uint8_t  * p_username,
+    uint16_t   username_size
+);
+
+/*!
  * @brief Check if credentials length is valid
  *
  * @param[in] p_session Pointer to session

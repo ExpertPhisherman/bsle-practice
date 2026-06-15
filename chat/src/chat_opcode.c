@@ -31,21 +31,6 @@ static status_t validate_session(
 );
 
 /*!
- * @brief Check if username is in room
- *
- * @param[in] p_room        Pointer to room
- * @param[in] p_username    Pointer to username
- * @param[in] username_size Size of username in bytes
- *
- * @return Boolean if username is in room
- */
-static bool username_in_room(
-    room_t   * p_room,
-    uint8_t  * p_username,
-    uint16_t   username_size
-);
-
-/*!
  * @brief Send message to session
  *
  * @param[in] p_session Pointer to session
@@ -1628,47 +1613,6 @@ validate_session (
 
 cleanup:
     return status;
-}
-
-static bool
-username_in_room (
-    room_t   * p_room,
-    uint8_t  * p_username,
-    uint16_t   username_size
-)
-{
-    bool b_result = false;
-
-    node_t    * p_curr    = NULL;
-    session_t * p_session = NULL;
-
-    if (
-        (NULL == p_room) ||
-        (NULL == p_room->p_sessions) ||
-        (NULL == p_username)
-    )
-    {
-        goto cleanup;
-    }
-
-    p_curr = p_room->p_sessions->p_head;
-    while (NULL != p_curr)
-    {
-        p_session = *(session_t **)(p_curr->p_data);
-        if (
-            (p_session->username_size == username_size) &&
-            (0 == memcmp(p_session->p_username, p_username, username_size))
-        )
-        {
-            b_result = true;
-            goto cleanup;
-        }
-
-        p_curr = p_curr->p_next;
-    }
-
-cleanup:
-    return b_result;
 }
 
 static status_t
