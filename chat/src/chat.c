@@ -220,6 +220,7 @@ chat_client_init (server_t * p_server, client_t * p_client)
     uint8_t * p_response_packet = NULL;
     uint8_t * p_username        = NULL;
     uint8_t * p_password        = NULL;
+    uint8_t * p_user_allow      = NULL;
 
     if ((NULL == p_server) || (NULL == p_client))
     {
@@ -242,8 +243,9 @@ chat_client_init (server_t * p_server, client_t * p_client)
     p_state->request.p_packet  = NULL;
     p_state->response.p_packet = NULL;
 
-    p_state->session.username_size = 0u;
-    p_state->session.password_size = 0u;
+    p_state->session.username_size   = 0u;
+    p_state->session.password_size   = 0u;
+    p_state->session.user_allow_size = 0u;
 
     p_username = calloc(g_username_size_max, sizeof(*p_username));
     if (NULL == p_username)
@@ -280,6 +282,15 @@ chat_client_init (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
     p_state->response.p_packet = p_response_packet;
+
+    p_user_allow = calloc(g_username_size_max, sizeof(*p_user_allow));
+    if (NULL == p_user_allow)
+    {
+        fprintf(stderr, "calloc failed in chat_client_init\n");
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_state->session.p_user_allow = p_user_allow;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -348,6 +359,9 @@ chat_client_free (server_t * p_server, client_t * p_client)
 
     free(p_session->p_password);
     p_session->p_password = NULL;
+
+    free(p_session->p_user_allow);
+    p_session->p_user_allow = NULL;
 
     free(p_state);
     p_state = NULL;

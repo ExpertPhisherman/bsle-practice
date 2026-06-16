@@ -1532,8 +1532,9 @@ opcode_respond (
             }
             else
             {
-                // TODO: Transfer file
-                ;
+                // Allow file to be transferred later
+                memcpy(p_session->p_user_allow, p_username, username_size);
+                p_session->user_allow_size = username_size;
             }
 
             // Reset request item for self
