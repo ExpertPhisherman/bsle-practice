@@ -38,18 +38,19 @@ typedef status_t (*opcode_func_t)(
 
 typedef enum opcode
 {
-    OPCODE_DEFAULT  = 0x00, // Default opcode in case of unknown
-    OPCODE_PING     = 0x01, // Respond with PONG
-    OPCODE_ECHO     = 0x02, // Return the provided message
-    OPCODE_QUIT     = 0x03, // Close client connection
-    OPCODE_LOGIN    = 0x04, // Log in with credentials
-    OPCODE_LOGOUT   = 0x05, // Log out
-    OPCODE_MSG_SEND = 0x06, // Send message to all users in room
-    OPCODE_MSG_RECV = 0x07, // Receive single message
-    OPCODE_JOIN     = 0x08, // Join or create room
-    OPCODE_LIST     = 0x09, // List all available rooms or users in current room
-    OPCODE_REQUEST  = 0x0a, // Request PM or file transfer to user
-    OPCODE_RESPOND  = 0x0b, // Respond to PM or file transfer request from user
+    OPCODE_DEFAULT   = 0x00, // Default opcode in case of unknown
+    OPCODE_PING      = 0x01, // Respond with PONG
+    OPCODE_ECHO      = 0x02, // Return the provided message
+    OPCODE_QUIT      = 0x03, // Close client connection
+    OPCODE_LOGIN     = 0x04, // Log in with credentials
+    OPCODE_LOGOUT    = 0x05, // Log out
+    OPCODE_MSG_SEND  = 0x06, // Send message to all users in room
+    OPCODE_MSG_RECV  = 0x07, // Receive single message
+    OPCODE_JOIN      = 0x08, // Join or create room
+    OPCODE_LIST      = 0x09, // List available rooms or users in current room
+    OPCODE_REQUEST   = 0x0a, // Request PM or file transfer to user
+    OPCODE_RESPOND   = 0x0b, // Respond to PM or file transfer request from user
+    OPCODE_FILE_SEND = 0x0c, // Send file to server for relay
 } opcode_t;
 
 typedef enum retcode
@@ -60,6 +61,7 @@ typedef enum retcode
     RETCODE_PENDING       = 0x04, // User already has a pending request
     RETCODE_NOT_PENDING   = 0x05, // User has no pending request to respond to
     RETCODE_DUPLICATE     = 0x06, // User already exists in room
+    RETCODE_UNALLOWED     = 0x07, // Receiving user hasn't allowed file transfer
     RETCODE_FAILURE       = 0xff, // Server action failed
 } retcode_t;
 
@@ -232,7 +234,7 @@ status_t user_join(session_t * p_session, appdata_t * p_appdata);
 status_t user_leave(session_t * p_session, appdata_t * p_appdata);
 
 /*!
- * @brief Check if username is in room
+ * @brief Get session by a username in room
  *
  * @param[in] p_room        Pointer to room
  * @param[in] p_username    Pointer to username
@@ -240,7 +242,7 @@ status_t user_leave(session_t * p_session, appdata_t * p_appdata);
  *
  * @return Boolean if username is in room
  */
-bool username_in_room(
+session_t * session_by_username(
     room_t   * p_room,
     uint8_t  * p_username,
     uint16_t   username_size

@@ -69,13 +69,14 @@ typedef enum resp_flag_choice
     RESP_FLAG_CHOICE_DECLINE = 0x01,
 } resp_flag_choice_t;
 
-typedef enum msg_send_out_flag
+typedef enum msg_flag
 {
-    MSG_SEND_OUT_FLAG_MSG   = 0x00,
-    MSG_SEND_OUT_FLAG_NOTIF = 0x01,
-    MSG_SEND_OUT_FLAG_LIST  = 0x02,
-    MSG_SEND_OUT_FLAG_JOIN  = 0x03,
-} msg_send_out_flag_t;
+    MSG_FLAG_MSG   = 0x00,
+    MSG_FLAG_NOTIF = 0x01,
+    MSG_FLAG_LIST  = 0x02,
+    MSG_FLAG_JOIN  = 0x03,
+    MSG_FLAG_FILE  = 0x04,
+} msg_flag_t;
 
 typedef struct __attribute__((packed)) ping_hdr
 {
@@ -143,13 +144,28 @@ typedef struct __attribute__((packed)) resp_hdr
     uint32_t session_id;
 } resp_hdr_t;
 
-typedef struct __attribute__((packed)) msg_recv_hdr_out
+typedef struct __attribute__((packed)) file_send_hdr
+{
+    uint8_t  padding;
+    uint16_t username_size;
+    uint16_t filename_size;
+    uint16_t file_size;
+    uint32_t session_id;
+} file_send_hdr_t;
+
+typedef struct __attribute__((packed)) file_recv_hdr
+{
+    uint16_t filename_size;
+    uint16_t file_size;
+} file_recv_hdr_t;
+
+typedef struct __attribute__((packed)) msg_recv_hdr
 {
     uint8_t  opcode;
     uint8_t  retcode;
     uint8_t  flag;
     uint16_t msg_size;
-} msg_recv_hdr_out_t;
+} msg_recv_hdr_t;
 
 /*!
  * @brief Default opcode in case of unknown
@@ -311,6 +327,21 @@ status_t opcode_request(
  * @return Status of operation
  */
 status_t opcode_respond(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Send file to server for relay
+ *
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_file_send(
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response

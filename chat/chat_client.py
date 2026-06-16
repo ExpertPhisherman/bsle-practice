@@ -14,18 +14,19 @@ from client import Client
 
 UINT8_MAX = 255
 
-OPCODE_DEFAULT  = 0x00
-OPCODE_PING     = 0x01
-OPCODE_ECHO     = 0x02
-OPCODE_QUIT     = 0x03
-OPCODE_LOGIN    = 0x04
-OPCODE_LOGOUT   = 0x05
-OPCODE_MSG_SEND = 0x06
-OPCODE_MSG_RECV = 0x07
-OPCODE_JOIN     = 0x08
-OPCODE_LIST     = 0x09
-OPCODE_REQUEST  = 0x0a
-OPCODE_RESPOND  = 0x0b
+OPCODE_DEFAULT   = 0x00
+OPCODE_PING      = 0x01
+OPCODE_ECHO      = 0x02
+OPCODE_QUIT      = 0x03
+OPCODE_LOGIN     = 0x04
+OPCODE_LOGOUT    = 0x05
+OPCODE_MSG_SEND  = 0x06
+OPCODE_MSG_RECV  = 0x07
+OPCODE_JOIN      = 0x08
+OPCODE_LIST      = 0x09
+OPCODE_REQUEST   = 0x0a
+OPCODE_RESPOND   = 0x0b
+OPCODE_FILE_SEND = 0x0c
 
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
@@ -33,6 +34,7 @@ RETCODE_OVERFLOW      = 0x03
 RETCODE_PENDING       = 0x04
 RETCODE_NOT_PENDING   = 0x05
 RETCODE_DUPLICATE     = 0x06
+RETCODE_UNALLOWED     = 0x07
 RETCODE_FAILURE       = 0xff
 
 FIELD_SIZE_OPCODE     = 1
@@ -53,10 +55,11 @@ RESP_FLAG_TYPE_FILE = 0x01
 RESP_FLAG_CHOICE_ACCEPT  = 0x00
 RESP_FLAG_CHOICE_DECLINE = 0x01
 
-MSG_SEND_OUT_FLAG_MSG   = 0x00
-MSG_SEND_OUT_FLAG_NOTIF = 0x01
-MSG_SEND_OUT_FLAG_LIST  = 0x02
-MSG_SEND_OUT_FLAG_JOIN  = 0x03
+MSG_FLAG_MSG   = 0x00
+MSG_FLAG_NOTIF = 0x01
+MSG_FLAG_LIST  = 0x02
+MSG_FLAG_JOIN  = 0x03
+MSG_FLAG_FILE  = 0x04
 
 def with_parser(
     description: str,
@@ -129,18 +132,19 @@ class ChatClient(Client):
 
         self._listener_lock = threading.Lock()
 
-        self.opcode_funcs[OPCODE_DEFAULT]  = self.opcode_default
-        self.opcode_funcs[OPCODE_PING]     = self.opcode_ping
-        self.opcode_funcs[OPCODE_ECHO]     = self.opcode_echo
-        self.opcode_funcs[OPCODE_QUIT]     = self.opcode_quit
-        self.opcode_funcs[OPCODE_LOGIN]    = self.opcode_login
-        self.opcode_funcs[OPCODE_LOGOUT]   = self.opcode_logout
-        self.opcode_funcs[OPCODE_MSG_SEND] = self.opcode_msg_send
-        self.opcode_funcs[OPCODE_MSG_RECV] = self.opcode_msg_recv
-        self.opcode_funcs[OPCODE_JOIN]     = self.opcode_join
-        self.opcode_funcs[OPCODE_LIST]     = self.opcode_list
-        self.opcode_funcs[OPCODE_REQUEST]  = self.opcode_request
-        self.opcode_funcs[OPCODE_RESPOND]  = self.opcode_respond
+        self.opcode_funcs[OPCODE_DEFAULT]   = self.opcode_default
+        self.opcode_funcs[OPCODE_PING]      = self.opcode_ping
+        self.opcode_funcs[OPCODE_ECHO]      = self.opcode_echo
+        self.opcode_funcs[OPCODE_QUIT]      = self.opcode_quit
+        self.opcode_funcs[OPCODE_LOGIN]     = self.opcode_login
+        self.opcode_funcs[OPCODE_LOGOUT]    = self.opcode_logout
+        self.opcode_funcs[OPCODE_MSG_SEND]  = self.opcode_msg_send
+        self.opcode_funcs[OPCODE_MSG_RECV]  = self.opcode_msg_recv
+        self.opcode_funcs[OPCODE_JOIN]      = self.opcode_join
+        self.opcode_funcs[OPCODE_LIST]      = self.opcode_list
+        self.opcode_funcs[OPCODE_REQUEST]   = self.opcode_request
+        self.opcode_funcs[OPCODE_RESPOND]   = self.opcode_respond
+        self.opcode_funcs[OPCODE_FILE_SEND] = self.opcode_file_send
 
     def _get_prompt(self) -> str:
         prompt = ""
@@ -403,10 +407,23 @@ class ChatClient(Client):
             return False
 
         if retcode == RETCODE_SUCCESS:
-            if flag == MSG_SEND_OUT_FLAG_JOIN:
+            if flag == MSG_FLAG_JOIN:
                 room_name = payload.decode("utf-8")
                 self.room_name = room_name
                 print(f"{self.username} joined room: \"{self.room_name}\"")
+            elif flag == MSG_FLAG_FILE:
+                filename_size, file_size = struct.unpack("!HH", payload[:4])
+                filename_enc, file_content = struct.unpack(
+                    f"!{filename_size}s{file_size}s",
+                    payload[4:]
+                )
+
+                filename = filename_enc.decode("utf-8")
+
+                with open(filename, "wb") as f:
+                    f.write(file_content)
+
+                print(f"Received file: \"{filename}\"")
             else:
                 print(payload.decode("utf-8"))
         else:
@@ -471,6 +488,28 @@ class ChatClient(Client):
             print("Pending request from user does not exist")
         elif retcode == RETCODE_FAILURE:
             print("Failed respond")
+        else:
+            print(f"Unknown return code: {retcode:02x}")
+
+        return False
+
+    def opcode_file_send(self) -> bool:
+        response = self.recv_response(FIELD_SIZE_RETCODE)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("File sent successfully")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
+        elif retcode == RETCODE_UNALLOWED:
+            print("Receiving user hasn't allowed file transfer")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed message send")
         else:
             print(f"Unknown return code: {retcode:02x}")
 
@@ -590,6 +629,54 @@ class ChatClient(Client):
             self.session_id
         )
         self.request += message_enc
+        return self.send_request()
+
+    @with_parser(
+        description="Send file to server for relay",
+        args={
+            "username": {"help": "username to relay file to"},
+            "src": {"help": "file to read from client"},
+            "dst": {
+                "help": "file to write to server (default: same as src)",
+                "nargs": "?"
+            }
+        }
+    )
+    def do_put(self, line: str) -> bool:
+        try:
+            args = self.do_put.parser.parse_args(line.split())
+        except SystemExit:
+            return False
+
+        username_enc = args.username.encode("utf-8")
+        filename_src = args.src
+        filename_dst = args.dst
+
+        if filename_dst is None:
+            filename_dst = filename_src
+
+        filename_dst_enc = filename_dst.encode("utf-8")
+
+        try:
+            with open(filename_src, "rb") as f:
+                file_content = f.read()
+        except OSError as e:
+            print(f"[!] Could not read \"{filename_src}\": {e}")
+            return False
+
+        self.request = struct.pack(
+            "!BxHHHI",
+            OPCODE_FILE_SEND,
+            len(username_enc),
+            len(filename_dst_enc),
+            len(file_content),
+            self.session_id
+        )
+
+        self.request += username_enc
+        self.request += filename_dst_enc
+        self.request += file_content
+
         return self.send_request()
 
     @with_parser(

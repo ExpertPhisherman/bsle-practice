@@ -532,6 +532,7 @@ opcode_msg_send (
     server_t  * p_server         = NULL;
     uint8_t   * p_request_packet = NULL;
     room_t    * p_room           = NULL;
+    uint16_t    msg_size         = 0u;
     uint8_t   * p_msg            = NULL;
     bool        b_locked         = false;
 
@@ -560,7 +561,7 @@ opcode_msg_send (
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    uint16_t msg_size      = ntohs(p_hdr->msg_size);
+    msg_size               = ntohs(p_hdr->msg_size);
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
@@ -628,7 +629,7 @@ opcode_msg_send (
             continue;
         }
 
-        msg_send(p_target, MSG_SEND_OUT_FLAG_MSG, p_msg, msg_size);
+        msg_send(p_target, MSG_FLAG_MSG, p_msg, msg_size);
 
         p_curr = p_curr->p_next;
     }
@@ -916,7 +917,7 @@ opcode_list (
                 p_room = *(room_t **)(p_curr->p_data);
                 msg_send(
                     p_session,
-                    MSG_SEND_OUT_FLAG_LIST,
+                    MSG_FLAG_LIST,
                     p_room->p_name,
                     p_room->name_size
                 );
@@ -936,7 +937,7 @@ opcode_list (
                 p_target = *(session_t **)(p_curr->p_data);
                 msg_send(
                     p_session,
-                    MSG_SEND_OUT_FLAG_LIST,
+                    MSG_FLAG_LIST,
                     p_target->p_username,
                     p_target->username_size
                 );
@@ -1057,7 +1058,7 @@ opcode_request (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    if (!username_in_room(p_room, p_username, username_size))
+    if (NULL == session_by_username(p_room, p_username, username_size))
     {
         fprintf(stderr, "Receiving user not in room\n");
         p_response->retcode = RETCODE_FAILURE;
@@ -1104,7 +1105,7 @@ opcode_request (
                 p_room,
                 p_username,
                 username_size,
-                MSG_SEND_OUT_FLAG_NOTIF,
+                MSG_FLAG_NOTIF,
                 p_msg,
                 written
             );
@@ -1140,7 +1141,7 @@ opcode_request (
                 p_room,
                 p_username,
                 username_size,
-                MSG_SEND_OUT_FLAG_NOTIF,
+                MSG_FLAG_NOTIF,
                 p_msg,
                 written
             );
@@ -1278,7 +1279,7 @@ opcode_respond (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    if (!username_in_room(p_room, p_username, username_size))
+    if (NULL == session_by_username(p_room, p_username, username_size))
     {
         fprintf(stderr, "Receiving user not in room\n");
         p_response->retcode = RETCODE_FAILURE;
@@ -1331,7 +1332,7 @@ opcode_respond (
             {
                 msg_send(
                     p_session,
-                    MSG_SEND_OUT_FLAG_NOTIF,
+                    MSG_FLAG_NOTIF,
                     (uint8_t *)"Responded: decline",
                     18u
                 );
@@ -1349,7 +1350,7 @@ opcode_respond (
                     p_room,
                     p_username,
                     username_size,
-                    MSG_SEND_OUT_FLAG_NOTIF,
+                    MSG_FLAG_NOTIF,
                     p_msg,
                     written
                 );
@@ -1427,7 +1428,7 @@ opcode_respond (
                 user_join(p_session, p_appdata);
                 msg_send(
                     p_session,
-                    MSG_SEND_OUT_FLAG_JOIN,
+                    MSG_FLAG_JOIN,
                     p_room_name,
                     room_name_size
                 );
@@ -1450,7 +1451,7 @@ opcode_respond (
                         user_join(p_target, p_appdata);
                         msg_send(
                             p_target,
-                            MSG_SEND_OUT_FLAG_JOIN,
+                            MSG_FLAG_JOIN,
                             p_room_name,
                             room_name_size
                         );
@@ -1507,7 +1508,7 @@ opcode_respond (
             {
                 msg_send(
                     p_session,
-                    MSG_SEND_OUT_FLAG_NOTIF,
+                    MSG_FLAG_NOTIF,
                     (uint8_t *)"Responded: decline",
                     18u
                 );
@@ -1525,7 +1526,7 @@ opcode_respond (
                     p_room,
                     p_username,
                     username_size,
-                    MSG_SEND_OUT_FLAG_NOTIF,
+                    MSG_FLAG_NOTIF,
                     p_msg,
                     written
                 );
@@ -1562,6 +1563,201 @@ cleanup:
     free(p_room_name);
     p_room_name = NULL;
 
+    free(p_msg);
+    p_msg = NULL;
+
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+        b_locked = false;
+    }
+    return status;
+}
+
+status_t
+opcode_file_send (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    appdata_t       * p_appdata        = NULL;
+    sll_t           * p_room_store     = NULL;
+    room_t          * p_room           = NULL;
+    int               sockfd           = -1;
+    server_t        * p_server         = NULL;
+    uint8_t         * p_request_packet = NULL;
+    uint16_t          username_size    = 0u;
+    uint16_t          filename_size    = 0u;
+    uint16_t          file_size        = 0u;
+    uint8_t         * p_username       = NULL;
+    uint8_t         * p_filename       = NULL;
+    uint8_t         * p_file           = NULL;
+    uint16_t          msg_size         = 0u;
+    uint8_t         * p_msg            = NULL;
+    session_t       * p_target         = NULL;
+    bool              b_locked         = false;
+    file_send_hdr_t * p_hdr            = NULL;
+    file_recv_hdr_t * p_recv_hdr       = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
+
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode  = OPCODE_FILE_SEND;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    p_hdr = (file_send_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    username_size          = ntohs(p_hdr->username_size);
+    filename_size          = ntohs(p_hdr->filename_size);
+    file_size              = ntohs(p_hdr->file_size);
+    p_request->session_id  = ntohl(p_hdr->session_id);
+    p_request->size       += sizeof(*p_hdr);
+
+    if (
+        (
+            p_request->size +
+            username_size +
+            filename_size +
+            file_size
+        ) > g_max_packet_size
+    )
+    {
+        fprintf(stderr, "File send request size exceeds g_max_packet_size\n");
+        sockutil_drain(
+            sockfd,
+            (
+                username_size +
+                filename_size +
+                file_size
+            ),
+            g_chunk_size
+        );
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
+    p_username       = p_request_packet + p_request->size;
+    p_request->size += username_size;
+
+    p_filename       = p_request_packet + p_request->size;
+    p_request->size += filename_size;
+
+    p_file           = p_request_packet + p_request->size;
+    p_request->size += file_size;
+
+    sockutil_recvall(sockfd, p_username, username_size);
+    sockutil_recvall(sockfd, p_filename, filename_size);
+    sockutil_recvall(sockfd, p_file, file_size);
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    p_room = p_session->p_room;
+    if (NULL == p_room)
+    {
+        fprintf(stderr, "Sending user not in room\n");
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    p_target = session_by_username(p_room, p_username, username_size);
+
+    if (NULL == p_target)
+    {
+        fprintf(stderr, "Receiving user not in room\n");
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    // Reject unallowed file sends from current session
+    if (
+        (p_target->user_allow_size != p_session->username_size) ||
+        (0 != memcmp(
+            p_target->p_user_allow,
+            p_session->p_username,
+            p_session->username_size
+        ))
+    )
+    {
+        fprintf(stderr, "Receiving user hasn't allowed file transfer\n");
+        p_response->retcode = RETCODE_UNALLOWED;
+        goto cleanup;
+    }
+
+    p_msg = calloc(g_max_packet_size, sizeof(*p_msg));
+    if (NULL == p_msg)
+    {
+        fprintf(stderr, "calloc failed in opcode_file_send\n");
+        p_response->retcode = RETCODE_FAILURE;
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    p_recv_hdr = (file_recv_hdr_t *)p_msg;
+
+    p_recv_hdr->filename_size = htons(filename_size);
+    p_recv_hdr->file_size     = htons(file_size);
+
+    msg_size += sizeof(*p_recv_hdr);
+
+    memcpy(p_msg + msg_size, p_filename, filename_size);
+    msg_size += filename_size;
+
+    memcpy(p_msg + msg_size, p_file, file_size);
+    msg_size += file_size;
+
+    msg_send(p_target, MSG_FLAG_FILE, p_msg, msg_size);
+    memset(p_target->p_user_allow, 0, g_username_size_max);
+    p_target->user_allow_size = 0u;
+
+    if (p_server->b_verbose)
+    {
+        printf(
+            "%.*s sent file \"%.*s\" to user: %.*s\n",
+            p_session->username_size,
+            p_session->p_username,
+            filename_size,
+            p_filename,
+            p_target->username_size,
+            p_target->p_username
+        );
+    }
+
+cleanup:
     free(p_msg);
     p_msg = NULL;
 
@@ -1626,8 +1822,8 @@ msg_send (
 {
     status_t status = STATUS_SUCCESS;
 
-    uint8_t            * p_packet = NULL;
-    msg_recv_hdr_out_t   hdr      = {0};
+    uint8_t        * p_packet = NULL;
+    msg_recv_hdr_t   hdr      = {0};
 
     if ((NULL == p_session) || (NULL == p_msg))
     {

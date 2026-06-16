@@ -663,7 +663,7 @@ user_join (session_t * p_session, appdata_t * p_appdata)
         }
     }
 
-    if (username_in_room(
+    if (NULL != session_by_username(
         p_room,
         p_session->p_username,
         p_session->username_size
@@ -740,15 +740,13 @@ cleanup:
     return status;
 }
 
-bool
-username_in_room (
+session_t *
+session_by_username (
     room_t   * p_room,
     uint8_t  * p_username,
     uint16_t   username_size
 )
 {
-    bool b_result = false;
-
     node_t    * p_curr    = NULL;
     session_t * p_session = NULL;
 
@@ -770,15 +768,15 @@ username_in_room (
             (0 == memcmp(p_session->p_username, p_username, username_size))
         )
         {
-            b_result = true;
-            goto cleanup;
+            break;
         }
 
-        p_curr = p_curr->p_next;
+        p_session = NULL;
+        p_curr    = p_curr->p_next;
     }
 
 cleanup:
-    return b_result;
+    return p_session;
 }
 
 bool
@@ -974,18 +972,19 @@ appdata_create (void)
     }
     p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
-    pp_opcode_funcs[OPCODE_DEFAULT]  = opcode_default;
-    pp_opcode_funcs[OPCODE_PING]     = opcode_ping;
-    pp_opcode_funcs[OPCODE_ECHO]     = opcode_echo;
-    pp_opcode_funcs[OPCODE_QUIT]     = opcode_quit;
-    pp_opcode_funcs[OPCODE_LOGIN]    = opcode_login;
-    pp_opcode_funcs[OPCODE_LOGOUT]   = opcode_logout;
-    pp_opcode_funcs[OPCODE_MSG_SEND] = opcode_msg_send;
-    pp_opcode_funcs[OPCODE_MSG_RECV] = NULL;
-    pp_opcode_funcs[OPCODE_JOIN]     = opcode_join;
-    pp_opcode_funcs[OPCODE_LIST]     = opcode_list;
-    pp_opcode_funcs[OPCODE_REQUEST]  = opcode_request;
-    pp_opcode_funcs[OPCODE_RESPOND]  = opcode_respond;
+    pp_opcode_funcs[OPCODE_DEFAULT]   = opcode_default;
+    pp_opcode_funcs[OPCODE_PING]      = opcode_ping;
+    pp_opcode_funcs[OPCODE_ECHO]      = opcode_echo;
+    pp_opcode_funcs[OPCODE_QUIT]      = opcode_quit;
+    pp_opcode_funcs[OPCODE_LOGIN]     = opcode_login;
+    pp_opcode_funcs[OPCODE_LOGOUT]    = opcode_logout;
+    pp_opcode_funcs[OPCODE_MSG_SEND]  = opcode_msg_send;
+    pp_opcode_funcs[OPCODE_MSG_RECV]  = NULL;
+    pp_opcode_funcs[OPCODE_JOIN]      = opcode_join;
+    pp_opcode_funcs[OPCODE_LIST]      = opcode_list;
+    pp_opcode_funcs[OPCODE_REQUEST]   = opcode_request;
+    pp_opcode_funcs[OPCODE_RESPOND]   = opcode_respond;
+    pp_opcode_funcs[OPCODE_FILE_SEND] = opcode_file_send;
 
     p_appdata->next_session_id = 1u;
 
