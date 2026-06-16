@@ -922,13 +922,7 @@ appdata_create (void)
     }
     p_appdata->p_cred_store = p_cred_store;
 
-    status = ht_set(
-        p_cred_store,
-        "admin",
-        5u,
-        "password",
-        8u
-    );
+    status = ht_set(p_cred_store, "admin", 5u, "password", 8u);
     if (STATUS_SUCCESS != status)
     {
         fprintf(stderr, "ht_set failed in appdata_create\n");
