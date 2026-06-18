@@ -38,19 +38,22 @@ typedef status_t (*opcode_func_t)(
 
 typedef enum opcode
 {
-    OPCODE_DEFAULT   = 0x00, // Default opcode in case of unknown
-    OPCODE_PING      = 0x01, // Respond with PONG
-    OPCODE_ECHO      = 0x02, // Return the provided message
-    OPCODE_QUIT      = 0x03, // Close client connection
-    OPCODE_LOGIN     = 0x04, // Log in with credentials
-    OPCODE_LOGOUT    = 0x05, // Log out
-    OPCODE_MSG_SEND  = 0x06, // Send message to all users in room
-    OPCODE_MSG_RECV  = 0x07, // Receive single message
-    OPCODE_JOIN      = 0x08, // Join or create room
-    OPCODE_LIST      = 0x09, // List available rooms or users in current room
-    OPCODE_REQUEST   = 0x0a, // Request PM or file transfer to user
-    OPCODE_RESPOND   = 0x0b, // Respond to PM or file transfer request from user
-    OPCODE_FILE_SEND = 0x0c, // Send file to server for relay
+    OPCODE_DEFAULT    = 0x00, // Default opcode in case of unknown
+    OPCODE_PING       = 0x01, // Respond with PONG
+    OPCODE_ECHO       = 0x02, // Return the provided message
+    OPCODE_QUIT       = 0x03, // Close client connection
+    OPCODE_LOGIN      = 0x04, // Log in with credentials
+    OPCODE_LOGOUT     = 0x05, // Log out
+    OPCODE_MSG_SEND   = 0x06, // Send message to all users in room
+    OPCODE_MSG_RECV   = 0x07, // Receive single message
+    OPCODE_JOIN       = 0x08, // Join or create room
+    OPCODE_LIST       = 0x09, // List available rooms or users in current room
+    OPCODE_REQUEST    = 0x0a, // Request PM or file transfer to user
+    OPCODE_RESPOND    = 0x0b, // Respond to PM or file transfer request
+    OPCODE_FILE_SEND  = 0x0c, // Send file to server for relay
+    OPCODE_PROMOTE    = 0x0d, // Promote user to admin
+    OPCODE_DISCONNECT = 0x0e, // Disconnect user from server
+    OPCODE_DELETE     = 0x0f, // Delete room
 } opcode_t;
 
 typedef enum retcode
@@ -62,6 +65,7 @@ typedef enum retcode
     RETCODE_NOT_PENDING   = 0x05, // User has no pending request to respond to
     RETCODE_DUPLICATE     = 0x06, // User already exists in room
     RETCODE_UNALLOWED     = 0x07, // Receiving user hasn't allowed file transfer
+    RETCODE_UNAUTHORIZED  = 0x08, // User isn't authorized to perform action
     RETCODE_FAILURE       = 0xff, // Server action failed
 } retcode_t;
 
@@ -115,6 +119,7 @@ typedef struct appdata
     uint32_t          next_session_id; // Next session ID to assign
     ht_t            * p_cred_store;    // Pointer to credential storage
     sll_t           * p_room_store;    // Pointer to room storage
+    sll_t           * p_admins;        // Pointer to admin list
     opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
     pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;

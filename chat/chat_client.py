@@ -14,19 +14,22 @@ from client import Client
 
 UINT8_MAX = 255
 
-OPCODE_DEFAULT   = 0x00
-OPCODE_PING      = 0x01
-OPCODE_ECHO      = 0x02
-OPCODE_QUIT      = 0x03
-OPCODE_LOGIN     = 0x04
-OPCODE_LOGOUT    = 0x05
-OPCODE_MSG_SEND  = 0x06
-OPCODE_MSG_RECV  = 0x07
-OPCODE_JOIN      = 0x08
-OPCODE_LIST      = 0x09
-OPCODE_REQUEST   = 0x0a
-OPCODE_RESPOND   = 0x0b
-OPCODE_FILE_SEND = 0x0c
+OPCODE_DEFAULT    = 0x00
+OPCODE_PING       = 0x01
+OPCODE_ECHO       = 0x02
+OPCODE_QUIT       = 0x03
+OPCODE_LOGIN      = 0x04
+OPCODE_LOGOUT     = 0x05
+OPCODE_MSG_SEND   = 0x06
+OPCODE_MSG_RECV   = 0x07
+OPCODE_JOIN       = 0x08
+OPCODE_LIST       = 0x09
+OPCODE_REQUEST    = 0x0a
+OPCODE_RESPOND    = 0x0b
+OPCODE_FILE_SEND  = 0x0c
+OPCODE_PROMOTE    = 0x0d
+OPCODE_DISCONNECT = 0x0e
+OPCODE_DELETE     = 0x0f
 
 RETCODE_SUCCESS       = 0x01
 RETCODE_SESSION_ERROR = 0x02
@@ -35,6 +38,7 @@ RETCODE_PENDING       = 0x04
 RETCODE_NOT_PENDING   = 0x05
 RETCODE_DUPLICATE     = 0x06
 RETCODE_UNALLOWED     = 0x07
+RETCODE_UNAUTHORIZED  = 0x08
 RETCODE_FAILURE       = 0xff
 
 FIELD_SIZE_OPCODE     = 1
@@ -132,19 +136,22 @@ class ChatClient(Client):
 
         self._listener_lock = threading.Lock()
 
-        self.opcode_funcs[OPCODE_DEFAULT]   = self.opcode_default
-        self.opcode_funcs[OPCODE_PING]      = self.opcode_ping
-        self.opcode_funcs[OPCODE_ECHO]      = self.opcode_echo
-        self.opcode_funcs[OPCODE_QUIT]      = self.opcode_quit
-        self.opcode_funcs[OPCODE_LOGIN]     = self.opcode_login
-        self.opcode_funcs[OPCODE_LOGOUT]    = self.opcode_logout
-        self.opcode_funcs[OPCODE_MSG_SEND]  = self.opcode_msg_send
-        self.opcode_funcs[OPCODE_MSG_RECV]  = self.opcode_msg_recv
-        self.opcode_funcs[OPCODE_JOIN]      = self.opcode_join
-        self.opcode_funcs[OPCODE_LIST]      = self.opcode_list
-        self.opcode_funcs[OPCODE_REQUEST]   = self.opcode_request
-        self.opcode_funcs[OPCODE_RESPOND]   = self.opcode_respond
-        self.opcode_funcs[OPCODE_FILE_SEND] = self.opcode_file_send
+        self.opcode_funcs[OPCODE_DEFAULT]    = self.opcode_default
+        self.opcode_funcs[OPCODE_PING]       = self.opcode_ping
+        self.opcode_funcs[OPCODE_ECHO]       = self.opcode_echo
+        self.opcode_funcs[OPCODE_QUIT]       = self.opcode_quit
+        self.opcode_funcs[OPCODE_LOGIN]      = self.opcode_login
+        self.opcode_funcs[OPCODE_LOGOUT]     = self.opcode_logout
+        self.opcode_funcs[OPCODE_MSG_SEND]   = self.opcode_msg_send
+        self.opcode_funcs[OPCODE_MSG_RECV]   = self.opcode_msg_recv
+        self.opcode_funcs[OPCODE_JOIN]       = self.opcode_join
+        self.opcode_funcs[OPCODE_LIST]       = self.opcode_list
+        self.opcode_funcs[OPCODE_REQUEST]    = self.opcode_request
+        self.opcode_funcs[OPCODE_RESPOND]    = self.opcode_respond
+        self.opcode_funcs[OPCODE_FILE_SEND]  = self.opcode_file_send
+        self.opcode_funcs[OPCODE_PROMOTE]    = self.opcode_promote
+        self.opcode_funcs[OPCODE_DISCONNECT] = self.opcode_disconnect
+        self.opcode_funcs[OPCODE_DELETE]     = self.opcode_delete
 
     def _get_prompt(self) -> str:
         prompt = ""
@@ -406,11 +413,20 @@ class ChatClient(Client):
         if payload is None:
             return False
 
+        payload_dec = payload.decode("utf-8")
+
         if retcode == RETCODE_SUCCESS:
             if flag == MSG_FLAG_JOIN:
-                room_name = payload.decode("utf-8")
+                room_name = payload_dec
+                if payload_dec == "":
+                    room_name = None
                 self.room_name = room_name
-                print(f"{self.username} joined room: \"{self.room_name}\"")
+                if self.room_name is None:
+                    print(f"{self.username} left room")
+                else:
+                    print(f"{self.username} joined room: \"{self.room_name}\"")
+            elif flag == MSG_FLAG_NOTIF:
+                print(f"Notification: {payload_dec}")
             elif flag == MSG_FLAG_FILE:
                 filename_size, file_size = struct.unpack("!HH", payload[:4])
                 filename_enc, file_content = struct.unpack(
@@ -425,7 +441,7 @@ class ChatClient(Client):
 
                 print(f"Received file: \"{filename}\"")
             else:
-                print(payload.decode("utf-8"))
+                print(payload_dec)
         else:
             print(f"Unknown return code: {retcode:02x}")
 
@@ -509,7 +525,73 @@ class ChatClient(Client):
         elif retcode == RETCODE_UNALLOWED:
             print("Receiving user hasn't allowed file transfer")
         elif retcode == RETCODE_FAILURE:
-            print("Failed message send")
+            print("Failed file send")
+        else:
+            print(f"Unknown return code: {retcode:02x}")
+
+        return False
+
+    def opcode_promote(self) -> bool:
+        response = self.recv_response(FIELD_SIZE_RETCODE)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("Promotion successful")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
+        elif retcode == RETCODE_UNAUTHORIZED:
+            print("You are not an admin!")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed promotion")
+        else:
+            print(f"Unknown return code: {retcode:02x}")
+
+        return False
+
+    def opcode_disconnect(self) -> bool:
+        response = self.recv_response(FIELD_SIZE_RETCODE)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("Admin disconnect successful")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
+        elif retcode == RETCODE_UNAUTHORIZED:
+            print("You are not an admin!")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed admin disconnect")
+        else:
+            print(f"Unknown return code: {retcode:02x}")
+
+        return False
+
+    def opcode_delete(self) -> bool:
+        response = self.recv_response(FIELD_SIZE_RETCODE)
+        if response is None:
+            return False
+
+        retcode = response[0]
+
+        if retcode == RETCODE_SUCCESS:
+            print("Room deletion successful")
+        elif retcode == RETCODE_SESSION_ERROR:
+            print("Invalid session")
+        elif retcode == RETCODE_OVERFLOW:
+            print("Exceeds maximum packet size")
+        elif retcode == RETCODE_UNAUTHORIZED:
+            print("You are not an admin!")
+        elif retcode == RETCODE_FAILURE:
+            print("Failed room deletion")
         else:
             print(f"Unknown return code: {retcode:02x}")
 
@@ -819,6 +901,57 @@ class ChatClient(Client):
             self.session_id
         )
         self.request += username_enc
+
+        return self.send_request()
+
+    @with_parser(
+        description="Promote user to admin",
+        args={"username": {"help": "Username to promote to admin"}}
+    )
+    def do_promote(self, line: str) -> bool:
+        line_enc = line.encode("utf-8")
+
+        self.request = struct.pack(
+            "!BxHI",
+            OPCODE_PROMOTE,
+            len(line_enc),
+            self.session_id
+        )
+        self.request += line_enc
+
+        return self.send_request()
+
+    @with_parser(
+        description="Disconnect user from server",
+        args={"username": {"help": "Username to disconnect from server"}}
+    )
+    def do_disconnect(self, line: str) -> bool:
+        line_enc = line.encode("utf-8")
+
+        self.request = struct.pack(
+            "!BxHI",
+            OPCODE_DISCONNECT,
+            len(line_enc),
+            self.session_id
+        )
+        self.request += line_enc
+
+        return self.send_request()
+
+    @with_parser(
+        description="Delete room",
+        args={"room_name": {"help": "Room name to delete"}}
+    )
+    def do_delete(self, line: str) -> bool:
+        line_enc = line.encode("utf-8")
+
+        self.request = struct.pack(
+            "!BxHI",
+            OPCODE_DELETE,
+            len(line_enc),
+            self.session_id
+        )
+        self.request += line_enc
 
         return self.send_request()
 

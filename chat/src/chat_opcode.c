@@ -40,7 +40,7 @@ static status_t validate_session(
  *
  * @return Status of operation
  */
-static status_t msg_send (
+static status_t msg_send(
     session_t     * p_session,
     uint8_t         flag,
     uint8_t const * p_msg,
@@ -59,7 +59,7 @@ static status_t msg_send (
  *
  * @return Status of operation
  */
-static status_t msg_send_username (
+static status_t msg_send_username(
     room_t        * p_room,
     uint8_t       * p_username,
     uint16_t        username_size,
@@ -67,6 +67,34 @@ static status_t msg_send_username (
     uint8_t const * p_msg,
     uint16_t        msg_size
 );
+
+/*!
+ * @brief Send message to all sessions in room
+ *
+ * @param[in] p_room   Pointer to room
+ * @param[in] flag     Flag for type of response
+ * @param[in] p_msg    Pointer to message
+ * @param[in] msg_size Size of message in bytes
+ *
+ * @return Status of operation
+ */
+static status_t msg_send_room(
+    room_t        * p_room,
+    uint8_t         flag,
+    uint8_t const * p_msg,
+    uint16_t        msg_size
+);
+
+/*!
+ * @brief Check if session is an admin
+ *
+ * @param[in] p_session Pointer to session
+ * @param[in] p_appdata Pointer to application data
+ *
+ * @return Status of operation
+ */
+static bool
+is_admin(session_t * p_session, appdata_t * p_appdata);
 
 status_t
 opcode_default (
@@ -613,26 +641,7 @@ opcode_msg_send (
     b_locked = true;
 
     // Send msg to all sessions in room
-    node_t * p_curr = p_room->p_sessions->p_head;
-    while (NULL != p_curr)
-    {
-        // Send msg to single session
-        session_t * p_target = *(session_t **)(p_curr->p_data);
-        if (
-            (0u == p_target->session_id) ||
-            (0u == p_target->username_size) ||
-            (NULL == p_target->p_username) ||
-            (p_room != p_target->p_room)
-        )
-        {
-            p_curr = p_curr->p_next;
-            continue;
-        }
-
-        msg_send(p_target, MSG_FLAG_MSG, p_msg, msg_size);
-
-        p_curr = p_curr->p_next;
-    }
+    msg_send_room(p_room, MSG_FLAG_MSG, p_msg, msg_size);
 
     if (p_server->b_verbose)
     {
@@ -1769,6 +1778,383 @@ cleanup:
     return status;
 }
 
+status_t
+opcode_promote (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    appdata_t     * p_appdata        = NULL;
+    sll_t         * p_admins         = NULL;
+    sll_t         * p_room_store     = NULL;
+    room_t        * p_room           = NULL;
+    int             sockfd           = -1;
+    server_t      * p_server         = NULL;
+    uint8_t       * p_request_packet = NULL;
+    uint16_t        username_size    = 0u;
+    uint8_t       * p_username       = NULL;
+    bool            b_locked         = false;
+    promote_hdr_t * p_hdr            = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_room           = p_session->p_room;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
+    p_admins         = p_appdata->p_admins;
+
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode  = OPCODE_PROMOTE;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    p_hdr = (promote_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    username_size          = ntohs(p_hdr->username_size);
+    p_request->session_id  = ntohl(p_hdr->session_id);
+    p_request->size       += sizeof(*p_hdr);
+
+    if ((p_request->size + username_size) > g_max_packet_size)
+    {
+        fprintf(stderr, "Promote request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, username_size, g_chunk_size);
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
+    p_username       = p_request_packet + p_request->size;
+    p_request->size += username_size;
+
+    sockutil_recvall(sockfd, p_username, username_size);
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    if (!is_admin(p_session, p_appdata))
+    {
+        p_response->retcode = RETCODE_UNAUTHORIZED;
+        goto cleanup;
+    }
+
+    // Append user to admin list
+    sll_append(p_admins, p_username, username_size);
+
+    msg_send_username(
+        p_room,
+        p_username,
+        username_size,
+        MSG_FLAG_NOTIF,
+        (uint8_t *)"You are now an admin",
+        20u
+    );
+
+    if (p_server->b_verbose)
+    {
+        printf("Promoted %.*s to admin\n", username_size, p_username);
+    }
+
+cleanup:
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+        b_locked = false;
+    }
+    return status;
+}
+
+status_t
+opcode_disconnect (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    appdata_t        * p_appdata        = NULL;
+    sll_t            * p_room_store     = NULL;
+    room_t           * p_room           = NULL;
+    int                sockfd           = -1;
+    server_t         * p_server         = NULL;
+    uint8_t          * p_request_packet = NULL;
+    uint16_t           username_size    = 0u;
+    uint8_t          * p_username       = NULL;
+    session_t        * p_target         = NULL;
+    bool               b_locked         = false;
+    disconnect_hdr_t * p_hdr            = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_room) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_room           = p_session->p_room;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
+
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode  = OPCODE_DISCONNECT;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    p_hdr = (disconnect_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    username_size          = ntohs(p_hdr->username_size);
+    p_request->session_id  = ntohl(p_hdr->session_id);
+    p_request->size       += sizeof(*p_hdr);
+
+    if ((p_request->size + username_size) > g_max_packet_size)
+    {
+        fprintf(stderr, "Disconnect request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, username_size, g_chunk_size);
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
+    p_username       = p_request_packet + p_request->size;
+    p_request->size += username_size;
+
+    sockutil_recvall(sockfd, p_username, username_size);
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    if (!is_admin(p_session, p_appdata))
+    {
+        p_response->retcode = RETCODE_UNAUTHORIZED;
+        goto cleanup;
+    }
+
+    msg_send_username(
+        p_room,
+        p_username,
+        username_size,
+        MSG_FLAG_NOTIF,
+        (uint8_t *)"Disconnected by an admin",
+        24u
+    );
+
+    p_target = session_by_username(p_room, p_username, username_size);
+    if (NULL == p_target)
+    {
+        fprintf(
+            stderr,
+            "User %.*s is not in room\n",
+            username_size,
+            p_username
+        );
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    user_logout(p_target, p_appdata);
+
+    pthread_mutex_unlock(&(p_appdata->lock));
+    b_locked = false;
+
+    if (p_server->b_verbose)
+    {
+        printf("Disconnecting %.*s...\n", username_size, p_username);
+    }
+
+    client_destroy(p_server, p_target->p_client);
+
+cleanup:
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+        b_locked = false;
+    }
+    return status;
+}
+
+status_t
+opcode_delete (
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    appdata_t    * p_appdata        = NULL;
+    sll_t        * p_room_store     = NULL;
+    room_t       * p_room           = NULL;
+    node_t       * p_node           = NULL;
+    int            sockfd           = -1;
+    server_t     * p_server         = NULL;
+    uint8_t      * p_request_packet = NULL;
+    uint16_t       room_name_size   = 0u;
+    uint8_t      * p_room_name      = NULL;
+    bool           b_locked         = false;
+    delete_hdr_t * p_hdr            = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_request) ||
+        (NULL == p_response) ||
+        (NULL == p_session->p_server) ||
+        (NULL == p_session->p_server->p_appdata) ||
+        (NULL == p_request->p_packet)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    sockfd           = p_session->sockfd;
+    p_server         = p_session->p_server;
+    p_request_packet = p_request->p_packet;
+    p_appdata        = p_server->p_appdata;
+    p_room_store     = p_appdata->p_room_store;
+
+    if (NULL == p_room_store)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_response->opcode  = OPCODE_DELETE;
+    p_response->retcode = RETCODE_SUCCESS;
+
+    p_hdr = (delete_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    room_name_size         = ntohs(p_hdr->room_name_size);
+    p_request->session_id  = ntohl(p_hdr->session_id);
+    p_request->size       += sizeof(*p_hdr);
+
+    if ((p_request->size + room_name_size) > g_max_packet_size)
+    {
+        fprintf(stderr, "Delete request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, room_name_size, g_chunk_size);
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
+    p_room_name      = p_request_packet + p_request->size;
+    p_request->size += room_name_size;
+
+    sockutil_recvall(sockfd, p_room_name, room_name_size);
+
+    status = validate_session(p_session, p_request, p_response);
+    if (STATUS_INVALID_SESSION == status)
+    {
+        status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    pthread_mutex_lock(&(p_appdata->lock));
+    b_locked = true;
+
+    if (!is_admin(p_session, p_appdata))
+    {
+        p_response->retcode = RETCODE_UNAUTHORIZED;
+        goto cleanup;
+    }
+
+    p_node = sll_get(p_room_store, p_room_name, room_name_size);
+    if (NULL == p_node)
+    {
+        fprintf(
+            stderr,
+            "Room doesn't exist: %.*s\n",
+            room_name_size,
+            p_room_name
+        );
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+    p_room = *(room_t **)(p_node->p_data);
+
+    msg_send_room(
+        p_room,
+        MSG_FLAG_NOTIF,
+        (uint8_t *)"Current room deleted by admin",
+        29u
+    );
+
+    msg_send_room(
+        p_room,
+        MSG_FLAG_JOIN,
+        (uint8_t *)"",
+        0u
+    );
+
+    if (p_server->b_verbose)
+    {
+        printf("Deleting room: %.*s\n", room_name_size, p_room_name);
+    }
+
+    room_destroy(p_room);
+    p_room = NULL;
+
+cleanup:
+    if (b_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->lock));
+        b_locked = false;
+    }
+    return status;
+}
+
 static status_t
 validate_session (
     session_t  * p_session,
@@ -1901,6 +2287,84 @@ msg_send_username (
 
 cleanup:
     return status;
+}
+
+static status_t
+msg_send_room (
+    room_t        * p_room,
+    uint8_t         flag,
+    uint8_t const * p_msg,
+    uint16_t        msg_size
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    node_t * p_curr = NULL;
+
+    if (
+        (NULL == p_room) ||
+        (NULL == p_room->p_sessions) ||
+        (NULL == p_msg)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_curr = p_room->p_sessions->p_head;
+    while (NULL != p_curr)
+    {
+        // Send msg to single session
+        session_t * p_target = *(session_t **)(p_curr->p_data);
+        if (
+            (0u == p_target->session_id) ||
+            (0u == p_target->username_size) ||
+            (NULL == p_target->p_username) ||
+            (p_room != p_target->p_room)
+        )
+        {
+            p_curr = p_curr->p_next;
+            continue;
+        }
+
+        msg_send(p_target, flag, p_msg, msg_size);
+
+        p_curr = p_curr->p_next;
+    }
+
+cleanup:
+    return status;
+}
+
+static bool
+is_admin (session_t * p_session, appdata_t * p_appdata)
+{
+    bool       b_is_admin    = false;
+    uint16_t   username_size = 0u;
+    uint8_t  * p_username    = NULL;
+
+    if (
+        (NULL == p_session) ||
+        (NULL == p_session->p_username) ||
+        (NULL == p_appdata) ||
+        (NULL == p_appdata->p_admins)
+    )
+    {
+        goto cleanup;
+    }
+
+    username_size = p_session->username_size;
+    p_username    = p_session->p_username;
+
+    printf("Checking if %.*s is an admin...\n", username_size, p_username);
+
+    if (NULL != sll_get(p_appdata->p_admins, p_username, username_size))
+    {
+        b_is_admin = true;
+    }
+
+cleanup:
+    return b_is_admin;
 }
 
 /*** end of file ***/

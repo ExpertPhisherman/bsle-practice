@@ -904,6 +904,7 @@ appdata_create (void)
     ht_t          * p_cred_store    = NULL;
     sll_t         * p_room_store    = NULL;
     room_t        * p_room          = NULL;
+    sll_t         * p_admins        = NULL;
     opcode_func_t * pp_opcode_funcs = NULL;
 
     p_appdata = calloc(1u, sizeof(*p_appdata));
@@ -957,6 +958,21 @@ appdata_create (void)
         goto cleanup;
     }
 
+    p_admins = sll_create();
+    if (NULL == p_admins)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_appdata->p_admins = p_admins;
+
+    status = sll_append(p_admins, "admin", 5u);
+    if (STATUS_SUCCESS != status)
+    {
+        fprintf(stderr, "sll_append failed in appdata_create\n");
+        goto cleanup;
+    }
+
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
     {
@@ -966,19 +982,21 @@ appdata_create (void)
     }
     p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
-    pp_opcode_funcs[OPCODE_DEFAULT]   = opcode_default;
-    pp_opcode_funcs[OPCODE_PING]      = opcode_ping;
-    pp_opcode_funcs[OPCODE_ECHO]      = opcode_echo;
-    pp_opcode_funcs[OPCODE_QUIT]      = opcode_quit;
-    pp_opcode_funcs[OPCODE_LOGIN]     = opcode_login;
-    pp_opcode_funcs[OPCODE_LOGOUT]    = opcode_logout;
-    pp_opcode_funcs[OPCODE_MSG_SEND]  = opcode_msg_send;
-    pp_opcode_funcs[OPCODE_MSG_RECV]  = NULL;
-    pp_opcode_funcs[OPCODE_JOIN]      = opcode_join;
-    pp_opcode_funcs[OPCODE_LIST]      = opcode_list;
-    pp_opcode_funcs[OPCODE_REQUEST]   = opcode_request;
-    pp_opcode_funcs[OPCODE_RESPOND]   = opcode_respond;
-    pp_opcode_funcs[OPCODE_FILE_SEND] = opcode_file_send;
+    pp_opcode_funcs[OPCODE_DEFAULT]    = opcode_default;
+    pp_opcode_funcs[OPCODE_PING]       = opcode_ping;
+    pp_opcode_funcs[OPCODE_ECHO]       = opcode_echo;
+    pp_opcode_funcs[OPCODE_QUIT]       = opcode_quit;
+    pp_opcode_funcs[OPCODE_LOGIN]      = opcode_login;
+    pp_opcode_funcs[OPCODE_LOGOUT]     = opcode_logout;
+    pp_opcode_funcs[OPCODE_MSG_SEND]   = opcode_msg_send;
+    pp_opcode_funcs[OPCODE_MSG_RECV]   = NULL;
+    pp_opcode_funcs[OPCODE_JOIN]       = opcode_join;
+    pp_opcode_funcs[OPCODE_LIST]       = opcode_list;
+    pp_opcode_funcs[OPCODE_REQUEST]    = opcode_request;
+    pp_opcode_funcs[OPCODE_RESPOND]    = opcode_respond;
+    pp_opcode_funcs[OPCODE_PROMOTE]    = opcode_promote;
+    pp_opcode_funcs[OPCODE_DISCONNECT] = opcode_disconnect;
+    pp_opcode_funcs[OPCODE_DELETE]     = opcode_delete;
 
     p_appdata->next_session_id = 1u;
 
@@ -1015,6 +1033,9 @@ appdata_destroy (appdata_t * p_appdata)
 
     sll_destroy(p_appdata->p_room_store);
     p_appdata->p_room_store = NULL;
+
+    sll_destroy(p_appdata->p_admins);
+    p_appdata->p_admins = NULL;
 
     free(p_appdata->pp_opcode_funcs);
     p_appdata->pp_opcode_funcs = NULL;

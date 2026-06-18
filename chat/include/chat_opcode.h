@@ -159,6 +159,27 @@ typedef struct __attribute__((packed)) file_recv_hdr
     uint16_t file_size;
 } file_recv_hdr_t;
 
+typedef struct __attribute__((packed)) promote_hdr
+{
+    uint8_t  padding;
+    uint16_t username_size;
+    uint32_t session_id;
+} promote_hdr_t;
+
+typedef struct __attribute__((packed)) disconnect_hdr
+{
+    uint8_t  padding;
+    uint16_t username_size;
+    uint32_t session_id;
+} disconnect_hdr_t;
+
+typedef struct __attribute__((packed)) delete_hdr
+{
+    uint8_t  padding;
+    uint16_t room_name_size;
+    uint32_t session_id;
+} delete_hdr_t;
+
 typedef struct __attribute__((packed)) msg_recv_hdr
 {
     uint8_t  opcode;
@@ -342,6 +363,51 @@ status_t opcode_respond(
  * @return Status of operation
  */
 status_t opcode_file_send(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Promote user to admin
+ *
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_promote(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Disconnect user from server
+ *
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_disconnect(
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+);
+
+/*!
+ * @brief Delete room
+ *
+ * @param[in]  p_session  Pointer to session
+ * @param[in]  p_request  Pointer to request
+ * @param[out] p_response Pointer to response
+ *
+ * @return Status of operation
+ */
+status_t opcode_delete(
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response
