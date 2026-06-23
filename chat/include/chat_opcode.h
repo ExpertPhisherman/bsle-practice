@@ -149,14 +149,14 @@ typedef struct __attribute__((packed)) file_send_hdr
     uint8_t  padding;
     uint16_t username_size;
     uint16_t filename_size;
-    uint16_t file_size;
+    uint32_t file_size;
     uint32_t session_id;
 } file_send_hdr_t;
 
 typedef struct __attribute__((packed)) file_recv_hdr
 {
     uint16_t filename_size;
-    uint16_t file_size;
+    uint32_t file_size;
 } file_recv_hdr_t;
 
 typedef struct __attribute__((packed)) promote_hdr

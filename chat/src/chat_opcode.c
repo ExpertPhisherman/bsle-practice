@@ -1600,7 +1600,7 @@ opcode_file_send (
     uint8_t         * p_request_packet = NULL;
     uint16_t          username_size    = 0u;
     uint16_t          filename_size    = 0u;
-    uint16_t          file_size        = 0u;
+    uint32_t          file_size        = 0u;
     uint8_t         * p_username       = NULL;
     uint8_t         * p_filename       = NULL;
     uint8_t         * p_file           = NULL;
@@ -1645,7 +1645,7 @@ opcode_file_send (
 
     username_size          = ntohs(p_hdr->username_size);
     filename_size          = ntohs(p_hdr->filename_size);
-    file_size              = ntohs(p_hdr->file_size);
+    file_size              = ntohl(p_hdr->file_size);
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
@@ -1739,7 +1739,7 @@ opcode_file_send (
     p_recv_hdr = (file_recv_hdr_t *)p_msg;
 
     p_recv_hdr->filename_size = htons(filename_size);
-    p_recv_hdr->file_size     = htons(file_size);
+    p_recv_hdr->file_size     = htonl(file_size);
 
     msg_size += sizeof(*p_recv_hdr);
 
@@ -1791,6 +1791,8 @@ opcode_promote (
     sll_t         * p_admins         = NULL;
     sll_t         * p_room_store     = NULL;
     room_t        * p_room           = NULL;
+    node_t        * p_curr           = NULL;
+    session_t     * p_target         = NULL;
     int             sockfd           = -1;
     server_t      * p_server         = NULL;
     uint8_t       * p_request_packet = NULL;
@@ -1814,7 +1816,6 @@ opcode_promote (
 
     sockfd           = p_session->sockfd;
     p_server         = p_session->p_server;
-    p_room           = p_session->p_room;
     p_request_packet = p_request->p_packet;
     p_appdata        = p_server->p_appdata;
     p_room_store     = p_appdata->p_room_store;
@@ -1869,14 +1870,24 @@ opcode_promote (
     // Append user to admin list
     sll_append(p_admins, p_username, username_size);
 
-    msg_send_username(
-        p_room,
-        p_username,
-        username_size,
-        MSG_FLAG_NOTIF,
-        (uint8_t *)"You are now an admin",
-        20u
-    );
+    // Search all rooms to notify target
+    p_curr = p_room_store->p_head;
+    while (NULL != p_curr)
+    {
+        p_room   = *(room_t **)(p_curr->p_data);
+        p_target = session_by_username(p_room, p_username, username_size);
+        if (NULL != p_target)
+        {
+            msg_send(
+                p_target,
+                MSG_FLAG_NOTIF,
+                (uint8_t *)"You are now an admin",
+                20u
+            );
+            break;
+        }
+        p_curr = p_curr->p_next;
+    }
 
     if (p_server->b_verbose)
     {
@@ -2036,6 +2047,9 @@ opcode_delete (
     sll_t        * p_room_store     = NULL;
     room_t       * p_room           = NULL;
     node_t       * p_node           = NULL;
+    node_t       * p_curr           = NULL;
+    node_t       * p_next           = NULL;
+    session_t    * p_member         = NULL;
     int            sockfd           = -1;
     server_t     * p_server         = NULL;
     uint8_t      * p_request_packet = NULL;
@@ -2138,11 +2152,22 @@ opcode_delete (
         0u
     );
 
+    // Make room members leave before destroying the room
+    p_curr = p_room->p_sessions->p_head;
+    while (NULL != p_curr)
+    {
+        p_next = p_curr->p_next;
+        p_member = *(session_t **)(p_curr->p_data);
+        user_leave(p_member, p_appdata);
+        p_curr = p_next;
+    }
+
     if (p_server->b_verbose)
     {
         printf("Deleting room: %.*s\n", room_name_size, p_room_name);
     }
 
+    sll_remove(p_room_store, p_room_name, room_name_size);
     room_destroy(p_room);
     p_room = NULL;
 

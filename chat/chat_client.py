@@ -428,10 +428,10 @@ class ChatClient(Client):
             elif flag == MSG_FLAG_NOTIF:
                 print(f"Notification: {payload_dec}")
             elif flag == MSG_FLAG_FILE:
-                filename_size, file_size = struct.unpack("!HH", payload[:4])
+                filename_size, file_size = struct.unpack("!HI", payload[:6])
                 filename_enc, file_content = struct.unpack(
                     f"!{filename_size}s{file_size}s",
-                    payload[4:]
+                    payload[6:]
                 )
 
                 filename = filename_enc.decode("utf-8")
@@ -747,7 +747,7 @@ class ChatClient(Client):
             return False
 
         self.request = struct.pack(
-            "!BxHHHI",
+            "!BxHHII",
             OPCODE_FILE_SEND,
             len(username_enc),
             len(filename_dst_enc),
