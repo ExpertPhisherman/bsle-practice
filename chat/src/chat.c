@@ -8,16 +8,18 @@
 
 #include "chat.h"
 
-uint16_t const g_default_lport      = 3333u;
-uint32_t const g_max_packet_size    = 4096u;
-uint32_t const g_chunk_size         = 512u;
-size_t const   g_creds_capacity     = 17u;
-size_t const   g_pm_reqs_capacity   = 17u;
-size_t const   g_file_reqs_capacity = 17u;
-uint16_t const g_username_size_min  = 3u;
-uint16_t const g_username_size_max  = 16u;
-uint16_t const g_password_size_min  = 8u;
-uint16_t const g_password_size_max  = 128u;
+uint16_t const g_default_lport          = 3333u;
+uint32_t const g_max_packet_size        = 4096u;
+uint32_t const g_chunk_size             = 512u;
+size_t const   g_creds_capacity         = 17u;
+size_t const   g_admins_capacity        = 17u;
+size_t const   g_session_store_capacity = 17u;
+size_t const   g_pm_reqs_capacity       = 17u;
+size_t const   g_file_reqs_capacity     = 17u;
+uint16_t const g_username_size_min      = 3u;
+uint16_t const g_username_size_max      = 16u;
+uint16_t const g_password_size_min      = 8u;
+uint16_t const g_password_size_max      = 128u;
 
 /*!
  * @brief Create application data
@@ -36,6 +38,26 @@ static appdata_t * appdata_create(void);
  * @return Status of operation
  */
 static status_t appdata_destroy(appdata_t * p_appdata);
+
+/*!
+ * @brief Seed credential store with default admin credentials
+ */
+static status_t appdata_seed_creds(ht_t * p_cred_store);
+
+/*!
+ * @brief Seed room store with default rooms and configure callbacks
+ */
+static status_t appdata_seed_rooms(sll_t * p_room_store);
+
+/*!
+ * @brief Seed admin table with default admin username
+ */
+static status_t appdata_seed_admins(ht_t * p_admins);
+
+/*!
+ * @brief Populate opcode function dispatch table
+ */
+static void appdata_init_opcodes(opcode_func_t * pp_opcode_funcs);
 
 /*!
  * @brief Compare room
@@ -156,16 +178,16 @@ chat_client_run (server_t * p_server, client_t * p_client)
     p_request->size   = sizeof(p_request->opcode);
     memset(p_request->p_packet, 0, g_max_packet_size);
 
-    p_response->opcode  = OPCODE_DEFAULT;
-    p_response->retcode = RETCODE_FAILURE;
+    sockutil_recvall(sockfd, p_request->p_packet, p_request->size);
+    p_request->opcode = (p_request->p_packet)[FIELD_OFFSET_OPCODE];
+
+    p_response->opcode  = p_request->opcode;
+    p_response->retcode = RETCODE_SUCCESS;
     p_response->size    = (
         sizeof(p_response->opcode) +
         sizeof(p_response->retcode)
     );
     memset(p_response->p_packet, 0, g_max_packet_size);
-
-    sockutil_recvall(sockfd, p_request->p_packet, p_request->size);
-    p_request->opcode = (p_request->p_packet)[FIELD_OFFSET_OPCODE];
 
     status = handle_request(p_session, p_request, p_response);
     if (STATUS_SUCCESS != status)
@@ -310,7 +332,6 @@ chat_client_free (server_t * p_server, client_t * p_client)
     request_t  * p_request    = NULL;
     response_t * p_response   = NULL;
     appdata_t  * p_appdata    = NULL;
-    sll_t      * p_room_store = NULL;
     bool         b_locked     = false;
 
     if (
@@ -331,13 +352,6 @@ chat_client_free (server_t * p_server, client_t * p_client)
 
     p_appdata = p_server->p_appdata;
     if (NULL == p_appdata)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_room_store = p_appdata->p_room_store;
-    if (NULL == p_room_store)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -608,6 +622,18 @@ user_logout (session_t * p_session, appdata_t * p_appdata)
 
     user_leave(p_session, p_appdata);
 
+    if (
+        (NULL != p_appdata->p_session_store) &&
+        (0u != p_session->username_size)
+    )
+    {
+        ht_del(
+            p_appdata->p_session_store,
+            p_session->p_username,
+            p_session->username_size
+        );
+    }
+
     memset(p_session->p_username, 0, g_username_size_max);
     memset(p_session->p_password, 0, g_password_size_max);
 
@@ -780,66 +806,9 @@ cleanup:
 }
 
 bool
-user_creds_len_valid (session_t * p_session, appdata_t * p_appdata)
+user_creds_valid (session_t * p_session)
 {
-    bool b_valid = true;
-    UNUSED(p_appdata);
-
-    uint16_t username_size = 0u;
-    uint16_t password_size = 0u;
-
-    if (
-        (NULL == p_session) ||
-        (NULL == p_session->p_username) ||
-        (NULL == p_session->p_password)
-    )
-    {
-        b_valid = false;
-        goto cleanup;
-    }
-
-    username_size = p_session->username_size;
-    password_size = p_session->password_size;
-
-    // Validate username and password length
-    if (!(
-        (g_username_size_min <= username_size) &&
-        (g_username_size_max >= username_size)
-    ))
-    {
-        fprintf(
-            stderr,
-            "Username: 3-16 alphanumeric or underscore\n"
-        );
-
-        b_valid = false;
-        goto cleanup;
-    }
-
-    if (!(
-        (g_password_size_min <= password_size) &&
-        (g_password_size_max >= password_size)
-    ))
-    {
-        fprintf(
-            stderr,
-            "Password: 8-128 printable characters excluding space\n"
-        );
-
-        b_valid = false;
-        goto cleanup;
-    }
-
-cleanup:
-    return b_valid;
-}
-
-bool
-user_creds_content_valid (session_t * p_session, appdata_t * p_appdata)
-{
-    bool b_valid = true;
-    UNUSED(p_appdata);
-
+    bool       b_valid       = true;
     uint16_t   username_size = 0u;
     uint16_t   password_size = 0u;
     uint8_t  * p_username    = NULL;
@@ -860,17 +829,36 @@ user_creds_content_valid (session_t * p_session, appdata_t * p_appdata)
     p_username    = p_session->p_username;
     p_password    = p_session->p_password;
 
-    // Validate username and password content
+    if (!(
+        (g_username_size_min <= username_size) &&
+        (g_username_size_max >= username_size)
+    ))
+    {
+        fprintf(stderr, "Username: 3-16 alphanumeric or underscore\n");
+        b_valid = false;
+        goto cleanup;
+    }
+
+    if (!(
+        (g_password_size_min <= password_size) &&
+        (g_password_size_max >= password_size)
+    ))
+    {
+        fprintf(
+            stderr,
+            "Password: 8-128 printable characters excluding space\n"
+        );
+
+        b_valid = false;
+        goto cleanup;
+    }
+
     for (size_t idx = 0u; idx < username_size; idx++)
     {
         uint8_t chr = p_username[idx];
         if (!(isalnum(chr) || ('_' == chr)))
         {
-            fprintf(
-                stderr,
-                "Username: 3-16 alphanumeric or underscore\n"
-            );
-
+            fprintf(stderr, "Username: 3-16 alphanumeric or underscore\n");
             b_valid = false;
             goto cleanup;
         }
@@ -895,17 +883,78 @@ cleanup:
     return b_valid;
 }
 
+static status_t
+appdata_seed_creds (ht_t * p_cred_store)
+{
+    return ht_set(p_cred_store, "admin", 5u, "password", 8u);
+}
+
+static status_t
+appdata_seed_rooms (sll_t * p_room_store)
+{
+    status_t   status = STATUS_SUCCESS;
+    room_t   * p_room = NULL;
+
+    p_room_store->p_destroy_data = room_destroy;
+    p_room_store->p_compare_node = compare_room;
+
+    p_room = room_create("general", 7u);
+    if (NULL == p_room)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+
+    status = sll_append(p_room_store, &p_room, sizeof(p_room));
+    if (STATUS_SUCCESS != status)
+    {
+        fprintf(stderr, "sll_append failed in appdata_seed_rooms\n");
+        room_destroy(p_room);
+        p_room = NULL;
+    }
+
+cleanup:
+    return status;
+}
+
+static status_t
+appdata_seed_admins (ht_t * p_admins)
+{
+    return ht_set(p_admins, "admin", 5u, "", 0u);
+}
+
+static void
+appdata_init_opcodes (opcode_func_t * pp_opcode_funcs)
+{
+    pp_opcode_funcs[OPCODE_DEFAULT]    = opcode_default;
+    pp_opcode_funcs[OPCODE_PING]       = opcode_ping;
+    pp_opcode_funcs[OPCODE_ECHO]       = opcode_echo;
+    pp_opcode_funcs[OPCODE_QUIT]       = opcode_quit;
+    pp_opcode_funcs[OPCODE_LOGIN]      = opcode_login;
+    pp_opcode_funcs[OPCODE_LOGOUT]     = opcode_logout;
+    pp_opcode_funcs[OPCODE_MSG_SEND]   = opcode_msg_send;
+    pp_opcode_funcs[OPCODE_MSG_RECV]   = NULL;
+    pp_opcode_funcs[OPCODE_JOIN]       = opcode_join;
+    pp_opcode_funcs[OPCODE_LIST]       = opcode_list;
+    pp_opcode_funcs[OPCODE_REQUEST]    = opcode_request;
+    pp_opcode_funcs[OPCODE_RESPOND]    = opcode_respond;
+    pp_opcode_funcs[OPCODE_FILE_SEND]  = opcode_file_send;
+    pp_opcode_funcs[OPCODE_PROMOTE]    = opcode_promote;
+    pp_opcode_funcs[OPCODE_DISCONNECT] = opcode_disconnect;
+    pp_opcode_funcs[OPCODE_DELETE]     = opcode_delete;
+}
+
 static appdata_t *
 appdata_create (void)
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t     * p_appdata       = NULL;
-    ht_t          * p_cred_store    = NULL;
-    sll_t         * p_room_store    = NULL;
-    room_t        * p_room          = NULL;
-    sll_t         * p_admins        = NULL;
-    opcode_func_t * pp_opcode_funcs = NULL;
+    appdata_t     * p_appdata        = NULL;
+    ht_t          * p_cred_store     = NULL;
+    sll_t         * p_room_store     = NULL;
+    ht_t          * p_admins         = NULL;
+    ht_t          * p_session_store  = NULL;
+    opcode_func_t * pp_opcode_funcs  = NULL;
 
     p_appdata = calloc(1u, sizeof(*p_appdata));
     if (NULL == p_appdata)
@@ -923,10 +972,9 @@ appdata_create (void)
     }
     p_appdata->p_cred_store = p_cred_store;
 
-    status = ht_set(p_cred_store, "admin", 5u, "password", 8u);
+    status = appdata_seed_creds(p_cred_store);
     if (STATUS_SUCCESS != status)
     {
-        fprintf(stderr, "ht_set failed in appdata_create\n");
         goto cleanup;
     }
 
@@ -938,27 +986,13 @@ appdata_create (void)
     }
     p_appdata->p_room_store = p_room_store;
 
-    p_room_store->p_destroy_data = room_destroy;
-    p_room_store->p_compare_node = compare_room;
-
-    p_room = room_create("general", 7u);
-    if (NULL == p_room)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-
-    status = sll_append(p_room_store, &p_room, sizeof(p_room));
+    status = appdata_seed_rooms(p_room_store);
     if (STATUS_SUCCESS != status)
     {
-        fprintf(stderr, "sll_append failed in appdata_create\n");
-
-        room_destroy(p_room);
-        p_room = NULL;
         goto cleanup;
     }
 
-    p_admins = sll_create();
+    p_admins = ht_create(g_admins_capacity);
     if (NULL == p_admins)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -966,12 +1000,19 @@ appdata_create (void)
     }
     p_appdata->p_admins = p_admins;
 
-    status = sll_append(p_admins, "admin", 5u);
+    status = appdata_seed_admins(p_admins);
     if (STATUS_SUCCESS != status)
     {
-        fprintf(stderr, "sll_append failed in appdata_create\n");
         goto cleanup;
     }
+
+    p_session_store = ht_create(g_session_store_capacity);
+    if (NULL == p_session_store)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_appdata->p_session_store = p_session_store;
 
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
@@ -982,21 +1023,7 @@ appdata_create (void)
     }
     p_appdata->pp_opcode_funcs = pp_opcode_funcs;
 
-    pp_opcode_funcs[OPCODE_DEFAULT]    = opcode_default;
-    pp_opcode_funcs[OPCODE_PING]       = opcode_ping;
-    pp_opcode_funcs[OPCODE_ECHO]       = opcode_echo;
-    pp_opcode_funcs[OPCODE_QUIT]       = opcode_quit;
-    pp_opcode_funcs[OPCODE_LOGIN]      = opcode_login;
-    pp_opcode_funcs[OPCODE_LOGOUT]     = opcode_logout;
-    pp_opcode_funcs[OPCODE_MSG_SEND]   = opcode_msg_send;
-    pp_opcode_funcs[OPCODE_MSG_RECV]   = NULL;
-    pp_opcode_funcs[OPCODE_JOIN]       = opcode_join;
-    pp_opcode_funcs[OPCODE_LIST]       = opcode_list;
-    pp_opcode_funcs[OPCODE_REQUEST]    = opcode_request;
-    pp_opcode_funcs[OPCODE_RESPOND]    = opcode_respond;
-    pp_opcode_funcs[OPCODE_PROMOTE]    = opcode_promote;
-    pp_opcode_funcs[OPCODE_DISCONNECT] = opcode_disconnect;
-    pp_opcode_funcs[OPCODE_DELETE]     = opcode_delete;
+    appdata_init_opcodes(pp_opcode_funcs);
 
     p_appdata->next_session_id = 1u;
 
@@ -1034,8 +1061,11 @@ appdata_destroy (appdata_t * p_appdata)
     sll_destroy(p_appdata->p_room_store);
     p_appdata->p_room_store = NULL;
 
-    sll_destroy(p_appdata->p_admins);
+    ht_destroy(p_appdata->p_admins);
     p_appdata->p_admins = NULL;
+
+    ht_destroy(p_appdata->p_session_store);
+    p_appdata->p_session_store = NULL;
 
     free(p_appdata->pp_opcode_funcs);
     p_appdata->pp_opcode_funcs = NULL;

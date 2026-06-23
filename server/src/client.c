@@ -81,7 +81,8 @@ cleanup:
 client_t *
 client_create (server_t * p_server)
 {
-    status_t   status   = STATUS_SUCCESS;
+    status_t status = STATUS_SUCCESS;
+
     client_t * p_client = NULL;
     char     * p_rhost  = NULL;
 

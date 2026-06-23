@@ -118,7 +118,8 @@ typedef struct appdata
     uint32_t          next_session_id; // Next session ID to assign
     ht_t            * p_cred_store;    // Pointer to credential storage
     sll_t           * p_room_store;    // Pointer to room storage
-    sll_t           * p_admins;        // Pointer to admin list
+    ht_t            * p_admins;        // Pointer to admin hash table
+    ht_t            * p_session_store; // Pointer to online session lookup table
     opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
     pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;
@@ -253,24 +254,13 @@ session_t * session_by_username(
 );
 
 /*!
- * @brief Check if credentials length is valid
+ * @brief Check if credentials length and content are valid
  *
  * @param[in] p_session Pointer to session
- * @param[in] p_appdata Pointer to application data
  *
- * @return Boolean if credentials length is valid
+ * @return Boolean if credentials are valid
  */
-bool user_creds_len_valid(session_t * p_session, appdata_t * p_appdata);
-
-/*!
- * @brief Check if credentials content is valid
- *
- * @param[in] p_session Pointer to session
- * @param[in] p_appdata Pointer to application data
- *
- * @return Boolean if credentials content is valid
- */
-bool user_creds_content_valid(session_t * p_session, appdata_t * p_appdata);
+bool user_creds_valid(session_t * p_session);
 
 #endif /* CHAT_H */
 
