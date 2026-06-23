@@ -16,17 +16,20 @@ main (int argc, char * argv[])
 {
     status_t status = STATUS_SUCCESS;
 
-    int        opt;
-    uint16_t   lport     = g_default_lport;
-    bool       b_verbose = false;
-    server_t * p_server  = NULL;
+    int         opt       = -1;
+    uint64_t    u64       = 0u;
+    int const   ten       = 10;
+    uint16_t    lport     = g_default_lport;
+    bool        b_verbose = false;
+    server_t  * p_server  = NULL;
 
     server_t hints =
     {
         .lport         = lport,
+        .p_lhost       = NULL,
+        .b_verbose     = b_verbose,
         .sockfd        = -1,
         .epollfd       = -1,
-        .b_verbose     = b_verbose,
         .p_tm          = NULL,
         .p_registry    = NULL,
         .p_client_run  = chat_client_run,
@@ -37,9 +40,6 @@ main (int argc, char * argv[])
 
     while (-1 != (opt = getopt(argc, argv, "vp:")))
     {
-        // Enforce command line integer sizes
-        uint64_t u64;
-
         switch (opt)
         {
             case 'v':
@@ -47,7 +47,7 @@ main (int argc, char * argv[])
                 break;
 
             case 'p':
-                u64 = strtoul(optarg, NULL, 10);
+                u64 = strtoul(optarg, NULL, ten);
                 if (u64 > g_max_port)
                 {
                     fprintf(stderr, "Port must be [0-%hu]\n", g_max_port);
