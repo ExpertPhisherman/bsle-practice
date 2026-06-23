@@ -1,12 +1,12 @@
 /** @file chat_basic.c
  *
- * @brief Basic opcodes: default, ping, echo, quit
+ * @brief Basic opcodes source: default, ping, echo, quit
  *
  * @par
  *
  */
 
-#include "chat_internal.h"
+#include "chat_basic.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;

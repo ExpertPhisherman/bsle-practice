@@ -1,12 +1,12 @@
 /** @file chat_admin.c
  *
- * @brief Admin opcodes: promote, disconnect, delete
+ * @brief Admin opcodes source: promote, disconnect, delete
  *
  * @par
  *
  */
 
-#include "chat_internal.h"
+#include "chat_admin.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;

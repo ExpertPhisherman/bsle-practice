@@ -1,12 +1,12 @@
 /** @file chat_msg.c
  *
- * @brief Messaging opcode and send helpers
+ * @brief Message opcodes source: msg_send, msg_recv
  *
  * @par
  *
  */
 
-#include "chat_internal.h"
+#include "chat_msg.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;

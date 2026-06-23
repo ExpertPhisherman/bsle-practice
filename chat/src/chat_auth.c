@@ -1,12 +1,12 @@
 /** @file chat_auth.c
  *
- * @brief Auth opcodes: login, logout
+ * @brief Auth opcodes source: login, logout
  *
  * @par
  *
  */
 
-#include "chat_internal.h"
+#include "chat_auth.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;

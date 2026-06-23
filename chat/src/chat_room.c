@@ -1,12 +1,12 @@
 /** @file chat_room.c
  *
- * @brief Room opcodes: join, list
+ * @brief Room opcodes source: join, list
  *
  * @par
  *
  */
 
-#include "chat_internal.h"
+#include "chat_room.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;
