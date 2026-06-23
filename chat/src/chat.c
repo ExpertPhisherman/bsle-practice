@@ -42,7 +42,7 @@ static status_t appdata_destroy(appdata_t * p_appdata);
 /*!
  * @brief Seed credential store with default admin credentials
  *
- * @param[in] p_appdata Pointer to application data
+ * @param[in,out] p_cred_store Pointer to credential storage
  *
  * @return Status of operation
  */
@@ -51,7 +51,7 @@ static status_t appdata_seed_creds(ht_t * p_cred_store);
 /*!
  * @brief Seed room store with default rooms and configure callbacks
  *
- * @param[in] p_appdata Pointer to application data
+ * @param[in,out] p_room_store Pointer to room storage
  *
  * @return Status of operation
  */
@@ -60,7 +60,7 @@ static status_t appdata_seed_rooms(sll_t * p_room_store);
 /*!
  * @brief Seed admin table with default admin username
  *
- * @param[in] p_appdata Pointer to application data
+ * @param[in,out] p_admins Pointer to admin table
  *
  * @return Status of operation
  */
@@ -69,7 +69,7 @@ static status_t appdata_seed_admins(ht_t * p_admins);
 /*!
  * @brief Populate opcode function dispatch table
  *
- * @param[in] p_appdata Pointer to application data
+ * @param[in,out] pp_opcode_funcs Pointer to opcode function array
  *
  * @return Status of operation
  */
