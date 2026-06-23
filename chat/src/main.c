@@ -29,9 +29,9 @@ main (int argc, char * argv[])
         .b_verbose     = b_verbose,
         .p_tm          = NULL,
         .p_registry    = NULL,
-        .p_client_run  = NULL,
-        .p_client_init = NULL,
-        .p_client_free = NULL,
+        .p_client_run  = chat_client_run,
+        .p_client_init = chat_client_init,
+        .p_client_free = chat_client_free,
         .p_appdata     = NULL,
     };
 
@@ -71,11 +71,8 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    hints.lport         = lport;
-    hints.b_verbose     = b_verbose;
-    hints.p_client_run  = chat_client_run;
-    hints.p_client_init = chat_client_init;
-    hints.p_client_free = chat_client_free;
+    hints.lport     = lport;
+    hints.b_verbose = b_verbose;
 
     p_server = chat_server_create(&hints);
     if (NULL == p_server)
