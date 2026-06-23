@@ -415,8 +415,9 @@ appdata_seed_creds (ht_t * p_cred_store)
 static status_t
 appdata_seed_rooms (sll_t * p_room_store)
 {
-    status_t   status = STATUS_SUCCESS;
-    room_t   * p_room = NULL;
+    status_t status = STATUS_SUCCESS;
+
+    room_t * p_room = NULL;
 
     p_room_store->p_destroy_data = room_destroy;
     p_room_store->p_compare_node = compare_room;
