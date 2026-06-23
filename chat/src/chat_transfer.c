@@ -14,6 +14,15 @@ extern uint16_t const g_username_size_max;
 
 /*!
  * @brief Send "Responded: decline" to self and a notification to the requester
+ *
+ * @param[in] p_session          Pointer to session
+ * @param[in] p_room             Pointer to room
+ * @param[in] p_username         Pointer to username
+ * @param[in] username_size      Size of username in bytes
+ * @param[in] p_decline_notif    Pointer to notification message
+ * @param[in] decline_notif_size Size of notification message in bytes
+ *
+ * @return Status of operation
  */
 static status_t respond_decline(
     session_t     * p_session,
@@ -26,6 +35,14 @@ static status_t respond_decline(
 
 /*!
  * @brief Accept PM request: create private room and move both users into it
+ *
+ * @param[in] p_session     Pointer to session
+ * @param[in] p_appdata     Pointer to application data
+ * @param[in] p_room        Pointer to room
+ * @param[in] p_username    Pointer to username
+ * @param[in] username_size Size of username in bytes
+ *
+ * @return Status of operation
  */
 static status_t respond_pm_accept(
     session_t * p_session,
@@ -37,6 +54,15 @@ static status_t respond_pm_accept(
 
 /*!
  * @brief Relay a file to the target session and clear their user_allow
+ *
+ * @param[in] p_sender      Pointer to sender session
+ * @param[in] p_target      Pointer to target session
+ * @param[in] p_filename    Pointer to filename
+ * @param[in] filename_size Size of filename in bytes
+ * @param[in] p_file        Pointer to file content
+ * @param[in] file_size     Size of file content in bytes
+ *
+ * @return Status of operation
  */
 static status_t file_relay(
     session_t     * p_sender,
