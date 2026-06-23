@@ -226,37 +226,33 @@ class ChatClient(Client):
                 if opcode_func():
                     break
 
+    def _dispatch_retcode(
+        self,
+        retcode: int,
+        messages: dict[int, str | None]
+    ) -> bool:
+        msg = messages.get(retcode, f"Unknown return code: {retcode:02x}")
+        if msg is not None:
+            print(msg)
+        return False
+
     def opcode_default(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("Unknown operation code")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS: "Unknown operation code",
+        })
 
     def opcode_ping(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("PONG")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed ping")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:       "PONG",
+            RETCODE_SESSION_ERROR: "Invalid session",
+            RETCODE_FAILURE:       "Failed ping",
+        })
 
     def opcode_echo(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE + FIELD_SIZE_SIZE)
@@ -381,22 +377,12 @@ class ChatClient(Client):
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            # NOTE: Sender also receives message
-            pass
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_OVERFLOW:
-            print("Exceeds maximum packet size")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed message send")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:       None,  # Sender also receives message
+            RETCODE_SESSION_ERROR: "Invalid session",
+            RETCODE_OVERFLOW:      "Exceeds maximum packet size",
+            RETCODE_FAILURE:       "Failed message send",
+        })
 
     def opcode_msg_recv(self) -> bool:
         response = self.recv_response(
@@ -451,151 +437,83 @@ class ChatClient(Client):
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("List success")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed list")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:       "List success",
+            RETCODE_SESSION_ERROR: "Invalid session",
+            RETCODE_FAILURE:       "Failed list",
+        })
 
     def opcode_request(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("Request success")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_OVERFLOW:
-            print("Exceeds maximum packet size")
-        elif retcode == RETCODE_PENDING:
-            print("Pending request to user already exists")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed request")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:       "Request success",
+            RETCODE_SESSION_ERROR: "Invalid session",
+            RETCODE_OVERFLOW:      "Exceeds maximum packet size",
+            RETCODE_PENDING:       "Pending request to user already exists",
+            RETCODE_FAILURE:       "Failed request",
+        })
 
     def opcode_respond(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("Respond success")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_OVERFLOW:
-            print("Exceeds maximum packet size")
-        elif retcode == RETCODE_NOT_PENDING:
-            print("Pending request from user does not exist")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed respond")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:       "Respond success",
+            RETCODE_SESSION_ERROR: "Invalid session",
+            RETCODE_OVERFLOW:      "Exceeds maximum packet size",
+            RETCODE_NOT_PENDING:   "Pending request from user does not exist",
+            RETCODE_FAILURE:       "Failed respond",
+        })
 
     def opcode_file_send(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("File sent successfully")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_OVERFLOW:
-            print("Exceeds maximum packet size")
-        elif retcode == RETCODE_UNALLOWED:
-            print("Receiving user hasn't allowed file transfer")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed file send")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:       "File sent successfully",
+            RETCODE_SESSION_ERROR: "Invalid session",
+            RETCODE_OVERFLOW:      "Exceeds maximum packet size",
+            RETCODE_UNALLOWED:     "Recipient hasn't allowed file transfer",
+            RETCODE_FAILURE:       "Failed file send",
+        })
 
     def opcode_promote(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("Promotion successful")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_OVERFLOW:
-            print("Exceeds maximum packet size")
-        elif retcode == RETCODE_UNAUTHORIZED:
-            print("You are not an admin!")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed promotion")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:        "Promotion successful",
+            RETCODE_SESSION_ERROR:  "Invalid session",
+            RETCODE_OVERFLOW:       "Exceeds maximum packet size",
+            RETCODE_UNAUTHORIZED:   "You are not an admin!",
+            RETCODE_FAILURE:        "Failed promotion",
+        })
 
     def opcode_disconnect(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("Admin disconnect successful")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_OVERFLOW:
-            print("Exceeds maximum packet size")
-        elif retcode == RETCODE_UNAUTHORIZED:
-            print("You are not an admin!")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed admin disconnect")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:        "Admin disconnect successful",
+            RETCODE_SESSION_ERROR:  "Invalid session",
+            RETCODE_OVERFLOW:       "Exceeds maximum packet size",
+            RETCODE_UNAUTHORIZED:   "You are not an admin!",
+            RETCODE_FAILURE:        "Failed admin disconnect",
+        })
 
     def opcode_delete(self) -> bool:
         response = self.recv_response(FIELD_SIZE_RETCODE)
         if response is None:
             return False
-
-        retcode = response[0]
-
-        if retcode == RETCODE_SUCCESS:
-            print("Room deletion successful")
-        elif retcode == RETCODE_SESSION_ERROR:
-            print("Invalid session")
-        elif retcode == RETCODE_OVERFLOW:
-            print("Exceeds maximum packet size")
-        elif retcode == RETCODE_UNAUTHORIZED:
-            print("You are not an admin!")
-        elif retcode == RETCODE_FAILURE:
-            print("Failed room deletion")
-        else:
-            print(f"Unknown return code: {retcode:02x}")
-
-        return False
+        return self._dispatch_retcode(response[0], {
+            RETCODE_SUCCESS:        "Room deletion successful",
+            RETCODE_SESSION_ERROR:  "Invalid session",
+            RETCODE_OVERFLOW:       "Exceeds maximum packet size",
+            RETCODE_UNAUTHORIZED:   "You are not an admin!",
+            RETCODE_FAILURE:        "Failed room deletion",
+        })
 
     def send_request(self) -> bool:
         """Send request to server"""
