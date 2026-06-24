@@ -66,7 +66,10 @@ ht_t *
 ht_create (size_t capacity)
 {
     status_t status = STATUS_SUCCESS;
-    ht_t * p_ht = NULL;
+
+    ht_t   * p_ht  = NULL;
+    sll_t  * p_sll = NULL;
+    size_t   idx   = 0u;
 
     if (0u == capacity)
     {
@@ -96,9 +99,9 @@ ht_create (size_t capacity)
         goto cleanup;
     }
 
-    for (size_t idx = 0u; idx < capacity; idx++)
+    for (idx = 0u; idx < capacity; idx++)
     {
-        sll_t * p_sll = sll_create();
+        p_sll = sll_create();
         if (NULL == p_sll)
         {
             status = STATUS_ALLOC_FAILURE;
@@ -127,16 +130,21 @@ ht_destroy (ht_t * p_ht)
 {
     status_t status = STATUS_SUCCESS;
 
+    sll_t  * p_sll  = NULL;
+    node_t * p_curr = NULL;
+    item_t * p_item = NULL;
+    size_t   idx    = 0u;
+
     if (NULL == p_ht)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_ht->len             = 0u;
-    p_ht->p_hash_func     = NULL;
-    p_ht->p_display_item  = NULL;
-    p_ht->p_compare_item  = NULL;
+    p_ht->len            = 0u;
+    p_ht->p_hash_func    = NULL;
+    p_ht->p_display_item = NULL;
+    p_ht->p_compare_item = NULL;
 
     if (NULL == p_ht->pp_buckets)
     {
@@ -145,9 +153,9 @@ ht_destroy (ht_t * p_ht)
     }
 
     // Free each bucket
-    for (size_t idx = 0u; idx < p_ht->capacity; idx++)
+    for (idx = 0u; idx < p_ht->capacity; idx++)
     {
-        sll_t * p_sll = (p_ht->pp_buckets)[idx];
+        p_sll = (p_ht->pp_buckets)[idx];
         (p_ht->pp_buckets)[idx] = NULL;
 
         if (NULL == p_sll)
@@ -156,10 +164,10 @@ ht_destroy (ht_t * p_ht)
         }
 
         // Free heap allocated key and value
-        node_t * p_curr = p_sll->p_head;
+        p_curr = p_sll->p_head;
         while (NULL != p_curr)
         {
-            item_t * p_item = p_curr->p_data;
+            p_item = p_curr->p_data;
             if (NULL != p_item)
             {
                 if (NULL != p_ht->p_destroy_key)
@@ -204,6 +212,10 @@ ht_display (ht_t * p_ht, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
 
+    sll_t  * p_sll   = NULL;
+    size_t   idx     = 0u;
+    bool     b_first = true;
+
     if (NULL == p_ht)
     {
         status = STATUS_NULL_ARG;
@@ -217,10 +229,9 @@ ht_display (ht_t * p_ht, char const * p_sep)
     }
 
     printf("{");
-    bool b_first = true;
-    for (size_t idx = 0u; idx < p_ht->capacity; idx++)
+    for (idx = 0u; idx < p_ht->capacity; idx++)
     {
-        sll_t * p_sll = (p_ht->pp_buckets)[idx];
+        p_sll = (p_ht->pp_buckets)[idx];
         if (NULL != p_sll->p_head)
         {
             if (!b_first)
@@ -241,6 +252,8 @@ cleanup:
 item_t *
 ht_get (ht_t * p_ht, void const * p_key, size_t key_size)
 {
+    sll_t  * p_sll  = NULL;
+    node_t * p_node = NULL;
     item_t * p_item = NULL;
 
     if ((NULL == p_ht) || (NULL == p_key) || (NULL == p_ht->p_hash_func))
@@ -256,8 +269,8 @@ ht_get (ht_t * p_ht, void const * p_key, size_t key_size)
         .key_size    = key_size,
     };
 
-    sll_t * p_sll = ht_select(p_ht, &item);
-    node_t * p_node = sll_get(p_sll, &item, sizeof(item));
+    p_sll  = ht_select(p_ht, &item);
+    p_node = sll_get(p_sll, &item, sizeof(item));
 
     if (NULL == p_node)
     {
@@ -280,6 +293,10 @@ ht_set (
 )
 {
     status_t status = STATUS_SUCCESS;
+
+    sll_t  * p_sll  = NULL;
+    node_t * p_node = NULL;
+    item_t * p_item = NULL;
 
     if (
         (NULL == p_ht) ||
@@ -319,14 +336,14 @@ ht_set (
     }
     memcpy(new_item.p_value, p_value, value_size);
 
-    sll_t * p_sll = ht_select(p_ht, &new_item);
-    node_t * p_node = sll_get(p_sll, &new_item, sizeof(new_item));
+    p_sll = ht_select(p_ht, &new_item);
+    p_node = sll_get(p_sll, &new_item, sizeof(new_item));
 
     // Update item if key exists in SLL
     if (NULL != p_node)
     {
         // NOTE: Key exists in SLL
-        item_t * p_item = p_node->p_data;
+        p_item = p_node->p_data;
 
         // Destroy old value
         if (NULL != p_ht->p_destroy_value)
@@ -380,6 +397,12 @@ ht_del (ht_t * p_ht, void const * p_key, size_t key_size)
 {
     status_t status = STATUS_SUCCESS;
 
+    sll_t  * p_sll     = NULL;
+    node_t * p_node    = NULL;
+    item_t * p_item    = NULL;
+    void   * p_key_cpy = NULL;
+    void   * p_val_cpy = NULL;
+
     if (
         (NULL == p_ht) ||
         (NULL == p_key) ||
@@ -398,8 +421,8 @@ ht_del (ht_t * p_ht, void const * p_key, size_t key_size)
         .key_size    = key_size,
     };
 
-    sll_t * p_sll = ht_select(p_ht, &item);
-    node_t * p_node = sll_get(p_sll, &item, sizeof(item));
+    p_sll  = ht_select(p_ht, &item);
+    p_node = sll_get(p_sll, &item, sizeof(item));
 
     // Remove item if key exists in SLL
     if (NULL == p_node)
@@ -410,9 +433,9 @@ ht_del (ht_t * p_ht, void const * p_key, size_t key_size)
     }
 
     // Free heap allocated key and value
-    item_t * p_item = p_node->p_data;
-    void * p_key_cpy = p_item->p_key;
-    void * p_val_cpy = p_item->p_value;
+    p_item    = p_node->p_data;
+    p_key_cpy = p_item->p_key;
+    p_val_cpy = p_item->p_value;
 
     status = sll_remove(p_sll, &item, sizeof(item));
     if (STATUS_SUCCESS != status)
@@ -450,11 +473,13 @@ static uint64_t
 djb2_hash (void const * p_key, size_t key_size)
 {
     uint64_t hash = 5381u;
+    size_t   idx  = 0u;
+    uint8_t  chr  = 0u;
 
     DEBUG_PRINT("Current key: ");
-    for (size_t idx = 0u; idx < key_size; idx++)
+    for (idx = 0u; idx < key_size; idx++)
     {
-        uint8_t chr = ((uint8_t *)p_key)[idx];
+        chr = ((uint8_t *)p_key)[idx];
         DEBUG_PRINT("%c", chr);
         hash = ((hash << 5u) + hash) + chr; // (hash * 33) + chr
     }
@@ -484,12 +509,12 @@ display_item (void const * p_data)
 {
     status_t status = STATUS_SUCCESS;
 
+    item_t * p_item = (item_t *)p_data;
+
     if (NULL == p_data)
     {
         goto cleanup;
     }
-
-    item_t * p_item = (item_t *)p_data;
 
     // NOTE: Assuming p_key and p_value are strings
     printf(
@@ -511,7 +536,9 @@ compare_item (
     size_t size
 )
 {
-    int result = 0;
+    int      result  = 0;
+    item_t * p_item1 = (item_t *)p_data1;
+    item_t * p_item2 = (item_t *)p_data2;
     UNUSED(size);
 
     if ((NULL == p_data1) && (NULL == p_data2))
@@ -530,9 +557,6 @@ compare_item (
         result = 1;
         goto cleanup;
     }
-
-    item_t * p_item1 = (item_t *)p_data1;
-    item_t * p_item2 = (item_t *)p_data2;
 
     if ((NULL == p_item1->p_key) && (NULL == p_item2->p_key))
     {

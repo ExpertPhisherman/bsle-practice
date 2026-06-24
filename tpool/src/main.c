@@ -25,13 +25,14 @@ main (int argc, char * argv[])
     UNUSED(argc);
     UNUSED(argv);
 
-    tpool_t * p_tm;
-    int     * p_vals;
+    tpool_t * p_tm   = NULL;
+    int     * p_vals = NULL;
+    size_t    idx    = 0u;
 
     p_tm   = tpool_create(num_threads);
     p_vals = calloc(num_items, sizeof(*p_vals));
 
-    for (size_t idx = 0u; idx < num_items; idx++)
+    for (idx = 0u; idx < num_items; idx++)
     {
         p_vals[idx] = idx;
         tpool_add_work(p_tm, worker, p_vals + idx);
@@ -39,7 +40,7 @@ main (int argc, char * argv[])
 
     tpool_wait(p_tm);
 
-    for (size_t idx = 0u; idx < num_items; idx++)
+    for (idx = 0u; idx < num_items; idx++)
     {
         printf("%d\n", p_vals[idx]);
     }

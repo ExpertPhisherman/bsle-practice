@@ -374,7 +374,7 @@ class ChatClient(Client):
         if response is None:
             return False
         return self._dispatch_retcode(response[0], {
-            RETCODE_SUCCESS:       None,  # Sender also receives message
+            RETCODE_SUCCESS:       None, # Sender also receives message
             RETCODE_SESSION_ERROR: "Invalid session",
             RETCODE_OVERFLOW:      "Exceeds maximum packet size",
             RETCODE_FAILURE:       "Failed message send",
@@ -890,6 +890,8 @@ class ChatClient(Client):
     def do_EOF(self, line: str) -> bool:
         return self.do_quit(line)
 
+
+
 def main() -> int:
     chat_client = ChatClient()
 
@@ -901,15 +903,12 @@ def main() -> int:
 
     chat_client.listening_thread.start()
 
-    #chat_client.do_login(f"test {'password'*5}")
     chat_client.do_login("admin password")
-    time.sleep(0.1)
-    chat_client.do_echo("a"*22)
     time.sleep(0.1)
     chat_client.do_join("general")
     time.sleep(0.1)
 
-    if chat_client.room_name is None:
+    if chat_client.username is None:
         chat_client.do_login("asdf asdfasdf")
         time.sleep(0.1)
         chat_client.do_join("general")

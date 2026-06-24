@@ -10,6 +10,8 @@
 
 #include "tpool.h"
 
+static size_t const g_default_num = 2u;
+
 /*!
  * @brief Create work object
  *
@@ -51,10 +53,12 @@ tpool_t *
 tpool_create (size_t num)
 {
     tpool_t * p_tm = NULL;
+    size_t    idx  = 0u;
+    size_t    jdx  = 0u;
 
     if (0u == num)
     {
-        num = 2u;
+        num = g_default_num;
     }
 
     p_tm = calloc(1u, sizeof(*p_tm));
@@ -107,7 +111,7 @@ tpool_create (size_t num)
         goto cleanup;
     }
 
-    for (size_t idx = 0u; idx < num; idx++)
+    for (idx = 0u; idx < num; idx++)
     {
         if (0 == pthread_create(&((p_tm->p_threads)[idx]), NULL, tpool_worker, p_tm))
         {
@@ -120,7 +124,7 @@ tpool_create (size_t num)
         pthread_cond_broadcast(&(p_tm->work_cond));
         pthread_mutex_unlock(&(p_tm->work_mutex));
 
-        for (size_t jdx = 0u; jdx < idx; jdx++)
+        for (jdx = 0u; jdx < idx; jdx++)
         {
             pthread_join((p_tm->p_threads)[jdx], NULL);
         }
@@ -145,6 +149,7 @@ tpool_destroy (tpool_t * p_tm)
 {
     tpool_work_t * p_work  = NULL;
     tpool_work_t * p_work2 = NULL;
+    size_t         idx     = 0u;
 
     if (NULL == p_tm)
     {
@@ -173,7 +178,7 @@ tpool_destroy (tpool_t * p_tm)
     pthread_mutex_unlock(&(p_tm->work_mutex));
 
     // Join all worker threads
-    for (size_t idx = 0u; idx < p_tm->thread_cnt; idx++)
+    for (idx = 0u; idx < p_tm->thread_cnt; idx++)
     {
         pthread_join((p_tm->p_threads)[idx], NULL);
     }
@@ -194,8 +199,8 @@ cleanup:
 bool
 tpool_add_work (tpool_t * p_tm, thread_func_t p_func, void * p_arg)
 {
-    bool b_added          = false;
-    tpool_work_t * p_work = NULL;
+    bool           b_added = false;
+    tpool_work_t * p_work  = NULL;
 
     if ((NULL == p_tm) || (NULL == p_func))
     {
@@ -361,7 +366,7 @@ tpool_worker (void * p_arg)
 
         if (NULL != p_work)
         {
-            p_work->p_func(p_work->p_arg);
+            (p_work->p_func)(p_work->p_arg);
             tpool_work_destroy(p_work);
             p_work = NULL;
         }

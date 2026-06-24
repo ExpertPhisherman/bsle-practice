@@ -166,6 +166,7 @@ opcode_echo (
     int          sockfd            = -1;
     uint8_t    * p_request_packet  = NULL;
     uint8_t    * p_response_packet = NULL;
+    uint16_t     payload_size      = 0u;
     echo_hdr_t * p_hdr             = NULL;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
@@ -182,7 +183,7 @@ opcode_echo (
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    uint16_t payload_size = ntohs(p_hdr->payload_size);
+    payload_size = ntohs(p_hdr->payload_size);
     p_request->session_id = ntohl(p_hdr->session_id);
 
     // Copy size field into response

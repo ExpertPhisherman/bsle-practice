@@ -13,7 +13,12 @@ main (int argc, char * argv[])
 {
     status_t status = STATUS_SUCCESS;
 
-    ht_t * p_ht = ht_create(17u);
+    ht_t       * p_ht     = ht_create(17u);
+    item_t     * p_item   = NULL;
+    char const * p_key    = NULL;
+    size_t       len      = 0u;
+    size_t       idx      = 0u;
+    size_t       key_size = 0u;
 
     char const * p_keys[] =
     {
@@ -25,15 +30,15 @@ main (int argc, char * argv[])
         "perscent", "slapping", "histonal", "analytic", "belltail", "centrist",
     };
 
-    size_t len = sizeof(p_keys) / sizeof(*p_keys);
-    for (size_t idx = 0u; idx < len; idx++)
+    len = sizeof(p_keys) / sizeof(*p_keys);
+    for (idx = 0u; idx < len; idx++)
     {
-        char const * key = p_keys[idx];
-        size_t key_size = strnlen(key, 256u);
-        ht_set(p_ht, key, key_size, key, 4u);
+        p_key = p_keys[idx];
+        key_size = strnlen(p_key, 256u);
+        ht_set(p_ht, p_key, key_size, p_key, 4u);
     }
 
-    item_t * p_item = NULL;
+    p_item = NULL;
 
     ht_set(p_ht, "obama", 5u, "TEST", 4u);
     ht_set(p_ht, "obama", 5u, "pyramid", 7u);

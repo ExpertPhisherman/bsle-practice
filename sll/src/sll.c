@@ -12,6 +12,7 @@ sll_t *
 sll_create (void)
 {
     status_t status = STATUS_SUCCESS;
+
     sll_t * p_sll = NULL;
 
     p_sll = malloc(sizeof(*p_sll));
@@ -21,8 +22,8 @@ sll_create (void)
         goto cleanup;
     }
 
-    p_sll->p_head = NULL;
-    p_sll->len = 0u;
+    p_sll->p_head         = NULL;
+    p_sll->len            = 0u;
     p_sll->p_display_node = NULL;
     p_sll->p_compare_node = memcmp;
     p_sll->p_destroy_data = NULL;
@@ -41,6 +42,9 @@ sll_destroy (sll_t * p_sll)
 {
     status_t status = STATUS_SUCCESS;
 
+    node_t * p_curr = NULL;
+    node_t * p_next = NULL;
+
     if (NULL == p_sll)
     {
         status = STATUS_NULL_ARG;
@@ -48,10 +52,10 @@ sll_destroy (sll_t * p_sll)
     }
 
     // Traverse nodes
-    node_t * p_curr = p_sll->p_head;
+    p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
-        node_t * p_next = p_curr->p_next;
+        p_next = p_curr->p_next;
 
         if (NULL != p_sll->p_destroy_data)
         {
@@ -67,8 +71,8 @@ sll_destroy (sll_t * p_sll)
         p_curr = p_next;
     }
 
-    p_sll->p_head = NULL;
-    p_sll->len = 0u;
+    p_sll->p_head         = NULL;
+    p_sll->len            = 0u;
     p_sll->p_display_node = NULL;
     p_sll->p_compare_node = NULL;
     p_sll->p_destroy_data = NULL;
@@ -84,6 +88,8 @@ sll_display (sll_t * p_sll, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
 
+    node_t * p_curr = NULL;
+
     if ((NULL == p_sll) || (NULL == p_sll->p_display_node))
     {
         status = STATUS_NULL_ARG;
@@ -97,7 +103,7 @@ sll_display (sll_t * p_sll, char const * p_sep)
     }
 
     // Traverse nodes
-    node_t * p_curr = p_sll->p_head;
+    p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
         (p_sll->p_display_node)(p_curr->p_data);
@@ -118,6 +124,7 @@ node_t *
 sll_get (sll_t * p_sll, void const * p_data, size_t size)
 {
     node_t * p_node = NULL;
+    node_t * p_curr = NULL;
 
     if ((NULL == p_sll) || (NULL == p_data))
     {
@@ -125,7 +132,7 @@ sll_get (sll_t * p_sll, void const * p_data, size_t size)
     }
 
     // Traverse nodes until data is found
-    node_t * p_curr = p_sll->p_head;
+    p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
@@ -152,6 +159,10 @@ sll_insert (
 {
     status_t status = STATUS_SUCCESS;
 
+    node_t * p_prev = NULL;
+    node_t * p_curr = NULL;
+    node_t * p_node = NULL;
+
     if ((NULL == p_sll) || (NULL == p_data))
     {
         status = STATUS_NULL_ARG;
@@ -165,8 +176,8 @@ sll_insert (
         goto cleanup;
     }
 
-    node_t * p_prev = NULL;
-    node_t * p_curr = p_sll->p_head;
+    p_prev = NULL;
+    p_curr = p_sll->p_head;
     while (0u < idx)
     {
         p_prev = p_curr;
@@ -174,7 +185,7 @@ sll_insert (
         idx--;
     }
 
-    node_t * p_node = calloc(1u, sizeof(*p_node));
+    p_node = calloc(1u, sizeof(*p_node));
     if (NULL == p_node)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -235,6 +246,9 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
+    node_t * p_prev = NULL;
+    node_t * p_curr = NULL;
+
     if ((NULL == p_sll) || (NULL == p_data))
     {
         status = STATUS_NULL_ARG;
@@ -242,8 +256,7 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
     }
 
     // Traverse nodes until data is found
-    node_t * p_prev = NULL;
-    node_t * p_curr = p_sll->p_head;
+    p_curr = p_sll->p_head;
 
     while (NULL != p_curr)
     {
