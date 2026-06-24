@@ -7,6 +7,7 @@
  */
 
 #include "chat_admin.h"
+#include "chat_internal.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;
@@ -59,7 +60,6 @@ opcode_promote (
 
     appdata_t     * p_appdata        = NULL;
     ht_t          * p_admins         = NULL;
-    item_t        * p_item           = NULL;
     session_t     * p_target         = NULL;
     int             sockfd           = -1;
     server_t      * p_server         = NULL;
@@ -118,10 +118,24 @@ opcode_promote (
         goto cleanup;
     }
 
+    if (NULL != ht_get(p_admins, p_username, username_size))
+    {
+        if (p_server->b_verbose)
+        {
+            printf("User %.*s is already admin\n", username_size, p_username);
+        }
+
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
     ht_set(p_admins, p_username, username_size, "", 0u);
 
-    p_item   = ht_get(p_appdata->p_session_store, p_username, username_size);
-    p_target = (NULL != p_item) ? *(session_t **)(p_item->p_value) : NULL;
+    p_target = session_get(
+        p_username,
+        username_size,
+        p_appdata->p_session_store
+    );
     if (NULL != p_target)
     {
         msg_send(

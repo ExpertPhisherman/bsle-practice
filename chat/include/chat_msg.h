@@ -32,19 +32,19 @@ status_t msg_send(
 /*!
  * @brief Send MSG_RECV to every session in room matching username
  *
- * @param[in] p_room         Pointer to room
- * @param[in] p_username     Pointer to username
- * @param[in] username_size  Size of username in bytes
- * @param[in] flag           Message flag
- * @param[in] p_msg          Pointer to message
- * @param[in] msg_size       Size of message in bytes
+ * @param[in] p_username      Pointer to username
+ * @param[in] username_size   Size of username in bytes
+ * @param[in] p_session_store Pointer to session storage
+ * @param[in] flag            Message flag
+ * @param[in] p_msg           Pointer to message
+ * @param[in] msg_size        Size of message in bytes
  *
  * @return Status of operation
  */
 status_t msg_send_username(
-    room_t        * p_room,
     uint8_t       * p_username,
     uint16_t        username_size,
+    ht_t          * p_session_store,
     uint8_t         flag,
     uint8_t const * p_msg,
     uint16_t        msg_size

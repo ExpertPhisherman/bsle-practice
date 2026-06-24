@@ -156,16 +156,6 @@ opcode_login (
     {
         p_response->retcode = RETCODE_FAILURE;
     }
-    else
-    {
-        ht_set(
-            p_appdata->p_session_store,
-            p_session->p_username,
-            p_session->username_size,
-            &p_session,
-            sizeof(p_session)
-        );
-    }
 
 cleanup:
     if (

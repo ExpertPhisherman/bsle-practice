@@ -142,31 +142,6 @@ opcode_join (
         goto cleanup;
     }
 
-    if (p_server->b_verbose)
-    {
-        if (NULL == p_session->p_room)
-        {
-            printf(
-                "%.*s is already in room: \"%.*s\"\n",
-                p_session->username_size,
-                p_session->p_username,
-                p_room->name_size,
-                p_room->p_name
-            );
-            p_response->retcode = RETCODE_DUPLICATE;
-        }
-        else
-        {
-            printf(
-                "%.*s joined room: \"%.*s\"\n",
-                p_session->username_size,
-                p_session->p_username,
-                p_room->name_size,
-                p_room->p_name
-            );
-        }
-    }
-
 cleanup:
     if (b_locked)
     {

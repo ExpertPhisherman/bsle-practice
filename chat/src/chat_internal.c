@@ -229,6 +229,29 @@ user_login (session_t * p_session, appdata_t * p_appdata)
         }
     }
 
+    // Forbid duplicate user logins in
+    p_item = ht_get(p_appdata->p_session_store, p_username, username_size);
+    if (NULL != p_item)
+    {
+        if (p_server->b_verbose)
+        {
+            printf(
+                "User %.*s already has an active session\n",
+                username_size,
+                p_username
+            );
+        }
+        goto cleanup;
+    }
+
+    ht_set(
+        p_appdata->p_session_store,
+        p_username,
+        username_size,
+        &p_session,
+        sizeof(p_session)
+    );
+
     session_id = (p_appdata->next_session_id)++;
 
 cleanup:
@@ -255,7 +278,8 @@ user_logout (session_t * p_session, appdata_t * p_appdata)
 
     if (
         (NULL != p_appdata->p_session_store) &&
-        (0u != p_session->username_size)
+        (0u != p_session->username_size) &&
+        (0u != p_session->session_id)
     )
     {
         ht_del(
@@ -318,17 +342,6 @@ user_join (session_t * p_session, appdata_t * p_appdata)
             status = STATUS_FAILURE;
             goto cleanup;
         }
-    }
-
-    if (NULL != session_by_username(
-        p_room,
-        p_session->p_username,
-        p_session->username_size
-    ))
-    {
-        // NOTE: User is already in room
-        p_session->p_room = NULL;
-        goto cleanup;
     }
 
     // Append user session to room's sessions SLL
@@ -398,39 +411,22 @@ cleanup:
 }
 
 session_t *
-session_by_username (
-    room_t   * p_room,
+session_get (
     uint8_t  * p_username,
-    uint16_t   username_size
+    uint16_t   username_size,
+    ht_t     * p_session_store
 )
 {
-    node_t    * p_curr    = NULL;
+    item_t    * p_item    = NULL;
     session_t * p_session = NULL;
 
-    if (
-        (NULL == p_room) ||
-        (NULL == p_room->p_sessions) ||
-        (NULL == p_username)
-    )
+    if ((NULL == p_username) || (NULL == p_session_store))
     {
         goto cleanup;
     }
 
-    p_curr = p_room->p_sessions->p_head;
-    while (NULL != p_curr)
-    {
-        p_session = *(session_t **)(p_curr->p_data);
-        if (
-            (p_session->username_size == username_size) &&
-            (0 == memcmp(p_session->p_username, p_username, username_size))
-        )
-        {
-            break;
-        }
-
-        p_session = NULL;
-        p_curr    = p_curr->p_next;
-    }
+    p_item    = ht_get(p_session_store, p_username, username_size);
+    p_session = (NULL != p_item) ? *(session_t **)(p_item->p_value) : NULL;
 
 cleanup:
     return p_session;

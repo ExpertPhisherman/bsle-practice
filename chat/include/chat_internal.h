@@ -103,9 +103,8 @@ typedef enum retcode
     RETCODE_OVERFLOW      = 0x03, // Size exceeds g_max_packet_size
     RETCODE_PENDING       = 0x04, // User already has a pending request
     RETCODE_NOT_PENDING   = 0x05, // User has no pending request to respond to
-    RETCODE_DUPLICATE     = 0x06, // User already exists in room
-    RETCODE_UNALLOWED     = 0x07, // Receiving user hasn't allowed file transfer
-    RETCODE_UNAUTHORIZED  = 0x08, // User isn't authorized to perform action
+    RETCODE_UNALLOWED     = 0x06, // Receiving user hasn't allowed file transfer
+    RETCODE_UNAUTHORIZED  = 0x07, // User isn't authorized to perform action
     RETCODE_FAILURE       = 0xff, // Server action failed
 } retcode_t;
 
@@ -347,18 +346,18 @@ status_t user_join(session_t * p_session, appdata_t * p_appdata);
 status_t user_leave(session_t * p_session, appdata_t * p_appdata);
 
 /*!
- * @brief Get session by a username in room
+ * @brief Get session pointer by a username
  *
- * @param[in] p_room        Pointer to room
- * @param[in] p_username    Pointer to username
- * @param[in] username_size Size of username in bytes
+ * @param[in] p_username      Pointer to username
+ * @param[in] username_size   Size of username in bytes
+ * @param[in] p_session_store Pointer to session storage
  *
  * @return Boolean if username is in room
  */
-session_t * session_by_username(
-    room_t   * p_room,
+session_t * session_get(
     uint8_t  * p_username,
-    uint16_t   username_size
+    uint16_t   username_size,
+    ht_t     * p_session_store
 );
 
 /*!

@@ -16,7 +16,7 @@ extern uint16_t const g_username_size_max;
  * @brief Send "Responded: decline" to self and a notification to the requester
  *
  * @param[in] p_session          Pointer to session
- * @param[in] p_room             Pointer to room
+ * @param[in] p_session_store    Pointer to session storage
  * @param[in] p_username         Pointer to username
  * @param[in] username_size      Size of username in bytes
  * @param[in] p_decline_notif    Pointer to notification message
@@ -26,7 +26,7 @@ extern uint16_t const g_username_size_max;
  */
 static status_t respond_decline(
     session_t     * p_session,
-    room_t        * p_room,
+    ht_t          * p_session_store,
     uint8_t       * p_username,
     uint16_t        username_size,
     uint8_t const * p_decline_notif,
@@ -36,18 +36,18 @@ static status_t respond_decline(
 /*!
  * @brief Accept PM request: create private room and move both users into it
  *
- * @param[in] p_session     Pointer to session
- * @param[in] p_appdata     Pointer to application data
- * @param[in] p_room        Pointer to room
- * @param[in] p_username    Pointer to username
- * @param[in] username_size Size of username in bytes
+ * @param[in] p_session       Pointer to session
+ * @param[in] p_appdata       Pointer to application data
+ * @param[in] p_session_store Pointer to session storage
+ * @param[in] p_username      Pointer to username
+ * @param[in] username_size   Size of username in bytes
  *
  * @return Status of operation
  */
 static status_t respond_pm_accept(
     session_t * p_session,
     appdata_t * p_appdata,
-    room_t    * p_room,
+    ht_t      * p_session_store,
     uint8_t   * p_username,
     uint16_t    username_size
 );
@@ -76,7 +76,7 @@ static status_t file_relay(
 static status_t
 respond_decline (
     session_t     * p_session,
-    room_t        * p_room,
+    ht_t          * p_session_store,
     uint8_t       * p_username,
     uint16_t        username_size,
     uint8_t const * p_decline_notif,
@@ -85,9 +85,9 @@ respond_decline (
 {
     msg_send(p_session, MSG_FLAG_NOTIF, (uint8_t *)"Responded: decline", 18u);
     msg_send_username(
-        p_room,
         p_username,
         username_size,
+        p_session_store,
         MSG_FLAG_NOTIF,
         p_decline_notif,
         decline_notif_size
@@ -99,7 +99,7 @@ static status_t
 respond_pm_accept (
     session_t * p_session,
     appdata_t * p_appdata,
-    room_t    * p_room,
+    ht_t      * p_session_store,
     uint8_t   * p_username,
     uint16_t    username_size
 )
@@ -113,7 +113,6 @@ respond_pm_accept (
     uint8_t   * p_user2        = NULL;
     uint16_t    user2_size     = 0u;
     uint16_t    room_name_size = 0u;
-    node_t    * p_curr         = NULL;
     session_t * p_target       = NULL;
     sll_t     * p_room_store   = p_appdata->p_room_store;
 
@@ -174,23 +173,11 @@ respond_pm_accept (
     user_join(p_session, p_appdata);
     msg_send(p_session, MSG_FLAG_JOIN, p_room_name, room_name_size);
 
-    p_curr = p_room->p_sessions->p_head;
-    while (NULL != p_curr)
-    {
-        p_target = *(session_t **)(p_curr->p_data);
-        if (
-            (p_target->username_size == username_size) &&
-            (0 == memcmp(p_target->p_username, p_username, username_size))
-        )
-        {
-            user_leave(p_target, p_appdata);
-            p_target->p_room = p_new_room;
-            user_join(p_target, p_appdata);
-            msg_send(p_target, MSG_FLAG_JOIN, p_room_name, room_name_size);
-            break;
-        }
-        p_curr = p_curr->p_next;
-    }
+    p_target = session_get(p_username, username_size, p_session_store);
+    user_leave(p_target, p_appdata);
+    p_target->p_room = p_new_room;
+    user_join(p_target, p_appdata);
+    msg_send(p_target, MSG_FLAG_JOIN, p_room_name, room_name_size);
 
 cleanup:
     free(p_room_name);
@@ -356,9 +343,13 @@ opcode_request (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    if (NULL == session_by_username(p_room, p_username, username_size))
+    if (NULL == session_get(
+        p_username,
+        username_size,
+        p_appdata->p_session_store
+    ))
     {
-        fprintf(stderr, "Receiving user not in room\n");
+        fprintf(stderr, "Receiving user has no session\n");
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
@@ -391,9 +382,9 @@ opcode_request (
             );
 
             msg_send_username(
-                p_room,
                 p_username,
                 username_size,
+                p_appdata->p_session_store,
                 MSG_FLAG_NOTIF,
                 p_notif,
                 (uint16_t)written
@@ -428,9 +419,9 @@ opcode_request (
             );
 
             msg_send_username(
-                p_room,
                 p_username,
                 username_size,
+                p_appdata->p_session_store,
                 MSG_FLAG_NOTIF,
                 p_notif,
                 (uint16_t)written
@@ -557,9 +548,13 @@ opcode_respond (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    if (NULL == session_by_username(p_room, p_username, username_size))
+    if (NULL == session_get(
+        p_username,
+        username_size,
+        p_appdata->p_session_store
+    ))
     {
-        fprintf(stderr, "Receiving user not in room\n");
+        fprintf(stderr, "Receiving has no session\n");
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
@@ -605,7 +600,7 @@ opcode_respond (
                 );
                 respond_decline(
                     p_session,
-                    p_room,
+                    p_appdata->p_session_store,
                     p_username,
                     username_size,
                     p_notif,
@@ -617,7 +612,7 @@ opcode_respond (
                 status = respond_pm_accept(
                     p_session,
                     p_appdata,
-                    p_room,
+                    p_appdata->p_session_store,
                     p_username,
                     username_size
                 );
@@ -677,7 +672,7 @@ opcode_respond (
                 );
                 respond_decline(
                     p_session,
-                    p_room,
+                    p_appdata->p_session_store,
                     p_username,
                     username_size,
                     p_notif,
@@ -824,11 +819,15 @@ opcode_file_send (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    p_target = session_by_username(p_room, p_username, username_size);
+    p_target = session_get(
+        p_username,
+        username_size,
+        p_appdata->p_session_store
+    );
 
     if (NULL == p_target)
     {
-        fprintf(stderr, "Receiving user not in room\n");
+        fprintf(stderr, "Receiving user has no session\n");
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }

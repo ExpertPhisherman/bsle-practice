@@ -59,9 +59,9 @@ cleanup:
 
 status_t
 msg_send_username (
-    room_t        * p_room,
     uint8_t       * p_username,
     uint16_t        username_size,
+    ht_t          * p_session_store,
     uint8_t         flag,
     uint8_t const * p_msg,
     uint16_t        msg_size
@@ -69,13 +69,11 @@ msg_send_username (
 {
     status_t status = STATUS_SUCCESS;
 
-    node_t    * p_curr    = NULL;
     session_t * p_session = NULL;
 
     if (
-        (NULL == p_room) ||
-        (NULL == p_room->p_sessions) ||
         (NULL == p_username) ||
+        (NULL == p_session_store) ||
         (NULL == p_msg)
     )
     {
@@ -83,20 +81,8 @@ msg_send_username (
         goto cleanup;
     }
 
-    p_curr = p_room->p_sessions->p_head;
-    while (NULL != p_curr)
-    {
-        p_session = *(session_t **)(p_curr->p_data);
-        if (
-            (p_session->username_size == username_size) &&
-            (0 == memcmp(p_session->p_username, p_username, username_size))
-        )
-        {
-            msg_send(p_session, flag, p_msg, msg_size);
-        }
-
-        p_curr = p_curr->p_next;
-    }
+    p_session = session_get(p_username, username_size, p_session_store);
+    msg_send(p_session, flag, p_msg, msg_size);
 
 cleanup:
     return status;
