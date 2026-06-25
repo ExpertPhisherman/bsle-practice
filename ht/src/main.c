@@ -8,12 +8,14 @@
 
 #include "main.h"
 
+static size_t const g_capacity = 17u;
+
 int
 main (int argc, char * argv[])
 {
     status_t status = STATUS_SUCCESS;
 
-    ht_t       * p_ht     = ht_create(17u);
+    ht_t       * p_ht     = ht_create(g_capacity);
     item_t     * p_item   = NULL;
     char const * p_key    = NULL;
     size_t       len      = 0u;
@@ -37,8 +39,6 @@ main (int argc, char * argv[])
         key_size = strnlen(p_key, 256u);
         ht_set(p_ht, p_key, key_size, p_key, 4u);
     }
-
-    p_item = NULL;
 
     ht_set(p_ht, "obama", 5u, "TEST", 4u);
     ht_set(p_ht, "obama", 5u, "pyramid", 7u);
