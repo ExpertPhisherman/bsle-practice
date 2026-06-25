@@ -46,8 +46,6 @@ typedef struct room
     uint8_t  * p_name;      // Pointer to name
     uint16_t   name_size;   // Size of name in bytes
     sll_t    * p_sessions;  // Pointer to list of members' sessions
-    ht_t     * p_pm_reqs;   // Pointer to PM requests
-    ht_t     * p_file_reqs; // Pointer to file transfer requests
     bool       b_private;   // Boolean if room is private (direct message)
     uint8_t  * p_user1;     // Name of first allowed private user
     uint16_t   user1_size;  // Size of first allowed private user in bytes
@@ -115,6 +113,8 @@ typedef struct appdata
     sll_t           * p_room_store;    // Pointer to room storage
     ht_t            * p_admins;        // Pointer to admin hash table
     ht_t            * p_session_store; // Pointer to online session lookup table
+    ht_t            * p_pm_reqs;       // Pointer to PM requests
+    ht_t            * p_file_reqs;     // Pointer to file transfer requests
     opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
     pthread_mutex_t   lock;            // Mutex lock for read/write control
 } appdata_t;

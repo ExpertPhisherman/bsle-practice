@@ -428,8 +428,8 @@ opcode_request (
         goto cleanup;
     }
 
-    p_pm_reqs   = p_room->p_pm_reqs;
-    p_file_reqs = p_room->p_file_reqs;
+    p_pm_reqs   = p_appdata->p_pm_reqs;
+    p_file_reqs = p_appdata->p_file_reqs;
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
@@ -633,8 +633,8 @@ opcode_respond (
         goto cleanup;
     }
 
-    p_pm_reqs   = p_room->p_pm_reqs;
-    p_file_reqs = p_room->p_file_reqs;
+    p_pm_reqs   = p_appdata->p_pm_reqs;
+    p_file_reqs = p_appdata->p_file_reqs;
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
@@ -715,7 +715,7 @@ opcode_respond (
             }
 
             ht_set(
-                p_room->p_pm_reqs,
+                p_appdata->p_pm_reqs,
                 p_session->p_username,
                 p_session->username_size,
                 "",
@@ -777,7 +777,7 @@ opcode_respond (
             }
 
             ht_set(
-                p_room->p_file_reqs,
+                p_appdata->p_file_reqs,
                 p_session->p_username,
                 p_session->username_size,
                 "",

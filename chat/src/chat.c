@@ -479,6 +479,8 @@ appdata_create (void)
     sll_t         * p_room_store     = NULL;
     ht_t          * p_admins         = NULL;
     ht_t          * p_session_store  = NULL;
+    ht_t          * p_pm_reqs        = NULL;
+    ht_t          * p_file_reqs      = NULL;
     opcode_func_t * pp_opcode_funcs  = NULL;
 
     p_appdata = calloc(1u, sizeof(*p_appdata));
@@ -539,6 +541,22 @@ appdata_create (void)
     }
     p_appdata->p_session_store = p_session_store;
 
+    p_pm_reqs = ht_create(g_pm_reqs_capacity);
+    if (NULL == p_pm_reqs)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_appdata->p_pm_reqs = p_pm_reqs;
+
+    p_file_reqs = ht_create(g_file_reqs_capacity);
+    if (NULL == p_file_reqs)
+    {
+        status = STATUS_ALLOC_FAILURE;
+        goto cleanup;
+    }
+    p_appdata->p_file_reqs = p_file_reqs;
+
     pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
     if (NULL == pp_opcode_funcs)
     {
@@ -591,6 +609,12 @@ appdata_destroy (appdata_t * p_appdata)
 
     ht_destroy(p_appdata->p_session_store);
     p_appdata->p_session_store = NULL;
+
+    ht_destroy(p_appdata->p_pm_reqs);
+    p_appdata->p_pm_reqs = NULL;
+
+    ht_destroy(p_appdata->p_file_reqs);
+    p_appdata->p_file_reqs = NULL;
 
     free(p_appdata->pp_opcode_funcs);
     p_appdata->pp_opcode_funcs = NULL;

@@ -14,8 +14,6 @@ extern uint32_t const g_chunk_size;
 extern size_t const   g_creds_capacity;
 extern size_t const   g_admins_capacity;
 extern size_t const   g_session_store_capacity;
-extern size_t const   g_pm_reqs_capacity;
-extern size_t const   g_file_reqs_capacity;
 extern uint16_t const g_username_size_min;
 extern uint16_t const g_username_size_max;
 extern uint16_t const g_password_size_min;
@@ -28,8 +26,6 @@ room_create (char const * p_name, uint16_t name_size)
 
     room_t  * p_room      = NULL;
     sll_t   * p_sessions  = NULL;
-    ht_t    * p_pm_reqs   = NULL;
-    ht_t    * p_file_reqs = NULL;
     uint8_t * p_plus_chr  = NULL;
 
     p_room = calloc(1u, sizeof(*p_room));
@@ -59,22 +55,6 @@ room_create (char const * p_name, uint16_t name_size)
         goto cleanup;
     }
     p_room->p_sessions = p_sessions;
-
-    p_pm_reqs = ht_create(g_pm_reqs_capacity);
-    if (NULL == p_pm_reqs)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-    p_room->p_pm_reqs = p_pm_reqs;
-
-    p_file_reqs = ht_create(g_file_reqs_capacity);
-    if (NULL == p_file_reqs)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
-    p_room->p_file_reqs = p_file_reqs;
 
     p_room->b_private  = false;
     p_room->p_user1    = NULL;
@@ -121,12 +101,6 @@ room_destroy (void * p_data)
 
     sll_destroy(p_room->p_sessions);
     p_room->p_sessions = NULL;
-
-    ht_destroy(p_room->p_pm_reqs);
-    p_room->p_pm_reqs = NULL;
-
-    ht_destroy(p_room->p_file_reqs);
-    p_room->p_file_reqs = NULL;
 
     p_room->b_private  = false;
     p_room->p_user1    = NULL;
@@ -349,7 +323,7 @@ user_join (session_t * p_session, appdata_t * p_appdata)
 
     // Set empty item in user's requests
     ht_set(
-        p_room->p_pm_reqs,
+        p_appdata->p_pm_reqs,
         p_session->p_username,
         p_session->username_size,
         "",
@@ -357,7 +331,7 @@ user_join (session_t * p_session, appdata_t * p_appdata)
     );
 
     ht_set(
-        p_room->p_file_reqs,
+        p_appdata->p_file_reqs,
         p_session->p_username,
         p_session->username_size,
         "",
@@ -393,13 +367,13 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
 
     // Delete item from user's requests
     ht_del(
-        p_room->p_pm_reqs,
+        p_appdata->p_pm_reqs,
         p_session->p_username,
         p_session->username_size
     );
 
     ht_del(
-        p_room->p_file_reqs,
+        p_appdata->p_file_reqs,
         p_session->p_username,
         p_session->username_size
     );
