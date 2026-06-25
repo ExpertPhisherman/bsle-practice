@@ -289,6 +289,11 @@ file_relay (
         {
             sockutil_drain(p_sender->sockfd, chunk_size, g_chunk_size);
         }
+        else if (chunk_size > g_file_chunk_size)
+        {
+            sockutil_drain(p_sender->sockfd, chunk_size, g_chunk_size);
+            status = STATUS_FAILURE;
+        }
         else
         {
             // Subsequent relay chunk payload
