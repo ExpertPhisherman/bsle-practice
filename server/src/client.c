@@ -143,7 +143,7 @@ client_create (server_t * p_server)
     uint16_t rport = ntohs(client_addr.sin_port);
     p_client->rport = rport;
 
-    p_rhost = calloc(1u, INET_ADDRSTRLEN);
+    p_rhost = calloc(INET_ADDRSTRLEN, sizeof(*p_rhost));
     if (NULL == p_rhost)
     {
         fprintf(stderr, "calloc failed in client_create\n");
