@@ -928,16 +928,18 @@ def main() -> int:
 
     chat_client.listening_thread.start()
 
-    chat_client.do_login("admin password")
-    time.sleep(0.1)
-    chat_client.do_join("general")
-    time.sleep(0.1)
+    # Testing Examples:
 
-    if chat_client.username is None:
-        chat_client.do_login("asdf asdfasdf")
-        time.sleep(0.1)
-        chat_client.do_join("general")
-        time.sleep(0.1)
+    # chat_client.do_login("admin password")
+    # time.sleep(0.1)
+    # chat_client.do_join("general")
+    # time.sleep(0.1)
+
+    # if chat_client.username is None:
+    #     chat_client.do_login("asdf asdfasdf")
+    #     time.sleep(0.1)
+    #     chat_client.do_join("general")
+    #     time.sleep(0.1)
 
     chat_client.cmdloop()
     chat_client.listening_thread.join()
