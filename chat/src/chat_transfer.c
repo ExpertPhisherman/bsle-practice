@@ -326,9 +326,6 @@ cleanup:
 
     if (STATUS_SUCCESS == status)
     {
-        memset(p_target->p_user_allow, 0, g_username_size_max);
-        p_target->user_allow_size = 0u;
-
         if (p_sender->p_server->b_verbose)
         {
             printf(
@@ -841,6 +838,7 @@ opcode_file_send (
     uint8_t               * p_first_data     = NULL;
     session_t             * p_target         = NULL;
     bool                    b_locked         = false;
+    bool                    b_file_locked    = false;
     bool                    b_need_drain     = false;
     file_send_first_hdr_t * p_hdr            = NULL;
 
@@ -958,7 +956,13 @@ opcode_file_send (
         goto cleanup;
     }
 
+    pthread_mutex_unlock(&(p_appdata->lock));
+    b_locked = false;
+
     b_need_drain = false;
+
+    pthread_mutex_lock(&(p_appdata->file_lock));
+    b_file_locked = true;
 
     status = file_relay(
         p_session,
@@ -969,12 +973,29 @@ opcode_file_send (
         first_data_size,
         first_flags
     );
-    if (STATUS_SUCCESS != status)
+
+    pthread_mutex_unlock(&(p_appdata->file_lock));
+    b_file_locked = false;
+
+    if (STATUS_SUCCESS == status)
+    {
+        pthread_mutex_lock(&(p_appdata->lock));
+        b_locked = true;
+
+        memset(p_target->p_user_allow, 0, g_username_size_max);
+        p_target->user_allow_size = 0u;
+    }
+    else
     {
         p_response->retcode = RETCODE_FAILURE;
     }
 
 cleanup:
+    if (b_file_locked)
+    {
+        pthread_mutex_unlock(&(p_appdata->file_lock));
+        b_file_locked = false;
+    }
     if (b_locked)
     {
         pthread_mutex_unlock(&(p_appdata->lock));

@@ -578,6 +578,13 @@ appdata_create (void)
         goto cleanup;
     }
 
+    if (0 != pthread_mutex_init(&(p_appdata->file_lock), NULL))
+    {
+        perror("pthread_mutex_init");
+        status = STATUS_MUTEX_FAILURE;
+        goto cleanup;
+    }
+
 cleanup:
     if (STATUS_SUCCESS != status)
     {
@@ -621,6 +628,7 @@ appdata_destroy (appdata_t * p_appdata)
     p_appdata->pp_opcode_funcs = NULL;
 
     pthread_mutex_destroy(&(p_appdata->lock));
+    pthread_mutex_destroy(&(p_appdata->file_lock));
 
     free(p_appdata);
     p_appdata = NULL;

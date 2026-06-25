@@ -117,6 +117,7 @@ typedef struct appdata
     ht_t            * p_file_reqs;     // Pointer to file transfer requests
     opcode_func_t   * pp_opcode_funcs; // Pointer to opcode function array
     pthread_mutex_t   lock;            // Mutex lock for read/write control
+    pthread_mutex_t   file_lock;       // Mutex lock serializing file transfers
 } appdata_t;
 
 typedef struct state
