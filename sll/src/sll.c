@@ -11,12 +11,12 @@
 /*!
  * @brief Destroy node
  *
- * @param[in] p_node         Pointer to node
- * @param[in] p_destroy_data Pointer to destroy data function
+ * @param[in] p_sll  Pointer to SLL
+ * @param[in] p_node Pointer to node
  *
  * @return Status of operation
  */
-static status_t node_destroy(node_t * p_node, destroy_func_t p_destroy_data);
+static status_t node_destroy(sll_t * p_sll, node_t * p_node);
 
 sll_t *
 sll_create (void)
@@ -65,7 +65,7 @@ sll_destroy (sll_t * p_sll)
     while (NULL != p_curr)
     {
         p_next = p_curr->p_next;
-        node_destroy(p_curr, p_sll->p_destroy_data);
+        node_destroy(p_sll, p_curr);
         p_curr = p_next;
     }
 
@@ -268,7 +268,7 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
                 p_prev->p_next = p_curr->p_next;
             }
 
-            node_destroy(p_curr, p_sll->p_destroy_data);
+            node_destroy(p_sll, p_curr);
 
             (p_sll->len)--;
 
@@ -288,19 +288,18 @@ cleanup:
 }
 
 static status_t
-node_destroy (node_t * p_node, destroy_func_t p_destroy_data)
+node_destroy (sll_t * p_sll, node_t * p_node)
 {
     status_t status = STATUS_SUCCESS;
 
-    if (NULL == p_node)
+    if ((NULL == p_sll) || (NULL == p_node))
     {
-        status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    if (NULL != p_destroy_data)
+    if (NULL != p_sll->p_destroy_data)
     {
-        p_destroy_data(*(void **)(p_node->p_data));
+        (p_sll->p_destroy_data)(*(void **)(p_node->p_data));
     }
 
     free(p_node->p_data);
