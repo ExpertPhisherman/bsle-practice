@@ -14,7 +14,7 @@ INCLUDE = include
 BUILD = build
 BIN = bin
 
-.DEFAULT_GOAL := debug
+.DEFAULT_GOAL := all
 
 # Local files
 SRCS = $(wildcard $(SRC)/*.c)
