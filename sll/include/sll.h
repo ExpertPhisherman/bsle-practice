@@ -29,7 +29,7 @@ typedef struct sll
     size_t           len;            // Current length
     display_func_t   p_display_node; // Pointer to display function
     compare_func_t   p_compare_node; // Pointer to compare function
-    destroy_func_t   p_destroy_data; // Pointer to destroy function
+    destroy_func_t   p_destroy_data; // Pointer to destroy data function
 } sll_t;
 
 /*!
