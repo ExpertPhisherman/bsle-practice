@@ -389,8 +389,6 @@ opcode_delete (
     }
 
     sll_remove(p_room_store, p_room_name, room_name_size);
-    room_destroy(p_room);
-    p_room = NULL;
 
 cleanup:
     if (b_locked)

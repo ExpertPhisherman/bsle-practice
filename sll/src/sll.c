@@ -8,6 +8,16 @@
 
 #include "sll.h"
 
+/*!
+ * @brief Destroy node
+ *
+ * @param[in] p_node         Pointer to node
+ * @param[in] p_destroy_data Pointer to destroy data function
+ *
+ * @return Status of operation
+ */
+static status_t node_destroy(node_t * p_node, destroy_func_t p_destroy_data);
+
 sll_t *
 sll_create (void)
 {
@@ -51,23 +61,11 @@ sll_destroy (sll_t * p_sll)
         goto cleanup;
     }
 
-    // Traverse nodes
     p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
         p_next = p_curr->p_next;
-
-        if (NULL != p_sll->p_destroy_data)
-        {
-            (p_sll->p_destroy_data)(*(void **)(p_curr->p_data));
-        }
-
-        free(p_curr->p_data);
-        p_curr->p_data = NULL;
-
-        free(p_curr);
-        p_curr = NULL;
-
+        node_destroy(p_curr, p_sll->p_destroy_data);
         p_curr = p_next;
     }
 
@@ -102,7 +100,6 @@ sll_display (sll_t * p_sll, char const * p_sep)
         goto cleanup;
     }
 
-    // Traverse nodes
     p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
@@ -131,7 +128,6 @@ sll_get (sll_t * p_sll, void const * p_data, size_t size)
         goto cleanup;
     }
 
-    // Traverse nodes until data is found
     p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
@@ -255,7 +251,6 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
         goto cleanup;
     }
 
-    // Traverse nodes until data is found
     p_curr = p_sll->p_head;
 
     while (NULL != p_curr)
@@ -273,10 +268,7 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
                 p_prev->p_next = p_curr->p_next;
             }
 
-            free(p_curr->p_data);
-            p_curr->p_data = NULL;
-            free(p_curr);
-            p_curr = NULL;
+            node_destroy(p_curr, p_sll->p_destroy_data);
 
             (p_sll->len)--;
 
@@ -284,15 +276,37 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
             goto cleanup;
         }
 
-        // Update previous node
         p_prev = p_curr;
-
-        // Update current node
         p_curr = p_curr->p_next;
     }
 
     // NOTE: Data not found in SLL
     status = STATUS_NOT_EXISTS;
+
+cleanup:
+    return status;
+}
+
+static status_t
+node_destroy (node_t * p_node, destroy_func_t p_destroy_data)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if (NULL == p_node)
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    if (NULL != p_destroy_data)
+    {
+        p_destroy_data(*(void **)(p_node->p_data));
+    }
+
+    free(p_node->p_data);
+    p_node->p_data = NULL;
+    free(p_node);
+    p_node = NULL;
 
 cleanup:
     return status;

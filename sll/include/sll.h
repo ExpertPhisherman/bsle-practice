@@ -78,6 +78,7 @@ node_t * sll_get(sll_t * p_sll, void const * p_data, size_t size);
  * @param[in] p_data Pointer to data to insert
  * @param[in] size   Size of data in bytes
  * @param[in] idx    Index to insert data at
+ *
  * @return Status of operation
  */
 status_t sll_insert(
