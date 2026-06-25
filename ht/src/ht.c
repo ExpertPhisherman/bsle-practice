@@ -336,7 +336,7 @@ ht_set (
     }
     memcpy(new_item.p_value, p_value, value_size);
 
-    p_sll = ht_select(p_ht, &new_item);
+    p_sll  = ht_select(p_ht, &new_item);
     p_node = sll_get(p_sll, &new_item, sizeof(new_item));
 
     // Update item if key exists in SLL
