@@ -183,7 +183,7 @@ opcode_echo (
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    payload_size = ntohs(p_hdr->payload_size);
+    payload_size          = ntohs(p_hdr->payload_size);
     p_request->session_id = ntohl(p_hdr->session_id);
 
     // Copy size field into response
