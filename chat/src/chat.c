@@ -210,6 +210,7 @@ chat_client_run (server_t * p_server, client_t * p_client)
     if (STATUS_SUCCESS != status)
     {
         fprintf(stderr, "handle_request failed\n");
+        p_response->retcode = RETCODE_FAILURE;
     }
 
     (p_response->p_packet)[FIELD_OFFSET_OPCODE]  = p_response->opcode;

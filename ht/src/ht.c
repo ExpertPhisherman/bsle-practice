@@ -294,9 +294,10 @@ ht_set (
 {
     status_t status = STATUS_SUCCESS;
 
-    sll_t  * p_sll  = NULL;
-    node_t * p_node = NULL;
-    item_t * p_item = NULL;
+    sll_t  * p_sll    = NULL;
+    node_t * p_node   = NULL;
+    item_t * p_item   = NULL;
+    item_t   new_item = {0};
 
     if (
         (NULL == p_ht) ||
@@ -309,7 +310,7 @@ ht_set (
         goto cleanup;
     }
 
-    item_t new_item =
+    new_item = (item_t)
     {
         .p_hash_func = p_ht->p_hash_func,
         .hash        = (p_ht->p_hash_func)(p_key, key_size),
@@ -380,7 +381,7 @@ ht_set (
     }
 
 cleanup:
-    if (STATUS_ALLOC_FAILURE == status)
+    if ((STATUS_SUCCESS != status) && (STATUS_EXISTS != status))
     {
         free(new_item.p_key);
         new_item.p_key = NULL;

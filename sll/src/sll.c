@@ -25,7 +25,7 @@ sll_create (void)
 
     sll_t * p_sll = NULL;
 
-    p_sll = malloc(sizeof(*p_sll));
+    p_sll = calloc(1u, sizeof(*p_sll));
     if (NULL == p_sll)
     {
         status = STATUS_ALLOC_FAILURE;

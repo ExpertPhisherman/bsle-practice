@@ -189,6 +189,11 @@ respond_pm_accept (
     msg_send(p_session, MSG_FLAG_JOIN, p_room_name, room_name_size);
 
     p_target = session_get(p_username, username_size, p_session_store);
+    if (NULL == p_target)
+    {
+        status = STATUS_FAILURE;
+        goto cleanup;
+    }
     user_leave(p_target, p_appdata);
     p_target->p_room = p_new_room;
     user_join(p_target, p_appdata);
@@ -450,7 +455,7 @@ opcode_request (
         case REQ_FLAG_TYPE_PM:
         {
             p_item = ht_get(p_pm_reqs, p_username, username_size);
-            if (0u != p_item->value_size)
+            if ((NULL != p_item) && (0u != p_item->value_size))
             {
                 p_response->retcode = RETCODE_PENDING;
                 goto cleanup;
@@ -487,7 +492,7 @@ opcode_request (
         case REQ_FLAG_TYPE_FILE:
         {
             p_item = ht_get(p_file_reqs, p_username, username_size);
-            if (0u != p_item->value_size)
+            if ((NULL != p_item) && (0u != p_item->value_size))
             {
                 p_response->retcode = RETCODE_PENDING;
                 goto cleanup;
@@ -658,7 +663,7 @@ opcode_respond (
                 p_session->p_username,
                 p_session->username_size
             );
-            if (0u == p_item->value_size)
+            if ((NULL == p_item) || (0u == p_item->value_size))
             {
                 fprintf(stderr, "No pending request from anyone\n");
                 p_response->retcode = RETCODE_NOT_PENDING;
@@ -730,7 +735,7 @@ opcode_respond (
                 p_session->p_username,
                 p_session->username_size
             );
-            if (0u == p_item->value_size)
+            if ((NULL == p_item) || (0u == p_item->value_size))
             {
                 fprintf(stderr, "No pending request from anyone\n");
                 p_response->retcode = RETCODE_NOT_PENDING;
