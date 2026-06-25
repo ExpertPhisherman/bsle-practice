@@ -478,7 +478,7 @@ opcode_request (
                 p_appdata->p_session_store,
                 MSG_FLAG_NOTIF,
                 p_notif,
-                (uint16_t)written
+                written
             );
 
             break;
@@ -515,7 +515,7 @@ opcode_request (
                 p_appdata->p_session_store,
                 MSG_FLAG_NOTIF,
                 p_notif,
-                (uint16_t)written
+                written
             );
 
             break;
@@ -695,7 +695,7 @@ opcode_respond (
                     p_username,
                     username_size,
                     p_notif,
-                    (uint16_t)written
+                    written
                 );
             }
             else
@@ -767,7 +767,7 @@ opcode_respond (
                     p_username,
                     username_size,
                     p_notif,
-                    (uint16_t)written
+                    written
                 );
             }
             else
