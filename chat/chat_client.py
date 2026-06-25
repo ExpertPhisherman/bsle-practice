@@ -64,6 +64,10 @@ MSG_FLAG_LIST  = 0x02
 MSG_FLAG_JOIN  = 0x03
 MSG_FLAG_FILE  = 0x04
 
+FILE_CHUNK_FLAG_FIRST = 0x01
+FILE_CHUNK_FLAG_LAST  = 0x02
+FILE_CHUNK_SIZE       = 512
+
 def with_parser(
     description: str,
     args: dict[str, dict[str, Any]] | None = None,
@@ -109,11 +113,13 @@ class ChatClient(Client):
 
     def __init__(self) -> None:
         super().__init__()
-        self.session_id   = 0
-        self.request      = b""
-        self.username     = None
-        self.password     = None
-        self.room_name    = None
+        self.session_id        = 0
+        self.request           = b""
+        self.username          = None
+        self.password          = None
+        self.room_name         = None
+        self._file_recv_name   = None
+        self._file_recv_buffer = bytearray()
         self.opcode       = OPCODE_DEFAULT
         self.opcode_funcs = [None] * (UINT8_MAX + 1)
         self._quit_event  = threading.Event()
@@ -395,12 +401,10 @@ class ChatClient(Client):
         if payload is None:
             return False
 
-        payload_dec = payload.decode("utf-8")
-
         if retcode == RETCODE_SUCCESS:
             if flag == MSG_FLAG_JOIN:
-                room_name = payload_dec
-                if payload_dec == "":
+                room_name = payload.decode("utf-8")
+                if room_name == "":
                     room_name = None
                 self.room_name = room_name
                 if self.room_name is None:
@@ -408,22 +412,26 @@ class ChatClient(Client):
                 else:
                     print(f"{self.username} joined room: \"{self.room_name}\"")
             elif flag == MSG_FLAG_NOTIF:
-                print(f"Notification: {payload_dec}")
+                print(f"Notification: {payload.decode('utf-8')}")
             elif flag == MSG_FLAG_FILE:
-                filename_size, file_size = struct.unpack("!HI", payload[:6])
-                filename_enc, file_content = struct.unpack(
-                    f"!{filename_size}s{file_size}s",
-                    payload[6:]
-                )
+                chunk_flags = payload[0]
 
-                filename = filename_enc.decode("utf-8")
+                if chunk_flags & FILE_CHUNK_FLAG_FIRST:
+                    filename_size = struct.unpack("!H", payload[1:3])[0]
+                    self._file_recv_name   = payload[3:3 + filename_size].decode("utf-8")
+                    self._file_recv_buffer = bytearray(payload[3 + filename_size:])
+                else:
+                    self._file_recv_buffer.extend(payload[1:])
 
-                with open(filename, "wb") as f:
-                    f.write(file_content)
-
-                print(f"Received file: \"{filename}\"")
+                if chunk_flags & FILE_CHUNK_FLAG_LAST:
+                    if self._file_recv_name is not None:
+                        with open(self._file_recv_name, "wb") as f:
+                            f.write(self._file_recv_buffer)
+                        print(f"Received file: \"{self._file_recv_name}\"")
+                    self._file_recv_name   = None
+                    self._file_recv_buffer = bytearray()
             else:
-                print(payload_dec)
+                print(payload.decode("utf-8"))
         else:
             print(f"Unknown return code: {retcode:02x}")
 
@@ -660,19 +668,36 @@ class ChatClient(Client):
             print(f"[!] Could not read \"{filename_src}\": {e}")
             return False
 
-        self.request = struct.pack(
-            "!BxHHII",
-            OPCODE_FILE_SEND,
-            len(username_enc),
-            len(filename_dst_enc),
-            len(file_content),
-            self.session_id
-        )
+        chunks = [
+            file_content[i:i + FILE_CHUNK_SIZE]
+            for i in range(0, max(len(file_content), 1), FILE_CHUNK_SIZE)
+        ]
 
-        self.request += username_enc
-        self.request += filename_dst_enc
-        self.request += file_content
+        packets = []
+        for i, chunk in enumerate(chunks):
+            is_first = (i == 0)
+            is_last  = (i == len(chunks) - 1)
+            flags    = (FILE_CHUNK_FLAG_FIRST if is_first else 0) | \
+                       (FILE_CHUNK_FLAG_LAST  if is_last  else 0)
 
+            if is_first:
+                pkt = struct.pack(
+                    "!BBHHHI",
+                    OPCODE_FILE_SEND,
+                    flags,
+                    len(username_enc),
+                    len(filename_dst_enc),
+                    len(chunk),
+                    self.session_id
+                )
+                pkt += username_enc + filename_dst_enc + chunk
+            else:
+                pkt = struct.pack("!BH", flags, len(chunk))
+                pkt += chunk
+
+            packets.append(pkt)
+
+        self.request = b"".join(packets)
         return self.send_request()
 
     @with_parser(

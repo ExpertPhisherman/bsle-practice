@@ -175,6 +175,12 @@ typedef enum msg_flag
     MSG_FLAG_FILE  = 0x04,
 } msg_flag_t;
 
+typedef enum file_chunk_flag
+{
+    FILE_CHUNK_FLAG_FIRST = 0x01,
+    FILE_CHUNK_FLAG_LAST  = 0x02,
+} file_chunk_flag_t;
+
 typedef struct __attribute__((packed)) ping_hdr
 {
     uint8_t  padding;
@@ -241,20 +247,20 @@ typedef struct __attribute__((packed)) resp_hdr
     uint32_t session_id;
 } resp_hdr_t;
 
-typedef struct __attribute__((packed)) file_send_hdr
+typedef struct __attribute__((packed)) file_send_first_hdr
 {
-    uint8_t  padding;
+    uint8_t  flags;
     uint16_t username_size;
     uint16_t filename_size;
-    uint32_t file_size;
+    uint16_t chunk_data_size;
     uint32_t session_id;
-} file_send_hdr_t;
+} file_send_first_hdr_t;
 
-typedef struct __attribute__((packed)) file_recv_hdr
+typedef struct __attribute__((packed)) file_send_chunk_hdr
 {
-    uint16_t filename_size;
-    uint32_t file_size;
-} file_recv_hdr_t;
+    uint8_t  flags;
+    uint16_t chunk_data_size;
+} file_send_chunk_hdr_t;
 
 typedef struct __attribute__((packed)) promote_hdr
 {

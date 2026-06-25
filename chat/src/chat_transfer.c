@@ -11,6 +11,7 @@
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;
 extern uint16_t const g_username_size_max;
+extern uint16_t const g_file_chunk_size;
 
 /*!
  * @brief Send "Responded: decline" to self and a notification to the requester
@@ -53,14 +54,27 @@ static status_t respond_pm_accept(
 );
 
 /*!
- * @brief Relay a file to the target session and clear their user_allow
+ * @brief Drain remaining file chunk packets from sender socket
  *
- * @param[in] p_sender      Pointer to sender session
- * @param[in] p_target      Pointer to target session
- * @param[in] p_filename    Pointer to filename
- * @param[in] filename_size Size of filename in bytes
- * @param[in] p_file        Pointer to file content
- * @param[in] file_size     Size of file content in bytes
+ * @param[in] sockfd Sender socket file descriptor
+ *
+ * @return void
+ */
+static void drain_file_chunks(int sockfd);
+
+/*!
+ * @brief Relay file chunks to the target session and clear their user_allow
+ *
+ * Sends the already-received first chunk, then loops reading and relaying
+ * subsequent chunks from p_sender->sockfd until FILE_CHUNK_FLAG_LAST.
+ *
+ * @param[in] p_sender        Pointer to sender session
+ * @param[in] p_target        Pointer to target session
+ * @param[in] p_filename      Pointer to filename
+ * @param[in] filename_size   Size of filename in bytes
+ * @param[in] p_first_data    Pointer to first chunk data
+ * @param[in] first_data_size Size of first chunk data in bytes
+ * @param[in] first_flags     Flags byte from first chunk header
  *
  * @return Status of operation
  */
@@ -69,8 +83,9 @@ static status_t file_relay(
     session_t     * p_target,
     uint8_t const * p_filename,
     uint16_t        filename_size,
-    uint8_t const * p_file,
-    uint32_t        file_size
+    uint8_t const * p_first_data,
+    uint16_t        first_data_size,
+    uint8_t         first_flags
 );
 
 static status_t
@@ -185,65 +200,141 @@ cleanup:
     return status;
 }
 
+static void
+drain_file_chunks (int sockfd)
+{
+    file_send_chunk_hdr_t hdr = {0};
+
+    while (true)
+    {
+        sockutil_recvall(sockfd, &hdr, sizeof(hdr));
+        sockutil_drain(sockfd, ntohs(hdr.chunk_data_size), g_chunk_size);
+
+        if (hdr.flags & FILE_CHUNK_FLAG_LAST)
+        {
+            break;
+        }
+    }
+}
+
 static status_t
 file_relay (
     session_t     * p_sender,
     session_t     * p_target,
     uint8_t const * p_filename,
     uint16_t        filename_size,
-    uint8_t const * p_file,
-    uint32_t        file_size
+    uint8_t const * p_first_data,
+    uint16_t        first_data_size,
+    uint8_t         first_flags
 )
 {
     status_t status = STATUS_SUCCESS;
 
-    uint8_t         * p_msg      = NULL;
-    uint16_t          msg_size   = 0u;
-    file_recv_hdr_t * p_recv_hdr = NULL;
+    uint8_t               * p_relay   = NULL;
+    file_send_chunk_hdr_t * p_hdr     = NULL;
+    bool                    b_more    = !(first_flags & FILE_CHUNK_FLAG_LAST);
+    bool                    b_in_loop = false;
 
-    p_msg = calloc(
-        sizeof(*p_recv_hdr) + filename_size + file_size,
-        sizeof(*p_msg)
+    file_send_chunk_hdr_t chunk_hdr  = {0};
+    uint16_t              chunk_size = 0u;
+
+    p_relay = calloc(
+        sizeof(chunk_hdr) + filename_size + g_file_chunk_size,
+        sizeof(*p_relay)
     );
-    if (NULL == p_msg)
+    if (NULL == p_relay)
     {
         fprintf(stderr, "calloc failed in file_relay\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    p_recv_hdr                = (file_recv_hdr_t *)p_msg;
-    p_recv_hdr->filename_size = htons(filename_size);
-    p_recv_hdr->file_size     = htonl(file_size);
-    msg_size                  = sizeof(*p_recv_hdr);
+    p_hdr = (file_send_chunk_hdr_t *)p_relay;
 
-    memcpy(p_msg + msg_size, p_filename, filename_size);
-    msg_size += filename_size;
+    // First relay chunk payload
+    p_hdr->flags           = first_flags;
+    p_hdr->chunk_data_size = htons(filename_size);
+    memcpy(p_relay + sizeof(chunk_hdr), p_filename, filename_size);
+    memcpy(
+        p_relay + sizeof(chunk_hdr) + filename_size,
+        p_first_data,
+        first_data_size
+    );
 
-    memcpy(p_msg + msg_size, p_file, file_size);
-    msg_size += (uint16_t)file_size;
+    status = msg_send(
+        p_target,
+        MSG_FLAG_FILE,
+        p_relay,
+        sizeof(chunk_hdr) + filename_size + first_data_size
+    );
 
-    msg_send(p_target, MSG_FLAG_FILE, p_msg, msg_size);
-
-    memset(p_target->p_user_allow, 0, g_username_size_max);
-    p_target->user_allow_size = 0u;
-
-    if (p_sender->p_server->b_verbose)
+    if (!b_more)
     {
-        printf(
-            "%.*s sent file \"%.*s\" to user: %.*s\n",
-            p_sender->username_size,
-            p_sender->p_username,
-            filename_size,
-            p_filename,
-            p_target->username_size,
-            p_target->p_username
-        );
+        goto cleanup;
+    }
+
+    b_in_loop = true;
+
+    while (true)
+    {
+        sockutil_recvall(p_sender->sockfd, &chunk_hdr, sizeof(chunk_hdr));
+        chunk_size = ntohs(chunk_hdr.chunk_data_size);
+
+        if (STATUS_SUCCESS != status)
+        {
+            sockutil_drain(p_sender->sockfd, chunk_size, g_chunk_size);
+        }
+        else
+        {
+            // Subsequent relay chunk payload
+            p_hdr->flags = chunk_hdr.flags;
+            sockutil_recvall(
+                p_sender->sockfd,
+                p_relay + sizeof(p_hdr->flags),
+                chunk_size
+            );
+            status = msg_send(
+                p_target,
+                MSG_FLAG_FILE,
+                p_relay,
+                sizeof(p_hdr->flags) + chunk_size
+            );
+        }
+
+        if (chunk_hdr.flags & FILE_CHUNK_FLAG_LAST)
+        {
+            break;
+        }
     }
 
 cleanup:
-    free(p_msg);
-    p_msg = NULL;
+    // Drain remaining chunks if failed before entering the loop
+    if ((STATUS_SUCCESS != status) && (b_more) && (!b_in_loop))
+    {
+        drain_file_chunks(p_sender->sockfd);
+    }
+
+    if (STATUS_SUCCESS == status)
+    {
+        memset(p_target->p_user_allow, 0, g_username_size_max);
+        p_target->user_allow_size = 0u;
+
+        if (p_sender->p_server->b_verbose)
+        {
+            printf(
+                "%.*s sent file \"%.*s\" to user: %.*s\n",
+                p_sender->username_size,
+                p_sender->p_username,
+                filename_size,
+                p_filename,
+                p_target->username_size,
+                p_target->p_username
+            );
+        }
+    }
+
+    free(p_relay);
+    p_relay = NULL;
     return status;
 }
 
@@ -725,21 +816,23 @@ opcode_file_send (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t       * p_appdata        = NULL;
-    sll_t           * p_room_store     = NULL;
-    room_t          * p_room           = NULL;
-    int               sockfd           = -1;
-    server_t        * p_server         = NULL;
-    uint8_t         * p_request_packet = NULL;
-    uint16_t          username_size    = 0u;
-    uint16_t          filename_size    = 0u;
-    uint32_t          file_size        = 0u;
-    uint8_t         * p_username       = NULL;
-    uint8_t         * p_filename       = NULL;
-    uint8_t         * p_file           = NULL;
-    session_t       * p_target         = NULL;
-    bool              b_locked         = false;
-    file_send_hdr_t * p_hdr            = NULL;
+    appdata_t             * p_appdata        = NULL;
+    sll_t                 * p_room_store     = NULL;
+    room_t                * p_room           = NULL;
+    int                     sockfd           = -1;
+    server_t              * p_server         = NULL;
+    uint8_t               * p_request_packet = NULL;
+    uint16_t                username_size    = 0u;
+    uint16_t                filename_size    = 0u;
+    uint16_t                first_data_size  = 0u;
+    uint8_t                 first_flags      = 0u;
+    uint8_t               * p_username       = NULL;
+    uint8_t               * p_filename       = NULL;
+    uint8_t               * p_first_data     = NULL;
+    session_t             * p_target         = NULL;
+    bool                    b_locked         = false;
+    bool                    b_need_drain     = false;
+    file_send_first_hdr_t * p_hdr            = NULL;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -759,29 +852,40 @@ opcode_file_send (
         goto cleanup;
     }
 
-    p_hdr = (file_send_hdr_t *)(p_request_packet + p_request->size);
+    p_hdr = (file_send_first_hdr_t *)(p_request_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
+    first_flags            = p_hdr->flags;
     username_size          = ntohs(p_hdr->username_size);
     filename_size          = ntohs(p_hdr->filename_size);
-    file_size              = ntohl(p_hdr->file_size);
+    first_data_size        = ntohs(p_hdr->chunk_data_size);
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
+    b_need_drain = !(first_flags & FILE_CHUNK_FLAG_LAST);
+
+    if (first_data_size > g_file_chunk_size)
+    {
+        fprintf(stderr, "File send chunk size exceeds g_file_chunk_size\n");
+        sockutil_drain(
+            sockfd,
+            username_size + filename_size + first_data_size,
+            g_chunk_size
+        );
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
     if (
-        (
-            p_request->size +
-            username_size +
-            filename_size +
-            file_size
-        ) > g_max_packet_size
+        (p_request->size + username_size + filename_size + first_data_size)
+        > g_max_packet_size
     )
     {
         fprintf(stderr, "File send request size exceeds g_max_packet_size\n");
         sockutil_drain(
             sockfd,
-            (username_size + filename_size + file_size),
+            username_size + filename_size + first_data_size,
             g_chunk_size
         );
         p_response->retcode = RETCODE_OVERFLOW;
@@ -790,16 +894,14 @@ opcode_file_send (
 
     p_username       = p_request_packet + p_request->size;
     p_request->size += username_size;
-
     p_filename       = p_request_packet + p_request->size;
     p_request->size += filename_size;
-
-    p_file           = p_request_packet + p_request->size;
-    p_request->size += file_size;
+    p_first_data     = p_request_packet + p_request->size;
+    p_request->size += first_data_size;
 
     sockutil_recvall(sockfd, p_username, username_size);
     sockutil_recvall(sockfd, p_filename, filename_size);
-    sockutil_recvall(sockfd, p_file, file_size);
+    sockutil_recvall(sockfd, p_first_data, first_data_size);
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
@@ -846,13 +948,16 @@ opcode_file_send (
         goto cleanup;
     }
 
+    b_need_drain = false;
+
     status = file_relay(
         p_session,
         p_target,
         p_filename,
         filename_size,
-        p_file,
-        file_size
+        p_first_data,
+        first_data_size,
+        first_flags
     );
     if (STATUS_SUCCESS != status)
     {
@@ -864,6 +969,10 @@ cleanup:
     {
         pthread_mutex_unlock(&(p_appdata->lock));
         b_locked = false;
+    }
+    if (b_need_drain)
+    {
+        drain_file_chunks(sockfd);
     }
     return status;
 }

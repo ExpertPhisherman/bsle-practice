@@ -11,6 +11,7 @@
 uint16_t const g_default_lport          = 3333u;
 uint32_t const g_max_packet_size        = 4096u;
 uint32_t const g_chunk_size             = 512u;
+uint16_t const g_file_chunk_size        = 512u;
 size_t const   g_creds_capacity         = 17u;
 size_t const   g_admins_capacity        = 17u;
 size_t const   g_session_store_capacity = 17u;

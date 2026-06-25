@@ -3,7 +3,6 @@
 
 ## Server
 
-- Make file transfers chunked with chunk number
 - Remove sender's name from all request values when they leave room
 - Add foreach function for SLL and hash table
 - Disallow PM or file transfer requests sent to self
