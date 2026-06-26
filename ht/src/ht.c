@@ -3,13 +3,7 @@
  * @brief Hash table source
  *
  * @par
- * Creating a hash table with n number of items
- * Navigating through a hash table to find the nth item
- * Finding an item in a hash table
- * Removing selected items from a hash table
- * Inserting an item into a hash table
- * Implement functionality to mitigate hash collisions within the hash table
- * Removing all items from the hash table
+ *
  */
 
 #include "ht.h"
