@@ -260,7 +260,15 @@ opcode_disconnect (
         printf("Disconnecting %.*s...\n", username_size, p_username);
     }
 
-    client_destroy(p_server, p_target->p_client);
+    // Handle the case where an admin disconnects themself
+    if (p_target != p_session)
+    {
+        client_destroy(p_server, p_target->p_client);
+    }
+    else
+    {
+        status = STATUS_CLIENT_DISCONNECT;
+    }
 
 cleanup:
     if (b_locked)

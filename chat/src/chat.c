@@ -207,7 +207,7 @@ chat_client_run (server_t * p_server, client_t * p_client)
     memset(p_response->p_packet, 0, g_max_packet_size);
 
     status = handle_request(p_session, p_request, p_response);
-    if (STATUS_SUCCESS != status)
+    if ((STATUS_SUCCESS != status) && (STATUS_CLIENT_DISCONNECT != status))
     {
         fprintf(stderr, "handle_request failed\n");
         p_response->retcode = RETCODE_FAILURE;
@@ -239,7 +239,10 @@ chat_client_run (server_t * p_server, client_t * p_client)
     sockutil_sendall(sockfd, p_response->p_packet, p_response->size);
     pthread_mutex_unlock(&(p_client->lock));
 
-    if (OPCODE_QUIT == p_request->opcode)
+    if (
+        (OPCODE_QUIT == p_request->opcode) ||
+        (STATUS_CLIENT_DISCONNECT == status)
+    )
     {
         // Signal server layer to close the connection
         status = STATUS_CLIENT_DISCONNECT;
