@@ -181,7 +181,10 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    sockutil_recvall(sockfd, p_request_packet + p_request->size, msg_size);
+    p_msg            = p_request_packet + p_request->size;
+    p_request->size += msg_size;
+
+    sockutil_recvall(sockfd, p_msg, msg_size);
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
@@ -207,9 +210,6 @@ opcode_msg_send (
 
         goto cleanup;
     }
-
-    p_msg            = p_request_packet + p_request->size;
-    p_request->size += msg_size;
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;

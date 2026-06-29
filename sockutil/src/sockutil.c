@@ -134,7 +134,6 @@ sockutil_drain (int sockfd, size_t size, size_t chunk_size)
 cleanup:
     free(p_buf);
     p_buf = NULL;
-
     return status;
 }
 

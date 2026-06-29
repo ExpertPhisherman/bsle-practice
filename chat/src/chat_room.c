@@ -59,7 +59,10 @@ opcode_join (
         goto cleanup;
     }
 
-    sockutil_recvall(sockfd, p_request_packet + p_request->size, room_name_size);
+    p_room_name      = p_request_packet + p_request->size;
+    p_request->size += room_name_size;
+
+    sockutil_recvall(sockfd, p_room_name, room_name_size);
 
     status = validate_session(p_session, p_request, p_response);
     if (STATUS_INVALID_SESSION == status)
@@ -67,9 +70,6 @@ opcode_join (
         status = STATUS_SUCCESS;
         goto cleanup;
     }
-
-    p_room_name      = p_request_packet + p_request->size;
-    p_request->size += room_name_size;
 
     if (!ischartype_str((char *)p_room_name, room_name_size, isalnum))
     {

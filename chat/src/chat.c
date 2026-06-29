@@ -209,7 +209,7 @@ chat_client_run (server_t * p_server, client_t * p_client)
     status = dispatch_opcode(p_session, p_request, p_response);
     if ((STATUS_SUCCESS != status) && (STATUS_CLIENT_DISCONNECT != status))
     {
-        fprintf(stderr, "handle_request failed\n");
+        fprintf(stderr, "dispatch_opcode failed\n");
         p_response->retcode = RETCODE_FAILURE;
     }
 
