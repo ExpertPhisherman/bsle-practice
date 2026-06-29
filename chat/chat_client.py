@@ -1,5 +1,6 @@
 import argparse
 import struct
+import os
 import sys
 import time
 import threading
@@ -418,7 +419,7 @@ class ChatClient(Client):
 
                 if chunk_flags & FILE_CHUNK_FLAG_FIRST:
                     filename_size = struct.unpack("!H", payload[1:3])[0]
-                    self._file_recv_name   = payload[3:3 + filename_size].decode("utf-8")
+                    self._file_recv_name = os.path.basename(payload[3:3 + filename_size].decode("utf-8"))
                     self._file_recv_buffer = bytearray(payload[3 + filename_size:])
                 else:
                     self._file_recv_buffer.extend(payload[1:])
