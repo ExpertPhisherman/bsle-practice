@@ -355,7 +355,6 @@ opcode_request (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata        = NULL;
-    sll_t     * p_room_store     = NULL;
     room_t    * p_room           = NULL;
     item_t    * p_item           = NULL;
     int         sockfd           = -1;
@@ -381,13 +380,6 @@ opcode_request (
     p_server         = p_session->p_server;
     p_request_packet = p_request->p_packet;
     p_appdata        = p_server->p_appdata;
-    p_room_store     = p_appdata->p_room_store;
-
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_notif = calloc(g_max_packet_size, sizeof(*p_notif));
     if (NULL == p_notif)
@@ -559,7 +551,6 @@ opcode_respond (
     status_t status = STATUS_SUCCESS;
 
     appdata_t  * p_appdata        = NULL;
-    sll_t      * p_room_store     = NULL;
     room_t     * p_room           = NULL;
     item_t     * p_item           = NULL;
     int          sockfd           = -1;
@@ -586,13 +577,6 @@ opcode_respond (
     p_server         = p_session->p_server;
     p_request_packet = p_request->p_packet;
     p_appdata        = p_server->p_appdata;
-    p_room_store     = p_appdata->p_room_store;
-
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_notif = calloc(g_max_packet_size, sizeof(*p_notif));
     if (NULL == p_notif)
@@ -824,7 +808,6 @@ opcode_file_send (
     status_t status = STATUS_SUCCESS;
 
     appdata_t             * p_appdata        = NULL;
-    sll_t                 * p_room_store     = NULL;
     room_t                * p_room           = NULL;
     int                     sockfd           = -1;
     server_t              * p_server         = NULL;
@@ -852,13 +835,6 @@ opcode_file_send (
     p_server         = p_session->p_server;
     p_request_packet = p_request->p_packet;
     p_appdata        = p_server->p_appdata;
-    p_room_store     = p_appdata->p_room_store;
-
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     p_hdr = (file_send_first_hdr_t *)(p_request_packet + p_request->size);
 

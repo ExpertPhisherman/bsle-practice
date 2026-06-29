@@ -84,12 +84,7 @@ opcode_default (
     int        sockfd   = -1;
     server_t * p_server = NULL;
 
-    if (
-        (NULL == p_session) ||
-        (NULL == p_request) ||
-        (NULL == p_response) ||
-        (NULL == p_session->p_server)
-    )
+    if (!opcode_args_valid(p_session, p_request, p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;

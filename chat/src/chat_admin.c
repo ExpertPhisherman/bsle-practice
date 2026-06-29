@@ -315,12 +315,6 @@ opcode_delete (
     p_appdata        = p_server->p_appdata;
     p_room_store     = p_appdata->p_room_store;
 
-    if (NULL == p_room_store)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
     p_hdr = (delete_hdr_t *)(p_request_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));

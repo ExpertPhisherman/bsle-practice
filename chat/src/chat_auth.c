@@ -30,70 +30,6 @@ static status_t login_recv_creds(
     response_t * p_response
 );
 
-static status_t
-login_recv_creds (
-    int          sockfd,
-    session_t  * p_session,
-    request_t  * p_request,
-    response_t * p_response
-)
-{
-    status_t status = STATUS_SUCCESS;
-
-    uint16_t      username_size    = 0u;
-    uint16_t      password_size    = 0u;
-    uint8_t     * p_username       = NULL;
-    uint8_t     * p_password       = NULL;
-    uint8_t     * p_request_packet = NULL;
-    login_hdr_t * p_hdr            = NULL;
-
-    if (!opcode_args_valid(p_session, p_request, p_response))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    p_request_packet = p_request->p_packet;
-
-    p_hdr = (login_hdr_t *)(p_request_packet + p_request->size);
-
-    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
-
-    username_size = ntohs(p_hdr->username_size);
-    password_size = ntohs(p_hdr->password_size);
-
-    p_session->username_size = username_size;
-    p_session->password_size = password_size;
-    p_request->size         += sizeof(*p_hdr);
-
-    if ((p_request->size + username_size + password_size) > g_max_packet_size)
-    {
-        fprintf(stderr, "Login request size exceeds g_max_packet_size\n");
-        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
-        p_response->retcode = RETCODE_OVERFLOW;
-        goto cleanup;
-    }
-
-    p_username       = p_request_packet + p_request->size;
-    p_request->size += username_size;
-    p_password       = p_request_packet + p_request->size;
-    p_request->size += password_size;
-
-    sockutil_recvall(sockfd, p_username, username_size);
-    memcpy(p_session->p_username, p_username, username_size);
-    sockutil_recvall(sockfd, p_password, password_size);
-    memcpy(p_session->p_password, p_password, password_size);
-
-    if (!user_creds_valid(p_session))
-    {
-        p_response->retcode = RETCODE_FAILURE;
-        goto cleanup;
-    }
-
-cleanup:
-    return status;
-}
-
 status_t
 opcode_login (
     session_t  * p_session,
@@ -244,6 +180,70 @@ cleanup:
         pthread_mutex_unlock(&(p_appdata->lock));
         b_locked = false;
     }
+    return status;
+}
+
+static status_t
+login_recv_creds (
+    int          sockfd,
+    session_t  * p_session,
+    request_t  * p_request,
+    response_t * p_response
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    uint16_t      username_size    = 0u;
+    uint16_t      password_size    = 0u;
+    uint8_t     * p_username       = NULL;
+    uint8_t     * p_password       = NULL;
+    uint8_t     * p_request_packet = NULL;
+    login_hdr_t * p_hdr            = NULL;
+
+    if (!opcode_args_valid(p_session, p_request, p_response))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_request_packet = p_request->p_packet;
+
+    p_hdr = (login_hdr_t *)(p_request_packet + p_request->size);
+
+    sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
+
+    username_size = ntohs(p_hdr->username_size);
+    password_size = ntohs(p_hdr->password_size);
+
+    p_session->username_size = username_size;
+    p_session->password_size = password_size;
+    p_request->size         += sizeof(*p_hdr);
+
+    if ((p_request->size + username_size + password_size) > g_max_packet_size)
+    {
+        fprintf(stderr, "Login request size exceeds g_max_packet_size\n");
+        sockutil_drain(sockfd, username_size + password_size, g_chunk_size);
+        p_response->retcode = RETCODE_OVERFLOW;
+        goto cleanup;
+    }
+
+    p_username       = p_request_packet + p_request->size;
+    p_request->size += username_size;
+    p_password       = p_request_packet + p_request->size;
+    p_request->size += password_size;
+
+    sockutil_recvall(sockfd, p_username, username_size);
+    memcpy(p_session->p_username, p_username, username_size);
+    sockutil_recvall(sockfd, p_password, password_size);
+    memcpy(p_session->p_password, p_password, password_size);
+
+    if (!user_creds_valid(p_session))
+    {
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
+    }
+
+cleanup:
     return status;
 }
 

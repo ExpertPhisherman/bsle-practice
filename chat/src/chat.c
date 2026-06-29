@@ -92,7 +92,7 @@ static int compare_room(
 );
 
 /*!
- * @brief Handle request and generate response
+ * @brief Dispatch work to opcode function
  *
  * @param[in] p_session  Pointer to session
  * @param[in] p_request  Pointer to request
@@ -100,7 +100,7 @@ static int compare_room(
  *
  * @return Status of operation
  */
-static status_t handle_request(
+static status_t dispatch_opcode(
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response
@@ -206,7 +206,7 @@ chat_client_run (server_t * p_server, client_t * p_client)
     );
     memset(p_response->p_packet, 0, g_max_packet_size);
 
-    status = handle_request(p_session, p_request, p_response);
+    status = dispatch_opcode(p_session, p_request, p_response);
     if ((STATUS_SUCCESS != status) && (STATUS_CLIENT_DISCONNECT != status))
     {
         fprintf(stderr, "handle_request failed\n");
@@ -357,6 +357,7 @@ chat_client_free (server_t * p_server, client_t * p_client)
 
     if (
         (NULL == p_server) ||
+        (NULL == p_server->p_appdata) ||
         (NULL == p_client) ||
         (NULL == p_client->p_clientdata)
     )
@@ -372,11 +373,6 @@ chat_client_free (server_t * p_server, client_t * p_client)
     p_response = &(p_state->response);
 
     p_appdata = p_server->p_appdata;
-    if (NULL == p_appdata)
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
 
     free(p_request->p_packet);
     p_request->p_packet = NULL;
@@ -682,7 +678,7 @@ cleanup:
 }
 
 static status_t
-handle_request (
+dispatch_opcode (
     session_t  * p_session,
     request_t  * p_request,
     response_t * p_response
