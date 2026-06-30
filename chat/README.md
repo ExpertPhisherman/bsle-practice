@@ -132,7 +132,7 @@ Chunk flags: `FILE_CHUNK_FLAG_FIRST` (0x01), `FILE_CHUNK_FLAG_LAST` (0x02). A si
 **Rooms:**
 
 - `/join <room_name>` - join an existing room or create it (alphanumeric names). A default `general` room exists at startup.
-- `/list` - list all rooms
+- `/list rooms` - list all rooms
 - `/list users` - list users in the current room
 
 **Messaging:**

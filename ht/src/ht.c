@@ -536,18 +536,18 @@ compare_item (
     item_t * p_item2 = (item_t *)p_data2;
     UNUSED(size);
 
-    if ((NULL == p_data1) && (NULL == p_data2))
+    if ((NULL == p_item1) && (NULL == p_item2))
     {
         goto cleanup;
     }
 
-    if (NULL == p_data1)
+    if (NULL == p_item1)
     {
         result = -1;
         goto cleanup;
     }
 
-    if (NULL == p_data2)
+    if (NULL == p_item2)
     {
         result = 1;
         goto cleanup;

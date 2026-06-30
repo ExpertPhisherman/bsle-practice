@@ -35,10 +35,10 @@ typedef struct request
 
 typedef struct response
 {
-    uint8_t   opcode;   // Operation code
-    uint8_t   retcode;  // Return code
-    uint8_t * p_packet; // Pointer to packet
-    uint32_t  size;     // Size of response packet in bytes
+    uint8_t    opcode;   // Operation code
+    uint8_t    retcode;  // Return code
+    uint8_t  * p_packet; // Pointer to packet
+    uint32_t   size;     // Size of response packet in bytes
 } response_t;
 
 typedef struct room
