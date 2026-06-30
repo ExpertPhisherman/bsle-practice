@@ -14,12 +14,10 @@ extern uint16_t const g_username_size_max;
 extern uint16_t const g_file_chunk_size;
 
 /*!
- * @brief Send "Responded: decline" to self and a notification to the requester
+ * @brief Send decline message to self and requester
  *
  * @param[in] p_session          Pointer to session
- * @param[in] p_session_store    Pointer to session storage
- * @param[in] p_username         Pointer to username
- * @param[in] username_size      Size of username in bytes
+ * @param[in] p_requester        Pointer to requester's session
  * @param[in] p_decline_notif    Pointer to notification message
  * @param[in] decline_notif_size Size of notification message in bytes
  *
@@ -27,9 +25,7 @@ extern uint16_t const g_file_chunk_size;
  */
 static status_t respond_decline(
     session_t     * p_session,
-    ht_t          * p_session_store,
-    uint8_t       * p_username,
-    uint16_t        username_size,
+    session_t     * p_requester,
     uint8_t const * p_decline_notif,
     uint16_t        decline_notif_size
 );
@@ -91,7 +87,7 @@ static status_t file_relay(
 /*!
  * @brief Set target's request value to sender
  *
- * @param[in] p_sender  Pointer to sender session
+ * @param[in] p_sender  Pointer to sender session (requester)
  * @param[in] p_target  Pointer to target session
  * @param[in] p_appdata Pointer to application data
  * @param[in] flag_type PM or file request flag type
@@ -105,25 +101,35 @@ static status_t set_request(
     uint8_t     flag_type
 );
 
+/*!
+ * @brief Set receiving user's response
+ *
+ * @param[in] p_sender    Pointer to sender session
+ * @param[in] p_target    Pointer to target session (requester)
+ * @param[in] p_appdata   Pointer to application data
+ * @param[in] flag_type   PM or file request flag type
+ * @param[in] flag_choice Accept or decline flag choice
+ *
+ * @return Status of operation
+ */
+static status_t set_response(
+    session_t * p_sender,
+    session_t * p_target,
+    appdata_t * p_appdata,
+    uint8_t     flag_type,
+    uint8_t     flag_choice
+);
+
 static status_t
 respond_decline (
     session_t     * p_session,
-    ht_t          * p_session_store,
-    uint8_t       * p_username,
-    uint16_t        username_size,
+    session_t     * p_requester,
     uint8_t const * p_decline_notif,
     uint16_t        decline_notif_size
 )
 {
     msg_send(p_session, MSG_FLAG_NOTIF, p_decline_notif, decline_notif_size);
-    msg_send_username(
-        p_username,
-        username_size,
-        p_session_store,
-        MSG_FLAG_NOTIF,
-        p_decline_notif,
-        decline_notif_size
-    );
+    msg_send(p_requester, MSG_FLAG_NOTIF, p_decline_notif, decline_notif_size);
     return STATUS_SUCCESS;
 }
 
@@ -479,18 +485,14 @@ opcode_respond (
 
     appdata_t  * p_appdata        = NULL;
     room_t     * p_room           = NULL;
-    item_t     * p_item           = NULL;
     int          sockfd           = -1;
     server_t   * p_server         = NULL;
     uint8_t    * p_request_packet = NULL;
-    ht_t       * p_pm_reqs        = NULL;
-    ht_t       * p_file_reqs      = NULL;
     uint8_t      flag_type        = 0u;
     uint8_t      flag_choice      = 0u;
     uint16_t     username_size    = 0u;
     uint8_t    * p_username       = NULL;
     uint8_t    * p_notif          = NULL;
-    int          written          = -1;
     bool         b_locked         = false;
     resp_hdr_t * p_hdr            = NULL;
 
@@ -551,167 +553,39 @@ opcode_respond (
         goto cleanup;
     }
 
-    p_pm_reqs   = p_appdata->p_pm_reqs;
-    p_file_reqs = p_appdata->p_file_reqs;
-
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    if (NULL == session_get(
+    session_t * p_target = session_get(
         p_username,
         username_size,
         p_appdata->p_session_store
-    ))
+    );
+
+    if (NULL == p_target)
     {
-        fprintf(stderr, "Receiving has no session\n");
+        fprintf(stderr, "Receiving user has no session\n");
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
 
-    switch (flag_type)
+    status = set_response(
+        p_session,
+        p_target,
+        p_appdata,
+        flag_type,
+        flag_choice
+    );
+    if (STATUS_NOT_EXISTS == status)
     {
-        case RESP_FLAG_TYPE_PM:
-            p_item = ht_get(
-                p_pm_reqs,
-                p_session->p_username,
-                p_session->username_size
-            );
-            if ((NULL == p_item) || (0u == p_item->value_size))
-            {
-                fprintf(stderr, "No pending request from anyone\n");
-                p_response->retcode = RETCODE_NOT_PENDING;
-                goto cleanup;
-            }
-
-            if (
-                (p_item->value_size != username_size) ||
-                (0 != memcmp(p_item->p_value, p_username, username_size))
-            )
-            {
-                fprintf(
-                    stderr,
-                    "No pending request from %.*s\n",
-                    username_size,
-                    p_username
-                );
-                p_response->retcode = RETCODE_NOT_PENDING;
-                goto cleanup;
-            }
-
-            if (RESP_FLAG_CHOICE_DECLINE == flag_choice)
-            {
-                written = snprintf(
-                    (char *)p_notif,
-                    g_max_packet_size,
-                    "PM request declined by %.*s",
-                    p_session->username_size,
-                    p_session->p_username
-                );
-                respond_decline(
-                    p_session,
-                    p_appdata->p_session_store,
-                    p_username,
-                    username_size,
-                    p_notif,
-                    written
-                );
-            }
-            else
-            {
-                status = respond_pm_accept(
-                    p_session,
-                    p_appdata,
-                    p_appdata->p_session_store,
-                    p_username,
-                    username_size
-                );
-                if (STATUS_SUCCESS != status)
-                {
-                    p_response->retcode = RETCODE_FAILURE;
-                    goto cleanup;
-                }
-            }
-
-            ht_set(
-                p_appdata->p_pm_reqs,
-                p_session->p_username,
-                p_session->username_size,
-                "",
-                0u
-            );
-
-            break;
-
-        case RESP_FLAG_TYPE_FILE:
-            p_item = ht_get(
-                p_file_reqs,
-                p_session->p_username,
-                p_session->username_size
-            );
-            if ((NULL == p_item) || (0u == p_item->value_size))
-            {
-                fprintf(stderr, "No pending request from anyone\n");
-                p_response->retcode = RETCODE_NOT_PENDING;
-                goto cleanup;
-            }
-
-            if (
-                (p_item->value_size != username_size) ||
-                (0 != memcmp(p_item->p_value, p_username, username_size))
-            )
-            {
-                fprintf(
-                    stderr,
-                    "No pending request from %.*s\n",
-                    username_size,
-                    p_username
-                );
-                p_response->retcode = RETCODE_NOT_PENDING;
-                goto cleanup;
-            }
-
-            if (RESP_FLAG_CHOICE_DECLINE == flag_choice)
-            {
-                written = snprintf(
-                    (char *)p_notif,
-                    g_max_packet_size,
-                    "File transfer request declined by %.*s",
-                    p_session->username_size,
-                    p_session->p_username
-                );
-                respond_decline(
-                    p_session,
-                    p_appdata->p_session_store,
-                    p_username,
-                    username_size,
-                    p_notif,
-                    written
-                );
-            }
-            else
-            {
-                memcpy(p_session->p_user_allow, p_username, username_size);
-                p_session->user_allow_size = username_size;
-            }
-
-            ht_set(
-                p_appdata->p_file_reqs,
-                p_session->p_username,
-                p_session->username_size,
-                "",
-                0u
-            );
-
-            break;
-
-        default:
-            p_response->retcode = RETCODE_FAILURE;
-            fprintf(
-                stderr,
-                "Unknown respond flag type: %02hhx\n",
-                p_hdr->flag_type
-            );
-            break;
+        status              = STATUS_SUCCESS;
+        p_response->retcode = RETCODE_NOT_PENDING;
+        goto cleanup;
+    }
+    else if (STATUS_SUCCESS != status)
+    {
+        p_response->retcode = RETCODE_FAILURE;
+        goto cleanup;
     }
 
 cleanup:
@@ -1000,11 +874,153 @@ set_request (
         p_sender->username_size
     );
 
-    msg_send(
-        p_target,
-        MSG_FLAG_NOTIF,
-        p_notif,
-        written
+    msg_send(p_target, MSG_FLAG_NOTIF, p_notif, written);
+
+cleanup:
+    free(p_notif);
+    p_notif = NULL;
+    return status;
+}
+
+static status_t
+set_response (
+    session_t * p_sender,
+    session_t * p_target,
+    appdata_t * p_appdata,
+    uint8_t     flag_type,
+    uint8_t     flag_choice
+)
+{
+    status_t status = STATUS_SUCCESS;
+
+    uint8_t * p_notif = NULL;
+
+    if (
+        (NULL == p_sender) ||
+        (NULL == p_target) ||
+        (NULL == p_appdata)
+    )
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    p_notif = calloc(g_max_packet_size, sizeof(*p_notif));
+    if (NULL == p_notif)
+    {
+        fprintf(stderr, "calloc failed in set_request\n");
+        status = STATUS_FAILURE;
+        goto cleanup;
+    }
+
+    ht_t * p_ht    = NULL;
+    int    written = -1;
+
+    switch (flag_type)
+    {
+        case REQ_FLAG_TYPE_PM:
+        {
+            p_ht    = p_appdata->p_pm_reqs;
+            written = snprintf(
+                (char *)p_notif,
+                g_max_packet_size,
+                "PM request declined by %.*s",
+                p_sender->username_size,
+                p_sender->p_username
+            );
+            break;
+        }
+
+        case REQ_FLAG_TYPE_FILE:
+        {
+            p_ht    = p_appdata->p_file_reqs;
+            written = snprintf(
+                (char *)p_notif,
+                g_max_packet_size,
+                "File transfer request declined by %.*s",
+                p_sender->username_size,
+                p_sender->p_username
+            );
+            break;
+        }
+
+        default:
+            status = STATUS_FAILURE;
+            fprintf(
+                stderr,
+                "Unknown respond flag type: %02hhx\n",
+                flag_type
+            );
+            goto cleanup;
+    }
+
+    uint8_t  * p_username    = p_sender->p_username;
+    uint16_t   username_size = p_sender->username_size;
+
+    item_t * p_item = ht_get(p_ht, p_username, username_size);
+    if ((NULL == p_item) || (0u == p_item->value_size))
+    {
+        fprintf(stderr, "No pending request from anyone\n");
+        status = STATUS_NOT_EXISTS;
+        goto cleanup;
+    }
+
+    if (
+        (p_item->value_size != p_target->username_size) ||
+        (0 != memcmp(
+            p_item->p_value,
+            p_target->p_username,
+            p_target->username_size
+        ))
+    )
+    {
+        fprintf(
+            stderr,
+            "No pending request from %.*s\n",
+            p_target->username_size,
+            p_target->p_username
+        );
+        status = STATUS_NOT_EXISTS;
+        goto cleanup;
+    }
+
+    if (RESP_FLAG_CHOICE_DECLINE == flag_choice)
+    {
+        respond_decline(p_sender, p_target, p_notif, written);
+    }
+    else
+    {
+        if (RESP_FLAG_TYPE_PM == flag_type)
+        {
+            status = respond_pm_accept(
+                p_target,
+                p_appdata,
+                p_appdata->p_session_store,
+                p_username,
+                username_size
+            );
+            if (STATUS_SUCCESS != status)
+            {
+                goto cleanup;
+            }
+        }
+        else if (RESP_FLAG_TYPE_FILE == flag_type)
+        {
+            memcpy(
+                p_sender->p_user_allow,
+                p_target->p_username,
+                p_target->username_size
+            );
+            p_sender->user_allow_size = p_target->username_size;
+        }
+    }
+
+    ht_set(
+        p_ht,
+        p_sender->p_username,
+        p_sender->username_size,
+        "",
+        0u
     );
 
 cleanup:
