@@ -28,14 +28,12 @@
 #include <sys/wait.h>
 #include "common.h"
 #include "tpool.h"
-#include "client.h"
-#include "registry.h"
 
 typedef struct server   server_t;
 typedef struct client   client_t;
 typedef struct registry registry_t;
 
-typedef status_t (*client_func_t)(server_t * p_server, client_t * p_client);
+typedef status_t (*client_func_t)(client_t * p_client);
 
 typedef struct server
 {

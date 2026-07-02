@@ -8,6 +8,8 @@
 
 #include "chat_admin.h"
 #include "chat_internal.h"
+#include "server.h"
+#include "client.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;
@@ -244,7 +246,7 @@ opcode_disconnect (
     // Handle the case where an admin disconnects themself
     if (p_target != p_session)
     {
-        client_destroy(p_server, p_target->p_client);
+        client_destroy(p_target->p_client);
     }
     else
     {

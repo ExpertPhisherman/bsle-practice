@@ -27,7 +27,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "common.h"
-#include "server.h"
 
 typedef struct server server_t;
 
@@ -46,7 +45,7 @@ typedef struct client
  * @brief Dispatch single recv/handle/send iteration to the thread pool,
  *        then re-arm client epoll registration
  *
- * @param[in] p_arg Pointer to server_client_pair_t
+ * @param[in] p_arg Pointer to client
  *
  * @return void
  */
@@ -64,12 +63,11 @@ client_t * client_create(server_t * p_server);
 /*!
  * @brief Destroy client, remove from epoll, shut down socket, call cleanup
  *
- * @param[in] p_server Pointer to server
  * @param[in] p_client Pointer to client
  *
  * @return Status of operation
  */
-status_t client_destroy(server_t * p_server, client_t * p_client);
+status_t client_destroy(client_t * p_client);
 
 #endif /* CLIENT_H */
 

@@ -27,7 +27,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "common.h"
-#include "client.h"
 
 typedef struct client client_t;
 

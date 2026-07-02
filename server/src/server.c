@@ -7,6 +7,8 @@
  */
 
 #include "server.h"
+#include "client.h"
+#include "registry.h"
 
 static uint32_t const g_worker_threads   = 8u;
 static uint32_t const g_epoll_max_events = 64u;
@@ -290,7 +292,7 @@ server_run (server_t * p_server)
                 ))
                 {
                     perror("epoll_ctl ADD client sockfd");
-                    client_destroy(p_server, p_client);
+                    client_destroy(p_client);
                     p_client = NULL;
                 }
 
@@ -312,7 +314,7 @@ server_run (server_t * p_server)
                     p_client->sockfd
                 );
 
-                client_destroy(p_server, p_client);
+                client_destroy(p_client);
                 p_client = NULL;
                 continue;
             }
@@ -335,7 +337,7 @@ server_run (server_t * p_server)
                 ))
                 {
                     perror("epoll_ctl MOD re-arm after failed tpool_add_work");
-                    client_destroy(p_server, p_client);
+                    client_destroy(p_client);
                 }
             }
 
@@ -438,7 +440,7 @@ destroy_all_clients (server_t * p_server)
             continue;
         }
 
-        client_destroy(p_server, p_client);
+        client_destroy(p_client);
     }
 
 cleanup:

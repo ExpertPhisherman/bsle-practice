@@ -7,6 +7,8 @@
  */
 
 #include "chat_msg.h"
+#include "server.h"
+#include "client.h"
 
 extern uint32_t const g_max_packet_size;
 extern uint32_t const g_chunk_size;

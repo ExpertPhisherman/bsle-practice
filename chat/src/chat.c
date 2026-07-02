@@ -7,6 +7,8 @@
  */
 
 #include "chat.h"
+#include "server.h"
+#include "client.h"
 
 uint16_t const g_default_lport          = 3333u;
 uint32_t const g_max_packet_size        = 4096u;
@@ -166,15 +168,17 @@ cleanup:
 }
 
 status_t
-chat_client_run (server_t * p_server, client_t * p_client)
+chat_client_run (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_server) || (NULL == p_client))
+    if ((NULL == p_client) || (NULL == p_client->p_server))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    server_t * p_server = p_client->p_server;
 
     state_t * p_state = p_client->p_clientdata;
     if (NULL == p_state)
@@ -252,15 +256,17 @@ cleanup:
 }
 
 status_t
-chat_client_init (server_t * p_server, client_t * p_client)
+chat_client_init (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_server) || (NULL == p_client))
+    if ((NULL == p_client) || (NULL == p_client->p_server))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    server_t * p_server = p_client->p_server;
 
     state_t * p_state = calloc(1u, sizeof(*p_state));
     if (NULL == p_state)
@@ -339,13 +345,13 @@ chat_client_init (server_t * p_server, client_t * p_client)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        chat_client_free(p_server, p_client);
+        chat_client_free(p_client);
     }
     return status;
 }
 
 status_t
-chat_client_free (server_t * p_server, client_t * p_client)
+chat_client_free (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -353,15 +359,17 @@ chat_client_free (server_t * p_server, client_t * p_client)
     bool        b_locked  = false;
 
     if (
-        (NULL == p_server) ||
-        (NULL == p_server->p_appdata) ||
         (NULL == p_client) ||
-        (NULL == p_client->p_clientdata)
+        (NULL == p_client->p_clientdata) ||
+        (NULL == p_client->p_server) ||
+        (NULL == p_client->p_server->p_appdata)
     )
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    server_t * p_server = p_client->p_server;
 
     state_t * p_state = p_client->p_clientdata;
 

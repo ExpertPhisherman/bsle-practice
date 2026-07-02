@@ -7,6 +7,8 @@
  */
 
 #include "client.h"
+#include "server.h"
+#include "registry.h"
 
 extern _Atomic bool gb_running;
 
@@ -30,11 +32,11 @@ client_run_wrapper (void * p_arg)
     if (NULL == p_server->p_client_run)
     {
         fprintf(stderr, "App not loaded\n");
-        client_destroy(p_server, p_client);
+        client_destroy(p_client);
         goto cleanup;
     }
 
-    status_t status = (p_server->p_client_run)(p_server, p_client);
+    status_t status = (p_server->p_client_run)(p_client);
 
     if (STATUS_SUCCESS != status)
     {
@@ -48,7 +50,7 @@ client_run_wrapper (void * p_arg)
             );
         }
 
-        client_destroy(p_server, p_client);
+        client_destroy(p_client);
         goto cleanup;
     }
 
@@ -66,7 +68,7 @@ client_run_wrapper (void * p_arg)
     ))
     {
         perror("epoll_ctl MOD re-arm");
-        client_destroy(p_server, p_client);
+        client_destroy(p_client);
     }
 
 cleanup:
@@ -173,7 +175,7 @@ client_create (server_t * p_server)
     // Allow the application layer to allocate per-client state
     if (NULL != p_server->p_client_init)
     {
-        status = (p_server->p_client_init)(p_server, p_client);
+        status = (p_server->p_client_init)(p_client);
         if (STATUS_SUCCESS != status)
         {
             fprintf(stderr, "p_client_init failed\n");
@@ -184,27 +186,28 @@ client_create (server_t * p_server)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        client_destroy(p_server, p_client);
+        client_destroy(p_client);
         p_client = NULL;
     }
     return p_client;
 }
 
 status_t
-client_destroy (server_t * p_server, client_t * p_client)
+client_destroy (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_server) || (NULL == p_client))
+    if ((NULL == p_client) || (NULL == p_client->p_server))
     {
-        status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    server_t * p_server = p_client->p_server;
 
     // Allow the application layer to free per-client state
     if (NULL != p_server->p_client_free)
     {
-        (p_server->p_client_free)(p_server, p_client);
+        (p_server->p_client_free)(p_client);
         p_client->p_clientdata = NULL;
     }
 

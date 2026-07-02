@@ -7,6 +7,7 @@
  */
 
 #include "registry.h"
+#include "client.h"
 
 extern uint32_t const g_max_clients;
 
@@ -106,7 +107,7 @@ registry_remove (registry_t * p_registry, client_t * p_client)
         goto cleanup;
     }
 
-    if (-1 == p_client->sockfd)
+    if (-1 == p_client->registry_idx)
     {
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;

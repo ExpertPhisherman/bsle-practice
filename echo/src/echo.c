@@ -7,6 +7,8 @@
  */
 
 #include "echo.h"
+#include "server.h"
+#include "client.h"
 
 extern _Atomic bool gb_running;
 
@@ -17,12 +19,11 @@ uint32_t const g_chunk_size = 512u;
 /*!
  * @brief Run client data recv/send loop
  *
- * @param[in] p_server Pointer to server
  * @param[in] p_client Pointer to client
  *
  * @return Status of operation
  */
-static status_t client_run(server_t * p_server, client_t * p_client);
+static status_t client_run(client_t * p_client);
 
 /*!
  * @brief Display request
@@ -80,7 +81,7 @@ cleanup:
 }
 
 static status_t
-client_run (server_t * p_server, client_t * p_client)
+client_run (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -90,11 +91,13 @@ client_run (server_t * p_server, client_t * p_client)
     request.p_payload = NULL;
     response.p_payload = NULL;
 
-    if ((NULL == p_server) || (NULL == p_client))
+    if ((NULL == p_client) || (NULL == p_client->p_server))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
+
+    server_t * p_server = p_client->p_server;
 
     int sockfd = p_client->sockfd;
 
