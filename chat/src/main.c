@@ -16,12 +16,9 @@ main (int argc, char * argv[])
 {
     status_t status = STATUS_SUCCESS;
 
-    int         opt       = -1;
-    uint64_t    u64       = 0u;
-    int const   ten       = 10;
-    uint16_t    lport     = g_default_lport;
-    bool        b_verbose = false;
-    server_t  * p_server  = NULL;
+    server_t * p_server  = NULL;
+    uint16_t   lport     = g_default_lport;
+    bool       b_verbose = false;
 
     server_t hints =
     {
@@ -38,16 +35,21 @@ main (int argc, char * argv[])
         .p_appdata     = NULL,
     };
 
+    int opt = -1;
     while (-1 != (opt = getopt(argc, argv, "vp:")))
     {
         switch (opt)
         {
             case 'v':
+            {
                 b_verbose = true;
                 break;
+            }
 
             case 'p':
-                u64 = strtoul(optarg, NULL, ten);
+            {
+                int const ten = 10;
+                uint64_t  u64 = strtoul(optarg, NULL, ten);
                 if (u64 > g_max_port)
                 {
                     fprintf(stderr, "Port must be [0-%hu]\n", g_max_port);
@@ -56,11 +58,14 @@ main (int argc, char * argv[])
                 }
                 lport = u64;
                 break;
+            }
 
             default:
+            {
                 fprintf(stderr, "Usage: %s [-v] [-p port]\n", argv[0]);
                 status = STATUS_FAILURE;
                 goto cleanup;
+            }
         }
     }
 

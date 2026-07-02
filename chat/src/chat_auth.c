@@ -40,8 +40,6 @@ opcode_login (
     status_t status = STATUS_SUCCESS;
 
     appdata_t * p_appdata  = NULL;
-    int         sockfd     = -1;
-    server_t  * p_server   = NULL;
     uint32_t    session_id = 0u;
     bool        b_locked   = false;
 
@@ -51,9 +49,9 @@ opcode_login (
         goto cleanup;
     }
 
-    sockfd    = p_session->sockfd;
-    p_server  = p_session->p_server;
-    p_appdata = p_server->p_appdata;
+    int         sockfd   = p_session->sockfd;
+    server_t  * p_server = p_session->p_server;
+    p_appdata            = p_server->p_appdata;
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
@@ -128,12 +126,8 @@ opcode_logout (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t    * p_appdata        = NULL;
-    int            sockfd           = -1;
-    server_t     * p_server         = NULL;
-    uint8_t      * p_request_packet = NULL;
-    bool           b_locked         = false;
-    logout_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -141,12 +135,12 @@ opcode_logout (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    p_hdr = (logout_hdr_t *)(p_request_packet + p_request->size);
+    logout_hdr_t * p_hdr = (logout_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
@@ -193,31 +187,24 @@ login_recv_creds (
 {
     status_t status = STATUS_SUCCESS;
 
-    uint16_t      username_size    = 0u;
-    uint16_t      password_size    = 0u;
-    uint8_t     * p_username       = NULL;
-    uint8_t     * p_password       = NULL;
-    uint8_t     * p_request_packet = NULL;
-    login_hdr_t * p_hdr            = NULL;
-
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_request_packet = p_request->p_packet;
+    uint8_t * p_req_packet = p_request->p_packet;
 
-    p_hdr = (login_hdr_t *)(p_request_packet + p_request->size);
+    login_hdr_t * p_hdr = (login_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    username_size = ntohs(p_hdr->username_size);
-    password_size = ntohs(p_hdr->password_size);
+    uint16_t username_size = ntohs(p_hdr->username_size);
+    uint16_t password_size = ntohs(p_hdr->password_size);
 
-    p_session->username_size = username_size;
-    p_session->password_size = password_size;
-    p_request->size         += sizeof(*p_hdr);
+    p_session->username_size  = username_size;
+    p_session->password_size  = password_size;
+    p_request->size          += sizeof(*p_hdr);
 
     if ((p_request->size + username_size + password_size) > g_max_packet_size)
     {
@@ -227,10 +214,10 @@ login_recv_creds (
         goto cleanup;
     }
 
-    p_username       = p_request_packet + p_request->size;
-    p_request->size += username_size;
-    p_password       = p_request_packet + p_request->size;
-    p_request->size += password_size;
+    uint8_t * p_username  = p_req_packet + p_request->size;
+    p_request->size      += username_size;
+    uint8_t * p_password  = p_req_packet + p_request->size;
+    p_request->size      += password_size;
 
     sockutil_recvall(sockfd, p_username, username_size);
     memcpy(p_session->p_username, p_username, username_size);

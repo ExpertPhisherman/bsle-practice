@@ -15,8 +15,7 @@ ischartype_str (
     ischartype_func_t   p_func
 )
 {
-    bool   b_valid = true;
-    size_t idx     = 0u;
+    bool b_valid = true;
 
     if ((NULL == p_str) || (NULL == p_func))
     {
@@ -24,7 +23,7 @@ ischartype_str (
         goto cleanup;
     }
 
-    for (idx = 0u; idx < size; idx++)
+    for (size_t idx = 0u; idx < size; idx++)
     {
         if (0 == p_func(p_str[idx]))
         {
@@ -115,10 +114,6 @@ fprint (
 {
     status_t status = STATUS_SUCCESS;
 
-    char const * p_fmt = NULL;
-    size_t       idx   = 0u;
-    uint8_t      chr   = 0u;
-
     if (NULL == p_buf)
     {
         status = STATUS_NULL_ARG;
@@ -132,9 +127,9 @@ fprint (
     p_fmt_true   = (NULL == p_fmt_true)   ? "%c"        : p_fmt_true;
     p_fmt_false  = (NULL == p_fmt_false)  ? "\\x%02hhx" : p_fmt_false;
 
-    for (idx = 0u; idx < size; idx++)
+    for (size_t idx = 0u; idx < size; idx++)
     {
-        chr = ((uint8_t *)p_buf)[idx];
+        uint8_t chr = ((uint8_t *)p_buf)[idx];
 
         // Print separator
         if (1u <= idx)
@@ -142,7 +137,7 @@ fprint (
             fprintf(p_stream, "%s", p_sep);
         }
 
-        p_fmt = (0 != p_ischartype(chr)) ? p_fmt_true : p_fmt_false;
+        char const * p_fmt = (0 != p_ischartype(chr)) ? p_fmt_true : p_fmt_false;
 
         // NOTE: fprintf expects string literal, ignore compiler warning
 #       pragma GCC diagnostic push

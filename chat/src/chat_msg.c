@@ -21,16 +21,15 @@ msg_send (
 {
     status_t status = STATUS_SUCCESS;
 
-    uint8_t        * p_packet = NULL;
-    msg_recv_hdr_t   hdr      = {0};
-
     if ((NULL == p_session) || (NULL == p_msg))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_packet = calloc(sizeof(hdr) + msg_size, sizeof(*p_packet));
+    msg_recv_hdr_t hdr = {0};
+
+    uint8_t * p_packet = calloc(sizeof(hdr) + msg_size, sizeof(*p_packet));
     if (NULL == p_packet)
     {
         fprintf(stderr, "calloc failed in msg_send\n");
@@ -69,8 +68,6 @@ msg_send_username (
 {
     status_t status = STATUS_SUCCESS;
 
-    session_t * p_session = NULL;
-
     if (
         (NULL == p_username) ||
         (NULL == p_session_store) ||
@@ -81,7 +78,7 @@ msg_send_username (
         goto cleanup;
     }
 
-    p_session = session_get(p_username, username_size, p_session_store);
+    session_t * p_session = session_get(p_username, username_size, p_session_store);
     msg_send(p_session, flag, p_msg, msg_size);
 
 cleanup:
@@ -98,9 +95,6 @@ msg_send_room (
 {
     status_t status = STATUS_SUCCESS;
 
-    node_t    * p_curr   = NULL;
-    session_t * p_target = NULL;
-
     if (
         (NULL == p_room) ||
         (NULL == p_room->p_sessions) ||
@@ -111,10 +105,10 @@ msg_send_room (
         goto cleanup;
     }
 
-    p_curr = p_room->p_sessions->p_head;
+    node_t * p_curr = p_room->p_sessions->p_head;
     while (NULL != p_curr)
     {
-        p_target = *(session_t **)(p_curr->p_data);
+        session_t * p_target = *(session_t **)(p_curr->p_data);
         if (
             (0u == p_target->session_id) ||
             (0u == p_target->username_size) ||
@@ -144,15 +138,8 @@ opcode_msg_send (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t      * p_appdata        = NULL;
-    int              sockfd           = -1;
-    server_t       * p_server         = NULL;
-    uint8_t        * p_request_packet = NULL;
-    room_t         * p_room           = NULL;
-    uint16_t         msg_size         = 0u;
-    uint8_t        * p_msg            = NULL;
-    bool             b_locked         = false;
-    msg_send_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -160,16 +147,16 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    p_hdr = (msg_send_hdr_t *)(p_request_packet + p_request->size);
+    msg_send_hdr_t * p_hdr = (msg_send_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    msg_size               = ntohs(p_hdr->msg_size);
+    uint16_t msg_size      = ntohs(p_hdr->msg_size);
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
@@ -181,7 +168,7 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    p_msg            = p_request_packet + p_request->size;
+    uint8_t * p_msg = p_req_packet + p_request->size;
     p_request->size += msg_size;
 
     sockutil_recvall(sockfd, p_msg, msg_size);
@@ -193,7 +180,7 @@ opcode_msg_send (
         goto cleanup;
     }
 
-    p_room = p_session->p_room;
+    room_t * p_room = p_session->p_room;
 
     if (NULL == p_room)
     {

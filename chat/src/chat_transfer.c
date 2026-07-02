@@ -144,22 +144,20 @@ respond_pm_accept (
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t    * p_new_room     = NULL;
-    uint8_t   * p_room_name    = NULL;
-    uint8_t   * p_user1        = NULL;
-    uint16_t    user1_size     = 0u;
-    uint8_t   * p_user2        = NULL;
-    uint16_t    user2_size     = 0u;
-    uint16_t    room_name_size = 0u;
-    session_t * p_target       = NULL;
-    sll_t     * p_room_store   = p_appdata->p_room_store;
-
-    p_room_name = calloc(2u * g_username_size_max + 1u, sizeof(*p_room_name));
+    uint8_t * p_room_name = calloc(
+        2u * g_username_size_max + 1u,
+        sizeof(*p_room_name)
+    );
     if (NULL == p_room_name)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
+
+    uint8_t  * p_user1;
+    uint16_t   user1_size;
+    uint8_t  * p_user2;
+    uint16_t   user2_size;
 
     // Assign usernames to variables alphabetically
     if (0 < memcmp(
@@ -188,30 +186,24 @@ respond_pm_accept (
     memcpy(p_room_name, p_user1, user1_size);
     p_room_name[user1_size] = '+';
     memcpy(p_room_name + user1_size + 1u, p_user2, user2_size);
-    room_name_size = user1_size + 1u + user2_size;
+    uint16_t room_name_size = user1_size + 1u + user2_size;
 
-    p_new_room = room_create((char *)p_room_name, room_name_size);
+    room_t * p_new_room = room_create((char *)p_room_name, room_name_size);
     if (NULL == p_new_room)
     {
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
 
-    status = sll_append(p_room_store, &p_new_room, sizeof(p_new_room));
-    if (STATUS_SUCCESS != status)
-    {
-        fprintf(stderr, "sll_append failed in respond_pm_accept\n");
-        room_destroy(p_new_room);
-        p_new_room = NULL;
-        goto cleanup;
-    }
+    sll_t * p_room_store = p_appdata->p_room_store;
+    sll_append(p_room_store, &p_new_room, sizeof(p_new_room));
 
     user_leave(p_session, p_appdata);
     p_session->p_room = p_new_room;
     user_join(p_session, p_appdata);
     msg_send(p_session, MSG_FLAG_JOIN, p_room_name, room_name_size);
 
-    p_target = session_get(p_username, username_size, p_session_store);
+    session_t * p_target = session_get(p_username, username_size, p_session_store);
     if (NULL == p_target)
     {
         status = STATUS_FAILURE;
@@ -258,16 +250,11 @@ file_relay (
 {
     status_t status = STATUS_SUCCESS;
 
-    uint8_t               * p_relay   = NULL;
-    file_send_chunk_hdr_t * p_hdr     = NULL;
-    bool                    b_more    = !(first_flags & FILE_CHUNK_FLAG_LAST);
-    bool                    b_in_loop = false;
+    bool b_more    = !(first_flags & FILE_CHUNK_FLAG_LAST);
+    bool b_in_loop = false;
 
-    file_send_chunk_hdr_t chunk_hdr  = {0};
-    uint16_t              chunk_size = 0u;
-
-    p_relay = calloc(
-        sizeof(chunk_hdr) + filename_size + g_file_chunk_size,
+    uint8_t * p_relay = calloc(
+        sizeof(file_send_chunk_hdr_t) + filename_size + g_file_chunk_size,
         sizeof(*p_relay)
     );
     if (NULL == p_relay)
@@ -277,14 +264,14 @@ file_relay (
         goto cleanup;
     }
 
-    p_hdr = (file_send_chunk_hdr_t *)p_relay;
+    file_send_chunk_hdr_t * p_hdr = (file_send_chunk_hdr_t *)p_relay;
 
     // First relay chunk payload
     p_hdr->flags           = first_flags;
     p_hdr->chunk_data_size = htons(filename_size);
-    memcpy(p_relay + sizeof(chunk_hdr), p_filename, filename_size);
+    memcpy(p_relay + sizeof(*p_hdr), p_filename, filename_size);
     memcpy(
-        p_relay + sizeof(chunk_hdr) + filename_size,
+        p_relay + sizeof(*p_hdr) + filename_size,
         p_first_data,
         first_data_size
     );
@@ -293,7 +280,7 @@ file_relay (
         p_target,
         MSG_FLAG_FILE,
         p_relay,
-        sizeof(chunk_hdr) + filename_size + first_data_size
+        sizeof(*p_hdr) + filename_size + first_data_size
     );
 
     if (!b_more)
@@ -305,8 +292,9 @@ file_relay (
 
     for (;;)
     {
+        file_send_chunk_hdr_t chunk_hdr = {0};
         sockutil_recvall(p_sender->sockfd, &chunk_hdr, sizeof(chunk_hdr));
-        chunk_size = ntohs(chunk_hdr.chunk_data_size);
+        uint16_t chunk_size = ntohs(chunk_hdr.chunk_data_size);
 
         if (STATUS_SUCCESS != status)
         {
@@ -377,16 +365,8 @@ opcode_request (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t * p_appdata        = NULL;
-    room_t    * p_room           = NULL;
-    int         sockfd           = -1;
-    server_t  * p_server         = NULL;
-    uint8_t   * p_request_packet = NULL;
-    uint8_t     flag_type        = 0u;
-    uint16_t    username_size    = 0u;
-    uint8_t   * p_username       = NULL;
-    bool        b_locked         = false;
-    req_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -394,19 +374,19 @@ opcode_request (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    p_hdr = (req_hdr_t *)(p_request_packet + p_request->size);
+    req_hdr_t * p_hdr = (req_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    flag_type              = p_hdr->flag_type;
-    username_size          = ntohs(p_hdr->username_size);
-    p_request->session_id  = ntohl(p_hdr->session_id);
-    p_request->size       += sizeof(*p_hdr);
+    uint8_t  flag_type      = p_hdr->flag_type;
+    uint16_t username_size  = ntohs(p_hdr->username_size);
+    p_request->session_id   = ntohl(p_hdr->session_id);
+    p_request->size        += sizeof(*p_hdr);
 
     if ((p_request->size + username_size) > g_max_packet_size)
     {
@@ -416,8 +396,8 @@ opcode_request (
         goto cleanup;
     }
 
-    p_username       = p_request_packet + p_request->size;
-    p_request->size += username_size;
+    uint8_t * p_username  = p_req_packet + p_request->size;
+    p_request->size      += username_size;
 
     sockutil_recvall(sockfd, p_username, username_size);
 
@@ -428,7 +408,7 @@ opcode_request (
         goto cleanup;
     }
 
-    p_room = p_session->p_room;
+    room_t * p_room = p_session->p_room;
     if (NULL == p_room)
     {
         fprintf(stderr, "Sending user not in room\n");
@@ -483,18 +463,9 @@ opcode_respond (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t  * p_appdata        = NULL;
-    room_t     * p_room           = NULL;
-    int          sockfd           = -1;
-    server_t   * p_server         = NULL;
-    uint8_t    * p_request_packet = NULL;
-    uint8_t      flag_type        = 0u;
-    uint8_t      flag_choice      = 0u;
-    uint16_t     username_size    = 0u;
-    uint8_t    * p_username       = NULL;
-    uint8_t    * p_notif          = NULL;
-    bool         b_locked         = false;
-    resp_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    uint8_t   * p_notif   = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -502,10 +473,10 @@ opcode_respond (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
     p_notif = calloc(g_max_packet_size, sizeof(*p_notif));
     if (NULL == p_notif)
@@ -515,15 +486,15 @@ opcode_respond (
         goto cleanup;
     }
 
-    p_hdr = (resp_hdr_t *)(p_request_packet + p_request->size);
+    resp_hdr_t * p_hdr = (resp_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    flag_type              = p_hdr->flag_type;
-    flag_choice            = p_hdr->flag_choice;
-    username_size          = ntohs(p_hdr->username_size);
-    p_request->session_id  = ntohl(p_hdr->session_id);
-    p_request->size       += sizeof(*p_hdr);
+    uint8_t  flag_type      = p_hdr->flag_type;
+    uint8_t  flag_choice    = p_hdr->flag_choice;
+    uint16_t username_size  = ntohs(p_hdr->username_size);
+    p_request->session_id   = ntohl(p_hdr->session_id);
+    p_request->size        += sizeof(*p_hdr);
 
     if ((p_request->size + username_size) > g_max_packet_size)
     {
@@ -533,8 +504,8 @@ opcode_respond (
         goto cleanup;
     }
 
-    p_username       = p_request_packet + p_request->size;
-    p_request->size += username_size;
+    uint8_t * p_username  = p_req_packet + p_request->size;
+    p_request->size      += username_size;
 
     sockutil_recvall(sockfd, p_username, username_size);
 
@@ -545,7 +516,7 @@ opcode_respond (
         goto cleanup;
     }
 
-    p_room = p_session->p_room;
+    room_t * p_room = p_session->p_room;
     if (NULL == p_room)
     {
         fprintf(stderr, "Sending user not in room\n");
@@ -608,23 +579,11 @@ opcode_file_send (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t             * p_appdata        = NULL;
-    room_t                * p_room           = NULL;
-    int                     sockfd           = -1;
-    server_t              * p_server         = NULL;
-    uint8_t               * p_request_packet = NULL;
-    uint16_t                username_size    = 0u;
-    uint16_t                filename_size    = 0u;
-    uint16_t                first_data_size  = 0u;
-    uint8_t                 first_flags      = 0u;
-    uint8_t               * p_username       = NULL;
-    uint8_t               * p_filename       = NULL;
-    uint8_t               * p_first_data     = NULL;
-    session_t             * p_target         = NULL;
-    bool                    b_locked         = false;
-    bool                    b_file_locked    = false;
-    bool                    b_need_drain     = false;
-    file_send_first_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata     = NULL;
+    int         sockfd        = -1;
+    bool        b_locked      = false;
+    bool        b_file_locked = false;
+    bool        b_need_drain  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -632,21 +591,24 @@ opcode_file_send (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
+    sockfd = p_session->sockfd;
 
-    p_hdr = (file_send_first_hdr_t *)(p_request_packet + p_request->size);
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
+
+    file_send_first_hdr_t * p_hdr = (file_send_first_hdr_t *)(
+        p_req_packet + p_request->size
+    );
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    first_flags            = p_hdr->flags;
-    username_size          = ntohs(p_hdr->username_size);
-    filename_size          = ntohs(p_hdr->filename_size);
-    first_data_size        = ntohs(p_hdr->chunk_data_size);
-    p_request->session_id  = ntohl(p_hdr->session_id);
-    p_request->size       += sizeof(*p_hdr);
+    uint8_t  first_flags      = p_hdr->flags;
+    uint16_t username_size    = ntohs(p_hdr->username_size);
+    uint16_t filename_size    = ntohs(p_hdr->filename_size);
+    uint16_t first_data_size  = ntohs(p_hdr->chunk_data_size);
+    p_request->session_id     = ntohl(p_hdr->session_id);
+    p_request->size          += sizeof(*p_hdr);
 
     b_need_drain = !(first_flags & FILE_CHUNK_FLAG_LAST);
 
@@ -677,12 +639,12 @@ opcode_file_send (
         goto cleanup;
     }
 
-    p_username       = p_request_packet + p_request->size;
-    p_request->size += username_size;
-    p_filename       = p_request_packet + p_request->size;
-    p_request->size += filename_size;
-    p_first_data     = p_request_packet + p_request->size;
-    p_request->size += first_data_size;
+    uint8_t * p_username    = p_req_packet + p_request->size;
+    p_request->size        += username_size;
+    uint8_t * p_filename    = p_req_packet + p_request->size;
+    p_request->size        += filename_size;
+    uint8_t * p_first_data  = p_req_packet + p_request->size;
+    p_request->size        += first_data_size;
 
     sockutil_recvall(sockfd, p_username, username_size);
     sockutil_recvall(sockfd, p_filename, filename_size);
@@ -695,7 +657,7 @@ opcode_file_send (
         goto cleanup;
     }
 
-    p_room = p_session->p_room;
+    room_t * p_room = p_session->p_room;
     if (NULL == p_room)
     {
         fprintf(stderr, "Sending user not in room\n");
@@ -706,7 +668,7 @@ opcode_file_send (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    p_target = session_get(
+    session_t * p_target = session_get(
         p_username,
         username_size,
         p_appdata->p_session_store
@@ -945,6 +907,7 @@ set_response (
         }
 
         default:
+        {
             status = STATUS_FAILURE;
             fprintf(
                 stderr,
@@ -952,6 +915,7 @@ set_response (
                 flag_type
             );
             goto cleanup;
+        }
     }
 
     uint8_t  * p_username    = p_sender->p_username;

@@ -15,9 +15,7 @@ extern uint32_t const g_chunk_size;
 bool
 is_admin (session_t * p_session, appdata_t * p_appdata)
 {
-    bool       b_is_admin    = false;
-    uint16_t   username_size = 0u;
-    uint8_t  * p_username    = NULL;
+    bool b_is_admin = false;
 
     if (
         (NULL == p_session) ||
@@ -29,8 +27,8 @@ is_admin (session_t * p_session, appdata_t * p_appdata)
         goto cleanup;
     }
 
-    username_size = p_session->username_size;
-    p_username    = p_session->p_username;
+    uint16_t   username_size = p_session->username_size;
+    uint8_t  * p_username    = p_session->p_username;
 
     if (
         (NULL != p_session->p_server) &&
@@ -58,16 +56,8 @@ opcode_promote (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t     * p_appdata        = NULL;
-    ht_t          * p_admins         = NULL;
-    session_t     * p_target         = NULL;
-    int             sockfd           = -1;
-    server_t      * p_server         = NULL;
-    uint8_t       * p_request_packet = NULL;
-    uint16_t        username_size    = 0u;
-    uint8_t       * p_username       = NULL;
-    bool            b_locked         = false;
-    promote_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -75,19 +65,18 @@ opcode_promote (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
-    p_admins         = p_appdata->p_admins;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    p_hdr = (promote_hdr_t *)(p_request_packet + p_request->size);
+    promote_hdr_t * p_hdr = (promote_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    username_size          = ntohs(p_hdr->username_size);
-    p_request->session_id  = ntohl(p_hdr->session_id);
-    p_request->size       += sizeof(*p_hdr);
+    uint16_t username_size  = ntohs(p_hdr->username_size);
+    p_request->session_id   = ntohl(p_hdr->session_id);
+    p_request->size        += sizeof(*p_hdr);
 
     if ((p_request->size + username_size) > g_max_packet_size)
     {
@@ -97,8 +86,8 @@ opcode_promote (
         goto cleanup;
     }
 
-    p_username       = p_request_packet + p_request->size;
-    p_request->size += username_size;
+    uint8_t * p_username  = p_req_packet + p_request->size;
+    p_request->size      += username_size;
 
     sockutil_recvall(sockfd, p_username, username_size);
 
@@ -118,7 +107,7 @@ opcode_promote (
         goto cleanup;
     }
 
-    if (NULL != ht_get(p_admins, p_username, username_size))
+    if (NULL != ht_get(p_appdata->p_admins, p_username, username_size))
     {
         if (p_server->b_verbose)
         {
@@ -129,9 +118,9 @@ opcode_promote (
         goto cleanup;
     }
 
-    ht_set(p_admins, p_username, username_size, "", 0u);
+    ht_set(p_appdata->p_admins, p_username, username_size, "", 0u);
 
-    p_target = session_get(
+    session_t * p_target = session_get(
         p_username,
         username_size,
         p_appdata->p_session_store
@@ -169,16 +158,8 @@ opcode_disconnect (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t        * p_appdata        = NULL;
-    int                sockfd           = -1;
-    server_t         * p_server         = NULL;
-    uint8_t          * p_request_packet = NULL;
-    uint16_t           username_size    = 0u;
-    uint8_t          * p_username       = NULL;
-    item_t           * p_item           = NULL;
-    session_t        * p_target         = NULL;
-    bool               b_locked         = false;
-    disconnect_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -186,18 +167,18 @@ opcode_disconnect (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    p_hdr = (disconnect_hdr_t *)(p_request_packet + p_request->size);
+    disconnect_hdr_t * p_hdr = (disconnect_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    username_size          = ntohs(p_hdr->username_size);
-    p_request->session_id  = ntohl(p_hdr->session_id);
-    p_request->size       += sizeof(*p_hdr);
+    uint16_t username_size  = ntohs(p_hdr->username_size);
+    p_request->session_id   = ntohl(p_hdr->session_id);
+    p_request->size        += sizeof(*p_hdr);
 
     if ((p_request->size + username_size) > g_max_packet_size)
     {
@@ -207,8 +188,8 @@ opcode_disconnect (
         goto cleanup;
     }
 
-    p_username       = p_request_packet + p_request->size;
-    p_request->size += username_size;
+    uint8_t * p_username  = p_req_packet + p_request->size;
+    p_request->size      += username_size;
 
     sockutil_recvall(sockfd, p_username, username_size);
 
@@ -228,8 +209,8 @@ opcode_disconnect (
         goto cleanup;
     }
 
-    p_item   = ht_get(p_appdata->p_session_store, p_username, username_size);
-    p_target = (NULL != p_item) ? *(session_t **)(p_item->p_value) : NULL;
+    item_t    * p_item   = ht_get(p_appdata->p_session_store, p_username, username_size);
+    session_t * p_target = (NULL != p_item) ? *(session_t **)(p_item->p_value) : NULL;
 
     if (NULL == p_target)
     {
@@ -288,20 +269,8 @@ opcode_delete (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t    * p_appdata        = NULL;
-    sll_t        * p_room_store     = NULL;
-    room_t       * p_room           = NULL;
-    node_t       * p_node           = NULL;
-    node_t       * p_curr           = NULL;
-    node_t       * p_next           = NULL;
-    session_t    * p_member         = NULL;
-    int            sockfd           = -1;
-    server_t     * p_server         = NULL;
-    uint8_t      * p_request_packet = NULL;
-    uint16_t       room_name_size   = 0u;
-    uint8_t      * p_room_name      = NULL;
-    bool           b_locked         = false;
-    delete_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -309,19 +278,20 @@ opcode_delete (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
-    p_room_store     = p_appdata->p_room_store;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    p_hdr = (delete_hdr_t *)(p_request_packet + p_request->size);
+    sll_t * p_room_store = p_appdata->p_room_store;
+
+    delete_hdr_t * p_hdr = (delete_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    room_name_size         = ntohs(p_hdr->room_name_size);
-    p_request->session_id  = ntohl(p_hdr->session_id);
-    p_request->size       += sizeof(*p_hdr);
+    uint16_t room_name_size  = ntohs(p_hdr->room_name_size);
+    p_request->session_id    = ntohl(p_hdr->session_id);
+    p_request->size         += sizeof(*p_hdr);
 
     if ((p_request->size + room_name_size) > g_max_packet_size)
     {
@@ -331,8 +301,8 @@ opcode_delete (
         goto cleanup;
     }
 
-    p_room_name      = p_request_packet + p_request->size;
-    p_request->size += room_name_size;
+    uint8_t * p_room_name  = p_req_packet + p_request->size;
+    p_request->size       += room_name_size;
 
     sockutil_recvall(sockfd, p_room_name, room_name_size);
 
@@ -352,7 +322,7 @@ opcode_delete (
         goto cleanup;
     }
 
-    p_node = sll_get(p_room_store, p_room_name, room_name_size);
+    node_t * p_node = sll_get(p_room_store, p_room_name, room_name_size);
     if (NULL == p_node)
     {
         fprintf(
@@ -365,7 +335,7 @@ opcode_delete (
         goto cleanup;
     }
 
-    p_room = *(room_t **)(p_node->p_data);
+    room_t * p_room = *(room_t **)(p_node->p_data);
 
     msg_send_room(
         p_room,
@@ -376,11 +346,11 @@ opcode_delete (
 
     msg_send_room(p_room, MSG_FLAG_JOIN, (uint8_t *)"", 0u);
 
-    p_curr = p_room->p_sessions->p_head;
+    node_t * p_curr = p_room->p_sessions->p_head;
     while (NULL != p_curr)
     {
-        p_next   = p_curr->p_next;
-        p_member = *(session_t **)(p_curr->p_data);
+        node_t    * p_next   = p_curr->p_next;
+        session_t * p_member = *(session_t **)(p_curr->p_data);
         user_leave(p_member, p_appdata);
         p_curr = p_next;
     }

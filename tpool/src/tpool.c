@@ -52,16 +52,12 @@ static void * tpool_worker(void * p_arg);
 tpool_t *
 tpool_create (size_t num)
 {
-    tpool_t * p_tm = NULL;
-    size_t    idx  = 0u;
-    size_t    jdx  = 0u;
-
     if (0u == num)
     {
         num = g_default_num;
     }
 
-    p_tm = calloc(1u, sizeof(*p_tm));
+    tpool_t * p_tm = calloc(1u, sizeof(*p_tm));
     if (NULL == p_tm)
     {
         goto cleanup;
@@ -111,7 +107,7 @@ tpool_create (size_t num)
         goto cleanup;
     }
 
-    for (idx = 0u; idx < num; idx++)
+    for (size_t idx = 0u; idx < num; idx++)
     {
         if (0 == pthread_create(&((p_tm->p_threads)[idx]), NULL, tpool_worker, p_tm))
         {
@@ -124,7 +120,7 @@ tpool_create (size_t num)
         pthread_cond_broadcast(&(p_tm->work_cond));
         pthread_mutex_unlock(&(p_tm->work_mutex));
 
-        for (jdx = 0u; jdx < idx; jdx++)
+        for (size_t jdx = 0u; jdx < idx; jdx++)
         {
             pthread_join((p_tm->p_threads)[jdx], NULL);
         }
@@ -147,10 +143,6 @@ cleanup:
 void
 tpool_destroy (tpool_t * p_tm)
 {
-    tpool_work_t * p_work  = NULL;
-    tpool_work_t * p_work2 = NULL;
-    size_t         idx     = 0u;
-
     if (NULL == p_tm)
     {
         goto cleanup;
@@ -161,10 +153,10 @@ tpool_destroy (tpool_t * p_tm)
 
     p_tm->stop = true;
 
-    p_work = p_tm->p_work_first;
+    tpool_work_t * p_work = p_tm->p_work_first;
     while (NULL != p_work)
     {
-        p_work2 = p_work->p_next;
+        tpool_work_t * p_work2 = p_work->p_next;
         tpool_work_destroy(p_work);
         p_work = p_work2;
     }
@@ -178,7 +170,7 @@ tpool_destroy (tpool_t * p_tm)
     pthread_mutex_unlock(&(p_tm->work_mutex));
 
     // Join all worker threads
-    for (idx = 0u; idx < p_tm->thread_cnt; idx++)
+    for (size_t idx = 0u; idx < p_tm->thread_cnt; idx++)
     {
         pthread_join((p_tm->p_threads)[idx], NULL);
     }
@@ -199,8 +191,7 @@ cleanup:
 bool
 tpool_add_work (tpool_t * p_tm, thread_func_t p_func, void * p_arg)
 {
-    bool           b_added = false;
-    tpool_work_t * p_work  = NULL;
+    bool b_added = false;
 
     if ((NULL == p_tm) || (NULL == p_func))
     {
@@ -208,7 +199,7 @@ tpool_add_work (tpool_t * p_tm, thread_func_t p_func, void * p_arg)
     }
 
     // Create work object
-    p_work = tpool_work_create(p_func, p_arg);
+    tpool_work_t * p_work = tpool_work_create(p_func, p_arg);
     if (NULL == p_work)
     {
         goto cleanup;
@@ -328,8 +319,7 @@ cleanup:
 static void *
 tpool_worker (void * p_arg)
 {
-    tpool_t      * p_tm   = p_arg;
-    tpool_work_t * p_work = NULL;
+    tpool_t * p_tm = p_arg;
 
     if (NULL == p_tm)
     {
@@ -356,7 +346,7 @@ tpool_worker (void * p_arg)
             break;
         }
 
-        p_work = tpool_work_get(p_tm);
+        tpool_work_t * p_work = tpool_work_get(p_tm);
         if (NULL != p_work)
         {
             (p_tm->working_cnt)++;

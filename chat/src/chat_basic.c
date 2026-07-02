@@ -38,8 +38,6 @@ validate_session (
 {
     status_t status = STATUS_SUCCESS;
 
-    server_t * p_server = NULL;
-
     if (
         (NULL == p_session) ||
         (NULL == p_request) ||
@@ -51,7 +49,7 @@ validate_session (
         goto cleanup;
     }
 
-    p_server = p_session->p_server;
+    server_t * p_server = p_session->p_server;
 
     if (
         (0u == p_session->session_id) ||
@@ -81,17 +79,14 @@ opcode_default (
 {
     status_t status = STATUS_SUCCESS;
 
-    int        sockfd   = -1;
-    server_t * p_server = NULL;
-
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd   = p_session->sockfd;
-    p_server = p_session->p_server;
+    int        sockfd   = p_session->sockfd;
+    server_t * p_server = p_session->p_server;
 
     p_response->opcode  = OPCODE_DEFAULT;
     p_response->retcode = RETCODE_SUCCESS;
@@ -118,20 +113,16 @@ opcode_ping (
 {
     status_t status = STATUS_SUCCESS;
 
-    int          sockfd           = -1;
-    uint8_t    * p_request_packet = NULL;
-    ping_hdr_t * p_hdr            = NULL;
-
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_request_packet = p_request->p_packet;
+    int       sockfd           = p_session->sockfd;
+    uint8_t * p_req_packet = p_request->p_packet;
 
-    p_hdr = (ping_hdr_t *)(p_request_packet + p_request->size);
+    ping_hdr_t * p_hdr = (ping_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
@@ -158,31 +149,25 @@ opcode_echo (
 {
     status_t status = STATUS_SUCCESS;
 
-    int          sockfd            = -1;
-    uint8_t    * p_request_packet  = NULL;
-    uint8_t    * p_response_packet = NULL;
-    uint16_t     payload_size      = 0u;
-    echo_hdr_t * p_hdr             = NULL;
-
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd            = p_session->sockfd;
-    p_request_packet  = p_request->p_packet;
-    p_response_packet = p_response->p_packet;
+    int       sockfd        = p_session->sockfd;
+    uint8_t * p_req_packet  = p_request->p_packet;
+    uint8_t * p_resp_packet = p_response->p_packet;
 
-    p_hdr = (echo_hdr_t *)(p_request_packet + p_request->size);
+    echo_hdr_t * p_hdr = (echo_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    payload_size          = ntohs(p_hdr->payload_size);
+    uint16_t payload_size = ntohs(p_hdr->payload_size);
     p_request->session_id = ntohl(p_hdr->session_id);
 
     // Copy size field into response
-    *(uint16_t *)(p_response_packet + p_response->size) = htons(payload_size);
+    *(uint16_t *)(p_resp_packet + p_response->size) = htons(payload_size);
 
     p_request->size += sizeof(*p_hdr);
 
@@ -190,7 +175,7 @@ opcode_echo (
     {
         p_response->retcode = RETCODE_OVERFLOW;
         fprintf(stderr, "Echo request size exceeds g_max_packet_size\n");
-        memset(p_response_packet + p_response->size, 0, FIELD_SIZE_SIZE);
+        memset(p_resp_packet + p_response->size, 0, FIELD_SIZE_SIZE);
         sockutil_drain(sockfd, payload_size, g_chunk_size);
         payload_size = 0u;
     }
@@ -199,18 +184,18 @@ opcode_echo (
     if (STATUS_INVALID_SESSION == status)
     {
         status = STATUS_SUCCESS;
-        memset(p_response_packet + p_response->size, 0, FIELD_SIZE_SIZE);
+        memset(p_resp_packet + p_response->size, 0, FIELD_SIZE_SIZE);
         sockutil_drain(sockfd, payload_size, g_chunk_size);
         payload_size = 0u;
     }
 
     p_response->size += FIELD_SIZE_SIZE;
 
-    sockutil_recvall(sockfd, p_request_packet + p_request->size, payload_size);
+    sockutil_recvall(sockfd, p_req_packet + p_request->size, payload_size);
 
     memcpy(
-        p_response_packet + p_response->size,
-        p_request_packet + p_request->size,
+        p_resp_packet + p_response->size,
+        p_req_packet + p_request->size,
         payload_size
     );
 
@@ -230,22 +215,17 @@ opcode_quit (
 {
     status_t status = STATUS_SUCCESS;
 
-    int          sockfd           = -1;
-    server_t   * p_server         = NULL;
-    uint8_t    * p_request_packet = NULL;
-    quit_hdr_t * p_hdr            = NULL;
-
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
+    int        sockfd       = p_session->sockfd;
+    server_t * p_server     = p_session->p_server;
+    uint8_t  * p_req_packet = p_request->p_packet;
 
-    p_hdr = (quit_hdr_t *)(p_request_packet + p_request->size);
+    quit_hdr_t * p_hdr = (quit_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 

@@ -23,9 +23,7 @@ sll_create (void)
 {
     status_t status = STATUS_SUCCESS;
 
-    sll_t * p_sll = NULL;
-
-    p_sll = calloc(1u, sizeof(*p_sll));
+    sll_t * p_sll = calloc(1u, sizeof(*p_sll));
     if (NULL == p_sll)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -52,16 +50,14 @@ sll_destroy (sll_t * p_sll)
 {
     status_t status = STATUS_SUCCESS;
 
-    node_t * p_curr = NULL;
-    node_t * p_next = NULL;
-
     if (NULL == p_sll)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_curr = p_sll->p_head;
+    node_t * p_curr = p_sll->p_head;
+    node_t * p_next = NULL;
     while (NULL != p_curr)
     {
         p_next = p_curr->p_next;
@@ -86,8 +82,6 @@ sll_display (sll_t * p_sll, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
 
-    node_t * p_curr = NULL;
-
     if ((NULL == p_sll) || (NULL == p_sll->p_display_node))
     {
         status = STATUS_NULL_ARG;
@@ -100,7 +94,7 @@ sll_display (sll_t * p_sll, char const * p_sep)
         goto cleanup;
     }
 
-    p_curr = p_sll->p_head;
+    node_t * p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
         (p_sll->p_display_node)(p_curr->p_data);
@@ -121,14 +115,13 @@ node_t *
 sll_get (sll_t * p_sll, void const * p_data, size_t size)
 {
     node_t * p_node = NULL;
-    node_t * p_curr = NULL;
 
     if ((NULL == p_sll) || (NULL == p_data))
     {
         goto cleanup;
     }
 
-    p_curr = p_sll->p_head;
+    node_t * p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
@@ -155,10 +148,6 @@ sll_insert (
 {
     status_t status = STATUS_SUCCESS;
 
-    node_t * p_prev = NULL;
-    node_t * p_curr = NULL;
-    node_t * p_node = NULL;
-
     if ((NULL == p_sll) || (NULL == p_data))
     {
         status = STATUS_NULL_ARG;
@@ -172,8 +161,8 @@ sll_insert (
         goto cleanup;
     }
 
-    p_prev = NULL;
-    p_curr = p_sll->p_head;
+    node_t * p_prev = NULL;
+    node_t * p_curr = p_sll->p_head;
     while (0u < idx)
     {
         p_prev = p_curr;
@@ -181,7 +170,7 @@ sll_insert (
         idx--;
     }
 
-    p_node = calloc(1u, sizeof(*p_node));
+    node_t * p_node = calloc(1u, sizeof(*p_node));
     if (NULL == p_node)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -242,16 +231,14 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
-    node_t * p_prev = NULL;
-    node_t * p_curr = NULL;
-
     if ((NULL == p_sll) || (NULL == p_data))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_curr = p_sll->p_head;
+    node_t * p_prev = NULL;
+    node_t * p_curr = p_sll->p_head;
 
     while (NULL != p_curr)
     {

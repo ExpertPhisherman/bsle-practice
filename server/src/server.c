@@ -40,7 +40,6 @@ server_create (server_t * p_hints)
     status_t status = STATUS_SUCCESS;
 
     server_t * p_server = NULL;
-    char     * p_lhost  = NULL;
 
     if (NULL == p_hints)
     {
@@ -186,7 +185,7 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    p_lhost = calloc(INET_ADDRSTRLEN, sizeof(*p_lhost));
+    char * p_lhost = calloc(INET_ADDRSTRLEN, sizeof(*p_lhost));
     if (NULL == p_lhost)
     {
         fprintf(stderr, "calloc failed in server_create\n");

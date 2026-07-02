@@ -20,16 +20,8 @@ opcode_join (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t * p_appdata        = NULL;
-    sll_t     * p_room_store     = NULL;
-    node_t    * p_node           = NULL;
-    int         sockfd           = -1;
-    server_t  * p_server         = NULL;
-    uint8_t   * p_request_packet = NULL;
-    room_t    * p_room           = NULL;
-    uint8_t   * p_room_name      = NULL;
-    uint16_t    room_name_size   = 0u;
-    bool        b_locked         = false;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -37,19 +29,20 @@ opcode_join (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
-    p_room_store     = p_appdata->p_room_store;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    join_hdr_t * p_hdr = (join_hdr_t *)(p_request_packet + p_request->size);
+    sll_t * p_room_store = p_appdata->p_room_store;
+
+    join_hdr_t * p_hdr = (join_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    room_name_size         = ntohs(p_hdr->room_name_size);
-    p_request->session_id  = ntohl(p_hdr->session_id);
-    p_request->size       += sizeof(*p_hdr);
+    uint16_t room_name_size  = ntohs(p_hdr->room_name_size);
+    p_request->session_id    = ntohl(p_hdr->session_id);
+    p_request->size         += sizeof(*p_hdr);
 
     if ((p_request->size + room_name_size) > g_max_packet_size)
     {
@@ -59,8 +52,8 @@ opcode_join (
         goto cleanup;
     }
 
-    p_room_name      = p_request_packet + p_request->size;
-    p_request->size += room_name_size;
+    uint8_t * p_room_name  = p_req_packet + p_request->size;
+    p_request->size       += room_name_size;
 
     sockutil_recvall(sockfd, p_room_name, room_name_size);
 
@@ -81,7 +74,8 @@ opcode_join (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    p_node = sll_get(p_room_store, p_room_name, room_name_size);
+    node_t * p_node = sll_get(p_room_store, p_room_name, room_name_size);
+    room_t * p_room = NULL;
     if (NULL == p_node)
     {
         p_room = room_create((char *)p_room_name, room_name_size);
@@ -154,17 +148,8 @@ opcode_list (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t  * p_appdata        = NULL;
-    sll_t      * p_room_store     = NULL;
-    room_t     * p_room           = NULL;
-    node_t     * p_curr           = NULL;
-    session_t  * p_target         = NULL;
-    int          sockfd           = -1;
-    server_t   * p_server         = NULL;
-    uint8_t    * p_request_packet = NULL;
-    uint8_t      flag             = 0u;
-    bool         b_locked         = false;
-    list_hdr_t * p_hdr            = NULL;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (!opcode_args_valid(p_session, p_request, p_response))
     {
@@ -172,17 +157,18 @@ opcode_list (
         goto cleanup;
     }
 
-    sockfd           = p_session->sockfd;
-    p_server         = p_session->p_server;
-    p_request_packet = p_request->p_packet;
-    p_appdata        = p_server->p_appdata;
-    p_room_store     = p_appdata->p_room_store;
+    int         sockfd       = p_session->sockfd;
+    server_t  * p_server     = p_session->p_server;
+    uint8_t   * p_req_packet = p_request->p_packet;
+    p_appdata                = p_server->p_appdata;
 
-    p_hdr = (list_hdr_t *)(p_request_packet + p_request->size);
+    sll_t * p_room_store = p_appdata->p_room_store;
+
+    list_hdr_t * p_hdr = (list_hdr_t *)(p_req_packet + p_request->size);
 
     sockutil_recvall(sockfd, p_hdr, sizeof(*p_hdr));
 
-    flag                   = p_hdr->flag;
+    uint8_t flag           = p_hdr->flag;
     p_request->session_id  = ntohl(p_hdr->session_id);
     p_request->size       += sizeof(*p_hdr);
 
@@ -199,25 +185,28 @@ opcode_list (
     switch (flag)
     {
         case LIST_FLAG_ROOM:
-            p_curr = p_room_store->p_head;
+        {
+            node_t * p_curr = p_room_store->p_head;
             while (NULL != p_curr)
             {
-                p_room = *(room_t **)(p_curr->p_data);
+                room_t * p_room = *(room_t **)(p_curr->p_data);
                 msg_send(p_session, MSG_FLAG_LIST, p_room->p_name, p_room->name_size);
                 p_curr = p_curr->p_next;
             }
             break;
+        }
 
         case LIST_FLAG_USER:
+        {
             if (NULL == p_session->p_room)
             {
                 p_response->retcode = RETCODE_FAILURE;
                 break;
             }
-            p_curr = p_session->p_room->p_sessions->p_head;
+            node_t * p_curr = p_session->p_room->p_sessions->p_head;
             while (NULL != p_curr)
             {
-                p_target = *(session_t **)(p_curr->p_data);
+                session_t * p_target = *(session_t **)(p_curr->p_data);
                 msg_send(
                     p_session,
                     MSG_FLAG_LIST,
@@ -227,6 +216,7 @@ opcode_list (
                 p_curr = p_curr->p_next;
             }
             break;
+        }
 
         default:
             p_response->retcode = RETCODE_FAILURE;

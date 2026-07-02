@@ -15,12 +15,11 @@ sockutil_sendall (int sockfd, void * p_buf, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
-    size_t  total = 0u;
-    ssize_t sent  = 0;
+    size_t total = 0u;
 
     while (total < size)
     {
-        sent = send(
+        ssize_t sent = send(
             sockfd,
             (uint8_t *)p_buf + total,
             size - total,
@@ -63,12 +62,11 @@ sockutil_recvall (int sockfd, void * p_buf, size_t size)
 {
     status_t status = STATUS_SUCCESS;
 
-    size_t  total = 0u;
-    ssize_t recvd = 0;
+    size_t total = 0u;
 
     while (total < size)
     {
-        recvd = recv(sockfd, (uint8_t *)p_buf + total, size - total, 0);
+        ssize_t recvd = recv(sockfd, (uint8_t *)p_buf + total, size - total, 0);
         if (-1 == recvd)
         {
             if (EINTR == errno)
@@ -107,10 +105,7 @@ sockutil_drain (int sockfd, size_t size, size_t chunk_size)
 {
     status_t status = STATUS_SUCCESS;
 
-    uint8_t  * p_buf = NULL;
-    uint32_t   chunk = 0u;
-
-    p_buf = calloc(chunk_size, sizeof(*p_buf));
+    uint8_t * p_buf = calloc(chunk_size, sizeof(*p_buf));
     if (NULL == p_buf)
     {
         fprintf(stderr, "calloc failed\n");
@@ -120,7 +115,7 @@ sockutil_drain (int sockfd, size_t size, size_t chunk_size)
 
     while (0u < size)
     {
-        chunk = (size < chunk_size) ? size : chunk_size;
+        uint32_t chunk = (size < chunk_size) ? size : chunk_size;
 
         status = sockutil_recvall(sockfd, p_buf, chunk);
         if (STATUS_SUCCESS != status)

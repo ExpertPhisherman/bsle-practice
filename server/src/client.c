@@ -13,8 +13,6 @@ extern _Atomic bool gb_running;
 void
 client_run_wrapper (void * p_arg)
 {
-    status_t status = STATUS_SUCCESS;
-
     if (NULL == p_arg)
     {
         goto cleanup;
@@ -39,7 +37,7 @@ client_run_wrapper (void * p_arg)
         goto cleanup;
     }
 
-    status = (p_server->p_client_run)(p_server, p_client);
+    status_t status = (p_server->p_client_run)(p_server, p_client);
 
     if (STATUS_SUCCESS != status)
     {
@@ -84,7 +82,6 @@ client_create (server_t * p_server)
     status_t status = STATUS_SUCCESS;
 
     client_t * p_client = NULL;
-    char     * p_rhost  = NULL;
 
     if (NULL == p_server)
     {
@@ -143,7 +140,7 @@ client_create (server_t * p_server)
     uint16_t rport = ntohs(client_addr.sin_port);
     p_client->rport = rport;
 
-    p_rhost = calloc(INET_ADDRSTRLEN, sizeof(*p_rhost));
+    char * p_rhost = calloc(INET_ADDRSTRLEN, sizeof(*p_rhost));
     if (NULL == p_rhost)
     {
         fprintf(stderr, "calloc failed in client_create\n");

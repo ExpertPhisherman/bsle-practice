@@ -147,15 +147,13 @@ chat_server_destroy (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t * p_appdata = NULL;
-
     if (NULL == p_server)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_appdata = p_server->p_appdata;
+    appdata_t * p_appdata = p_server->p_appdata;
 
     server_destroy(p_server);
     p_server = NULL;
@@ -258,20 +256,13 @@ chat_client_init (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    state_t * p_state           = NULL;
-    uint8_t * p_request_packet  = NULL;
-    uint8_t * p_response_packet = NULL;
-    uint8_t * p_username        = NULL;
-    uint8_t * p_password        = NULL;
-    uint8_t * p_user_allow      = NULL;
-
     if ((NULL == p_server) || (NULL == p_client))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_state = calloc(1u, sizeof(*p_state));
+    state_t * p_state = calloc(1u, sizeof(*p_state));
     if (NULL == p_state)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
@@ -280,60 +271,70 @@ chat_client_init (server_t * p_server, client_t * p_client)
     }
     p_client->p_clientdata = p_state;
 
-    p_state->session.p_server  = p_server;
-    p_state->session.p_client  = p_client;
-    p_state->session.sockfd    = p_client->sockfd;
-    p_state->request.p_packet  = NULL;
-    p_state->response.p_packet = NULL;
+    session_t  * p_session  = &(p_state->session);
+    request_t  * p_request  = &(p_state->request);
+    response_t * p_response = &(p_state->response);
 
-    p_state->session.username_size   = 0u;
-    p_state->session.password_size   = 0u;
-    p_state->session.user_allow_size = 0u;
+    p_session->p_server  = p_server;
+    p_session->p_client  = p_client;
+    p_session->sockfd    = p_client->sockfd;
+    p_request->p_packet  = NULL;
+    p_response->p_packet = NULL;
 
-    p_username = calloc(g_username_size_max, sizeof(*p_username));
+    p_session->username_size   = 0u;
+    p_session->password_size   = 0u;
+    p_session->user_allow_size = 0u;
+
+    uint8_t * p_username = calloc(g_username_size_max, sizeof(*p_username));
     if (NULL == p_username)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    p_state->session.p_username = p_username;
+    p_session->p_username = p_username;
 
-    p_password = calloc(g_password_size_max, sizeof(*p_password));
+    uint8_t * p_password = calloc(g_password_size_max, sizeof(*p_password));
     if (NULL == p_password)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    p_state->session.p_password = p_password;
+    p_session->p_password = p_password;
 
-    p_request_packet = calloc(g_max_packet_size, sizeof(*p_request_packet));
-    if (NULL == p_request_packet)
+    uint8_t * p_req_packet = calloc(
+        g_max_packet_size,
+        sizeof(*p_req_packet)
+    );
+    if (NULL == p_req_packet)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    p_state->request.p_packet = p_request_packet;
+    p_request->p_packet = p_req_packet;
 
-    p_response_packet = calloc(g_max_packet_size, sizeof(*p_response_packet));
-    if (NULL == p_response_packet)
+    uint8_t * p_resp_packet = calloc(
+        g_max_packet_size,
+        sizeof(*p_resp_packet)
+    );
+    if (NULL == p_resp_packet)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    p_state->response.p_packet = p_response_packet;
+    p_response->p_packet = p_resp_packet;
 
-    p_user_allow = calloc(g_username_size_max, sizeof(*p_user_allow));
+    uint8_t * p_user_allow = calloc(g_username_size_max, sizeof(*p_user_allow));
     if (NULL == p_user_allow)
     {
         fprintf(stderr, "calloc failed in chat_client_init\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    p_state->session.p_user_allow = p_user_allow;
+    p_session->p_user_allow = p_user_allow;
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -348,12 +349,8 @@ chat_client_free (server_t * p_server, client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
 
-    state_t    * p_state      = NULL;
-    session_t  * p_session    = NULL;
-    request_t  * p_request    = NULL;
-    response_t * p_response   = NULL;
-    appdata_t  * p_appdata    = NULL;
-    bool         b_locked     = false;
+    appdata_t * p_appdata = NULL;
+    bool        b_locked  = false;
 
     if (
         (NULL == p_server) ||
@@ -366,11 +363,11 @@ chat_client_free (server_t * p_server, client_t * p_client)
         goto cleanup;
     }
 
-    p_state = p_client->p_clientdata;
+    state_t * p_state = p_client->p_clientdata;
 
-    p_session  = &(p_state->session);
-    p_request  = &(p_state->request);
-    p_response = &(p_state->response);
+    session_t  * p_session  = &(p_state->session);
+    request_t  * p_request  = &(p_state->request);
+    response_t * p_response = &(p_state->response);
 
     p_appdata = p_server->p_appdata;
 
@@ -418,12 +415,10 @@ appdata_seed_rooms (sll_t * p_room_store)
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t * p_room = NULL;
-
     p_room_store->p_destroy_data = room_destroy;
     p_room_store->p_compare_node = compare_room;
 
-    p_room = room_create("general", 7u);
+    room_t * p_room = room_create("general", 7u);
     if (NULL == p_room)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -474,16 +469,7 @@ appdata_create (void)
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t     * p_appdata        = NULL;
-    ht_t          * p_cred_store     = NULL;
-    sll_t         * p_room_store     = NULL;
-    ht_t          * p_admins         = NULL;
-    ht_t          * p_session_store  = NULL;
-    ht_t          * p_pm_reqs        = NULL;
-    ht_t          * p_file_reqs      = NULL;
-    opcode_func_t * pp_opcode_funcs  = NULL;
-
-    p_appdata = calloc(1u, sizeof(*p_appdata));
+    appdata_t * p_appdata = calloc(1u, sizeof(*p_appdata));
     if (NULL == p_appdata)
     {
         fprintf(stderr, "calloc failed in appdata_create\n");
@@ -491,7 +477,7 @@ appdata_create (void)
         goto cleanup;
     }
 
-    p_cred_store = ht_create(g_creds_capacity);
+    ht_t * p_cred_store = ht_create(g_creds_capacity);
     if (NULL == p_cred_store)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -505,7 +491,7 @@ appdata_create (void)
         goto cleanup;
     }
 
-    p_room_store = sll_create();
+    sll_t * p_room_store = sll_create();
     if (NULL == p_room_store)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -519,7 +505,7 @@ appdata_create (void)
         goto cleanup;
     }
 
-    p_admins = ht_create(g_admins_capacity);
+    ht_t * p_admins = ht_create(g_admins_capacity);
     if (NULL == p_admins)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -533,7 +519,7 @@ appdata_create (void)
         goto cleanup;
     }
 
-    p_session_store = ht_create(g_session_store_capacity);
+    ht_t * p_session_store = ht_create(g_session_store_capacity);
     if (NULL == p_session_store)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -541,7 +527,7 @@ appdata_create (void)
     }
     p_appdata->p_session_store = p_session_store;
 
-    p_pm_reqs = ht_create(g_pm_reqs_capacity);
+    ht_t * p_pm_reqs = ht_create(g_pm_reqs_capacity);
     if (NULL == p_pm_reqs)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -549,7 +535,7 @@ appdata_create (void)
     }
     p_appdata->p_pm_reqs = p_pm_reqs;
 
-    p_file_reqs = ht_create(g_file_reqs_capacity);
+    ht_t * p_file_reqs = ht_create(g_file_reqs_capacity);
     if (NULL == p_file_reqs)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -557,7 +543,10 @@ appdata_create (void)
     }
     p_appdata->p_file_reqs = p_file_reqs;
 
-    pp_opcode_funcs = calloc(UINT8_MAX + 1u, sizeof(*pp_opcode_funcs));
+    opcode_func_t * pp_opcode_funcs = calloc(
+        UINT8_MAX + 1u,
+        sizeof(*pp_opcode_funcs)
+    );
     if (NULL == pp_opcode_funcs)
     {
         fprintf(stderr, "calloc failed in appdata_create\n");
@@ -686,20 +675,16 @@ dispatch_opcode (
 {
     status_t status = STATUS_SUCCESS;
 
-    appdata_t     * p_appdata       = NULL;
-    opcode_func_t * pp_opcode_funcs = NULL;
-    opcode_func_t   p_opcode_func   = NULL;
-
     if ((NULL == p_session) || (NULL == p_request) || (NULL == p_response))
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_appdata       = p_session->p_server->p_appdata;
-    pp_opcode_funcs = p_appdata->pp_opcode_funcs;
+    appdata_t     * p_appdata       = p_session->p_server->p_appdata;
+    opcode_func_t * pp_opcode_funcs = p_appdata->pp_opcode_funcs;
 
-    p_opcode_func = pp_opcode_funcs[p_request->opcode];
+    opcode_func_t p_opcode_func = pp_opcode_funcs[p_request->opcode];
     if (NULL == p_opcode_func)
     {
         p_opcode_func = pp_opcode_funcs[OPCODE_DEFAULT];

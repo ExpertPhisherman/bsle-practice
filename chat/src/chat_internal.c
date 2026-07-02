@@ -24,11 +24,7 @@ room_create (char const * p_name, uint16_t name_size)
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t  * p_room      = NULL;
-    sll_t   * p_sessions  = NULL;
-    uint8_t * p_plus_chr  = NULL;
-
-    p_room = calloc(1u, sizeof(*p_room));
+    room_t * p_room = calloc(1u, sizeof(*p_room));
     if (NULL == p_room)
     {
         fprintf(stderr, "calloc failed in room_create\n");
@@ -48,7 +44,7 @@ room_create (char const * p_name, uint16_t name_size)
 
     memcpy(p_room->p_name, p_name, name_size);
 
-    p_sessions = sll_create();
+    sll_t * p_sessions = sll_create();
     if (NULL == p_sessions)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -63,7 +59,7 @@ room_create (char const * p_name, uint16_t name_size)
     p_room->user2_size = 0u;
 
     // Check if '+' character is in room name
-    p_plus_chr = memchr(p_room->p_name, '+', name_size);
+    uint8_t * p_plus_chr = memchr(p_room->p_name, '+', name_size);
 
     if (NULL != p_plus_chr)
     {
@@ -120,14 +116,6 @@ user_login (session_t * p_session, appdata_t * p_appdata)
 {
     uint32_t session_id = 0u;
 
-    server_t * p_server      = NULL;
-    ht_t     * p_cred_store  = NULL;
-    item_t   * p_item        = NULL;
-    uint16_t   username_size = 0u;
-    uint16_t   password_size = 0u;
-    uint8_t  * p_username    = NULL;
-    uint8_t  * p_password    = NULL;
-
     if (
         (NULL == p_session) ||
         (NULL == p_appdata) ||
@@ -137,15 +125,15 @@ user_login (session_t * p_session, appdata_t * p_appdata)
         goto cleanup;
     }
 
-    p_server      = p_session->p_server;
-    p_cred_store  = p_appdata->p_cred_store;
-    username_size = p_session->username_size;
-    password_size = p_session->password_size;
-    p_username    = p_session->p_username;
-    p_password    = p_session->p_password;
+    server_t * p_server      = p_session->p_server;
+    ht_t     * p_cred_store  = p_appdata->p_cred_store;
+    uint16_t   username_size = p_session->username_size;
+    uint16_t   password_size = p_session->password_size;
+    uint8_t  * p_username    = p_session->p_username;
+    uint8_t  * p_password    = p_session->p_password;
 
     // Authenticate login against hash table
-    p_item = ht_get(p_cred_store, p_username, username_size);
+    item_t * p_item = ht_get(p_cred_store, p_username, username_size);
 
     if (NULL != p_item)
     {
@@ -279,8 +267,6 @@ user_join (session_t * p_session, appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t * p_room = NULL;
-
     if (
         (NULL == p_session) ||
         (NULL == p_session->p_username) ||
@@ -292,7 +278,7 @@ user_join (session_t * p_session, appdata_t * p_appdata)
         goto cleanup;
     }
 
-    p_room = p_session->p_room;
+    room_t * p_room = p_session->p_room;
 
     // Check if current user session is allowed to enter private room
     if (p_room->b_private)
@@ -347,8 +333,6 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
 {
     status_t status = STATUS_SUCCESS;
 
-    room_t * p_room = NULL;
-
     if (
         (NULL == p_session) ||
         (NULL == p_session->p_room) ||
@@ -360,7 +344,7 @@ user_leave (session_t * p_session, appdata_t * p_appdata)
         goto cleanup;
     }
 
-    p_room = p_session->p_room;
+    room_t * p_room = p_session->p_room;
 
     // Remove user session from room's sessions SLL
     sll_remove(p_room->p_sessions, &p_session, sizeof(p_session));
@@ -391,7 +375,6 @@ session_get (
     ht_t     * p_session_store
 )
 {
-    item_t    * p_item    = NULL;
     session_t * p_session = NULL;
 
     if ((NULL == p_username) || (NULL == p_session_store))
@@ -399,8 +382,8 @@ session_get (
         goto cleanup;
     }
 
-    p_item    = ht_get(p_session_store, p_username, username_size);
-    p_session = (NULL != p_item) ? *(session_t **)(p_item->p_value) : NULL;
+    item_t * p_item = ht_get(p_session_store, p_username, username_size);
+    p_session       = (NULL != p_item) ? *(session_t **)(p_item->p_value) : NULL;
 
 cleanup:
     return p_session;
@@ -409,11 +392,7 @@ cleanup:
 bool
 user_creds_valid (session_t * p_session)
 {
-    bool       b_valid       = true;
-    uint16_t   username_size = 0u;
-    uint16_t   password_size = 0u;
-    uint8_t  * p_username    = NULL;
-    uint8_t  * p_password    = NULL;
+    bool b_valid = true;
 
     if (
         (NULL == p_session) ||
@@ -425,10 +404,10 @@ user_creds_valid (session_t * p_session)
         goto cleanup;
     }
 
-    username_size = p_session->username_size;
-    password_size = p_session->password_size;
-    p_username    = p_session->p_username;
-    p_password    = p_session->p_password;
+    uint16_t   username_size = p_session->username_size;
+    uint16_t   password_size = p_session->password_size;
+    uint8_t  * p_username    = p_session->p_username;
+    uint8_t  * p_password    = p_session->p_password;
 
     if (!(
         (g_username_size_min <= username_size) &&
