@@ -317,23 +317,9 @@ server_run (server_t * p_server)
                 continue;
             }
 
-            server_client_pair_t * p_pair = calloc(1u, sizeof(*p_pair));
-            if (NULL == p_pair)
-            {
-                fprintf(stderr, "calloc failed in server_run\n");
-                client_destroy(p_server, p_client);
-                p_client = NULL;
-                continue;
-            }
-
-            p_pair->p_server = p_server;
-            p_pair->p_client = p_client;
-
-            if (!tpool_add_work(p_server->p_tm, client_run_wrapper, p_pair))
+            if (!tpool_add_work(p_server->p_tm, client_run_wrapper, p_client))
             {
                 fprintf(stderr, "tpool_add_work failed\n");
-                free(p_pair);
-                p_pair = NULL;
 
                 // Re-arm so client is not permanently silenced
                 struct epoll_event client_ev = {0};
@@ -355,7 +341,6 @@ server_run (server_t * p_server)
 
             // NOTE: Ownership of p_client transferred to worker thread
             p_client = NULL;
-            p_pair   = NULL;
         }
     }
 

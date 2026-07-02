@@ -31,10 +31,9 @@
 #include "client.h"
 #include "registry.h"
 
-typedef struct server             server_t;
-typedef struct client             client_t;
-typedef struct server_client_pair server_client_pair_t;
-typedef struct registry           registry_t;
+typedef struct server   server_t;
+typedef struct client   client_t;
+typedef struct registry registry_t;
 
 typedef status_t (*client_func_t)(server_t * p_server, client_t * p_client);
 
@@ -52,12 +51,6 @@ typedef struct server
     client_func_t   p_client_free; // Pointer to per-client free callback
     void          * p_appdata;     // Pointer to application data
 } server_t;
-
-typedef struct server_client_pair
-{
-    server_t * p_server; // Pointer to server
-    client_t * p_client; // Pointer to client
-} server_client_pair_t;
 
 /*!
  * @brief Create server

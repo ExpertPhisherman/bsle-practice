@@ -18,17 +18,14 @@ client_run_wrapper (void * p_arg)
         goto cleanup;
     }
 
-    server_client_pair_t * p_pair   = p_arg;
-    server_t             * p_server = p_pair->p_server;
-    client_t             * p_client = p_pair->p_client;
+    client_t * p_client = p_arg;
 
-    free(p_pair);
-    p_pair = NULL;
-
-    if ((NULL == p_server) || (NULL == p_client))
+    if ((NULL == p_client) || (NULL == p_client->p_server))
     {
         goto cleanup;
     }
+
+    server_t * p_server = p_client->p_server;
 
     if (NULL == p_server->p_client_run)
     {
@@ -103,6 +100,7 @@ client_create (server_t * p_server)
     p_client->sockfd           = -1;
     p_client->registry_idx     = -1;
     p_client->p_clientdata     = NULL;
+    p_client->p_server         = p_server;
 
     if (0 != pthread_mutex_init(&(p_client->lock), NULL))
     {
