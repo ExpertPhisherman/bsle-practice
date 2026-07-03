@@ -18,21 +18,6 @@ main (int argc, char * argv[])
     uint16_t   lport     = DEFAULT_LPORT;
     bool       b_verbose = false;
 
-    server_t hints =
-    {
-        .lport         = lport,
-        .p_lhost       = NULL,
-        .b_verbose     = b_verbose,
-        .sockfd        = -1,
-        .epollfd       = -1,
-        .p_tm          = NULL,
-        .p_registry    = NULL,
-        .p_client_run  = chat_client_run,
-        .p_client_init = chat_client_init,
-        .p_client_free = chat_client_free,
-        .p_appdata     = NULL,
-    };
-
     int opt = -1;
     while (-1 != (opt = getopt(argc, argv, "vp:")))
     {
@@ -74,8 +59,11 @@ main (int argc, char * argv[])
         goto cleanup;
     }
 
-    hints.lport     = lport;
-    hints.b_verbose = b_verbose;
+    server_t hints =
+    {
+        .b_verbose = b_verbose,
+        .lport     = lport,
+    };
 
     p_server = chat_server_create(&hints);
     if (NULL == p_server)

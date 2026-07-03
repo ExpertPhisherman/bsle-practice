@@ -50,33 +50,6 @@ server_t * chat_server_create(server_t * p_hints);
  */
 status_t chat_server_destroy(server_t * p_server);
 
-/*!
- * @brief Single recv/handle/send iteration
- *
- * @param[in] p_client Pointer to client
- *
- * @return Status of operation
- */
-status_t chat_client_run(client_t * p_client);
-
-/*!
- * @brief Initialize per-client state into p_clientdata
- *
- * @param[in] p_client Pointer to client
- *
- * @return Status of operation
- */
-status_t chat_client_init(client_t * p_client);
-
-/*!
- * @brief Free per-client state from p_clientdata
- *
- * @param[in] p_client Pointer to client
- *
- * @return Status of operation
- */
-status_t chat_client_free(client_t * p_client);
-
 #endif /* CHAT_H */
 
 /*** end of file ***/

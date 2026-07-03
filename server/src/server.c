@@ -64,19 +64,6 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    // Initialise to safe sentinel values before copying hints
-    p_server->lport         = 0u;
-    p_server->p_lhost       = NULL;
-    p_server->b_verbose     = false;
-    p_server->sockfd        = -1;
-    p_server->epollfd       = -1;
-    p_server->p_tm          = NULL;
-    p_server->p_registry    = NULL;
-    p_server->p_client_run  = NULL;
-    p_server->p_client_init = NULL;
-    p_server->p_client_free = NULL;
-    p_server->p_appdata     = NULL;
-
     *p_server = *p_hints;
 
     // Catch privileged port as non-root user
@@ -119,9 +106,8 @@ server_create (server_t * p_hints)
     }
 
     struct sockaddr_in server_addr = {0};
-
-    socklen_t sin_size = sizeof(server_addr);
-    int yes            = 1;
+    socklen_t sin_size             = sizeof(server_addr);
+    int const yes                  = 1;
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == sockfd)

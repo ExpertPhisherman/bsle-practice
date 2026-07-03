@@ -44,9 +44,9 @@ typedef status_t (*client_func_t)(client_t * p_client);
 
 typedef struct server
 {
+    bool            b_verbose;     // Verbosity
     uint16_t        lport;         // Local port
     char          * p_lhost;       // Pointer to local host IP address
-    bool            b_verbose;     // Verbosity
     int             sockfd;        // Server socket file descriptor
     int             epollfd;       // Epoll file descriptor
     tpool_t       * p_tm;          // Pointer to thread pool

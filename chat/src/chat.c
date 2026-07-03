@@ -25,6 +25,33 @@ uint16_t const g_password_size_min      = 8u;
 uint16_t const g_password_size_max      = 128u;
 
 /*!
+ * @brief Single recv/handle/send iteration
+ *
+ * @param[in] p_client Pointer to client
+ *
+ * @return Status of operation
+ */
+static status_t chat_client_run(client_t * p_client);
+
+/*!
+ * @brief Initialize per-client state into p_clientdata
+ *
+ * @param[in] p_client Pointer to client
+ *
+ * @return Status of operation
+ */
+static status_t chat_client_init(client_t * p_client);
+
+/*!
+ * @brief Free per-client state from p_clientdata
+ *
+ * @param[in] p_client Pointer to client
+ *
+ * @return Status of operation
+ */
+static status_t chat_client_free(client_t * p_client);
+
+/*!
  * @brief Create application data
  *
  * @param[in] void
@@ -121,6 +148,16 @@ chat_server_create (server_t * p_hints)
         goto cleanup;
     }
 
+    p_hints->p_lhost       = NULL;
+    p_hints->sockfd        = -1;
+    p_hints->epollfd       = -1;
+    p_hints->p_tm          = NULL;
+    p_hints->p_registry    = NULL;
+    p_hints->p_client_run  = chat_client_run;
+    p_hints->p_client_init = chat_client_init;
+    p_hints->p_client_free = chat_client_free;
+    p_hints->p_appdata     = NULL;
+
     p_server = server_create(p_hints);
     if (NULL == p_server)
     {
@@ -167,7 +204,7 @@ cleanup:
     return status;
 }
 
-status_t
+static status_t
 chat_client_run (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
@@ -255,7 +292,7 @@ cleanup:
     return status;
 }
 
-status_t
+static status_t
 chat_client_init (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
@@ -350,7 +387,7 @@ cleanup:
     return status;
 }
 
-status_t
+static status_t
 chat_client_free (client_t * p_client)
 {
     status_t status = STATUS_SUCCESS;
