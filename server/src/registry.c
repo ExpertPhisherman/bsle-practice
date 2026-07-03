@@ -7,9 +7,8 @@
  */
 
 #include "registry.h"
+#include "server.h"
 #include "client.h"
-
-extern uint32_t const g_max_clients;
 
 registry_t *
 registry_create (void)
@@ -25,7 +24,7 @@ registry_create (void)
     }
 
     p_registry->pp_clients = calloc(
-        g_max_clients,
+        MAX_CLIENTS,
         sizeof(*(p_registry->pp_clients))
     );
     if (NULL == p_registry->pp_clients)
@@ -69,7 +68,7 @@ registry_add (registry_t * p_registry, client_t * p_client)
     }
 
     pthread_mutex_lock(&(p_registry->lock));
-    for (size_t idx = 0u; idx < g_max_clients; idx++)
+    for (size_t idx = 0u; idx < MAX_CLIENTS; idx++)
     {
         if (NULL == (p_registry->pp_clients)[idx])
         {
@@ -150,7 +149,7 @@ registry_shutdown (registry_t * p_registry)
 
     // Unblock all workers blocked in recv()
     pthread_mutex_lock(&(p_registry->lock));
-    for (size_t idx = 0u; idx < g_max_clients; idx++)
+    for (size_t idx = 0u; idx < MAX_CLIENTS; idx++)
     {
         client_t * p_client = (p_registry->pp_clients)[idx];
         if (NULL == p_client)

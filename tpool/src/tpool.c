@@ -10,8 +10,6 @@
 
 #include "tpool.h"
 
-static size_t const g_default_num = 2u;
-
 /*!
  * @brief Create work object
  *
@@ -52,9 +50,9 @@ static void * tpool_worker(void * p_arg);
 tpool_t *
 tpool_create (size_t num)
 {
-    if (0u == num)
+    if (WORKER_THREADS_MIN > num)
     {
-        num = g_default_num;
+        num = WORKER_THREADS_MIN;
     }
 
     tpool_t * p_tm = calloc(1u, sizeof(*p_tm));

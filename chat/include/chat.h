@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <pthread.h>
+
 #include "common.h"
 #include "server.h"
 #include "chat_internal.h"
@@ -28,6 +29,8 @@
 #include "sockutil.h"
 #include "ht.h"
 #include "sll.h"
+
+#define DEFAULT_LPORT 3333
 
 /*!
  * @brief Create chat server

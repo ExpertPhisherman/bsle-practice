@@ -15,9 +15,12 @@
 #include <unistd.h>
 #include <stdatomic.h>
 #include <signal.h>
+
 #include "common.h"
 #include "server.h"
 #include "sockutil.h"
+
+#define DEFAULT_LPORT 4444
 
 typedef enum opcode
 {

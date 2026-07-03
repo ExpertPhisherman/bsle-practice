@@ -26,8 +26,15 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
 #include "common.h"
 #include "tpool.h"
+
+#define WORKER_THREADS      8
+#define EPOLL_MAX_EVENTS    64
+#define MAX_CLIENTS         128
+#define PRIVILEGED_PORT_MIN 1
+#define PRIVILEGED_PORT_MAX 1023
 
 typedef struct server   server_t;
 typedef struct client   client_t;

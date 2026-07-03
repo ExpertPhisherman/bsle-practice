@@ -16,7 +16,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+
 #include "common.h"
+
+#define WORKER_THREADS_MIN 2
 
 typedef void (*thread_func_t)(void * p_arg);
 

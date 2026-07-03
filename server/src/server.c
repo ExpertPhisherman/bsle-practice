@@ -10,12 +10,6 @@
 #include "client.h"
 #include "registry.h"
 
-static uint32_t const g_worker_threads   = 8u;
-static uint32_t const g_epoll_max_events = 64u;
-
-uint32_t const g_max_clients = 128u;
-uint16_t const g_max_port    = 65535u;
-
 _Atomic bool gb_running = true;
 
 /*!
@@ -87,15 +81,17 @@ server_create (server_t * p_hints)
 
     // Catch privileged port as non-root user
     if (
-        (1u <= p_server->lport) &&
-        (1023u >= p_server->lport) &&
+        (PRIVILEGED_PORT_MIN <= p_server->lport) &&
+        (PRIVILEGED_PORT_MAX >= p_server->lport) &&
         (0 != geteuid())
     )
     {
         fprintf(
             stderr,
-            "Cannot bind to privileged port %hu [1-1023] as non-root user\n",
-            p_server->lport
+            "Cannot bind to privileged port %hu [%hu-%hu] as non-root user\n",
+            p_server->lport,
+            PRIVILEGED_PORT_MIN,
+            PRIVILEGED_PORT_MAX
         );
         status = STATUS_SOCKET_FAILURE;
         goto cleanup;
@@ -115,7 +111,7 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
-    p_server->p_tm = tpool_create(g_worker_threads);
+    p_server->p_tm = tpool_create(WORKER_THREADS);
     if (NULL == p_server->p_tm)
     {
         status = STATUS_ALLOC_FAILURE;
@@ -235,7 +231,7 @@ server_run (server_t * p_server)
         goto cleanup;
     }
 
-    p_events = calloc(g_epoll_max_events, sizeof(*p_events));
+    p_events = calloc(EPOLL_MAX_EVENTS, sizeof(*p_events));
     if (NULL == p_events)
     {
         fprintf(stderr, "calloc failed in server_run\n");
@@ -248,7 +244,7 @@ server_run (server_t * p_server)
         int nfds = epoll_wait(
             p_server->epollfd,
             p_events,
-            g_epoll_max_events,
+            EPOLL_MAX_EVENTS,
             -1
         );
 
@@ -432,7 +428,7 @@ destroy_all_clients (server_t * p_server)
 
     registry_t * p_registry = p_server->p_registry;
 
-    for (size_t idx = 0u; idx < g_max_clients; idx++)
+    for (size_t idx = 0u; idx < MAX_CLIENTS; idx++)
     {
         client_t * p_client = (p_registry->pp_clients)[idx];
         if (NULL == p_client)
