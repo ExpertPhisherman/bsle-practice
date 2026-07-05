@@ -14,21 +14,14 @@ main (int argc, char * argv[])
 {
     status_t status = STATUS_SUCCESS;
 
-    server_t * p_server  = NULL;
-    uint16_t   lport     = DEFAULT_LPORT;
-    bool       b_verbose = false;
+    server_t * p_server = NULL;
+    uint16_t   lport    = DEFAULT_LPORT;
 
     int opt = -1;
-    while (-1 != (opt = getopt(argc, argv, "vp:")))
+    while (-1 != (opt = getopt(argc, argv, "p:")))
     {
         switch (opt)
         {
-            case 'v':
-            {
-                b_verbose = true;
-                break;
-            }
-
             case 'p':
             {
                 int const ten = 10;
@@ -45,7 +38,7 @@ main (int argc, char * argv[])
 
             default:
             {
-                fprintf(stderr, "Usage: %s [-v] [-p port]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-p port]\n", argv[0]);
                 status = STATUS_FAILURE;
                 goto cleanup;
             }
@@ -61,7 +54,6 @@ main (int argc, char * argv[])
 
     server_t hints =
     {
-        .b_verbose     = b_verbose,
         .lport         = lport,
         .p_server_init = chat_server_init,
         .p_server_free = chat_server_free,

@@ -97,16 +97,13 @@ opcode_join (
             goto cleanup;
         }
 
-        if (p_server->b_verbose)
-        {
-            printf(
-                "%.*s created new room: \"%.*s\"\n",
-                p_session->username_size,
-                p_session->p_username,
-                room_name_size,
-                p_room_name
-            );
-        }
+        printf(
+            "%.*s created new room: \"%.*s\"\n",
+            p_session->username_size,
+            p_session->p_username,
+            room_name_size,
+            p_room_name
+        );
 
         p_node = sll_get(p_room_store, p_room_name, room_name_size);
         if (NULL == p_node)

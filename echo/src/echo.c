@@ -97,8 +97,6 @@ client_run (client_t * p_client)
         goto cleanup;
     }
 
-    server_t * p_server = p_client->p_server;
-
     int sockfd = p_client->sockfd;
 
     request.opcode = 0x00;
@@ -139,14 +137,11 @@ client_run (client_t * p_client)
             ));
             fprintf(stderr, "%s\n", response.p_payload);
 
-            if (p_server->b_verbose)
-            {
-                printf(
-                    "========================================\n"
-                    "Response to sockfd %d:\n", p_client->sockfd
-                );
-                display_response(&response);
-            }
+            printf(
+                "========================================\n"
+                "Response to sockfd %d:\n", p_client->sockfd
+            );
+            display_response(&response);
 
             status = send_response(sockfd, &response);
             if (STATUS_SUCCESS != status)
@@ -176,14 +171,11 @@ client_run (client_t * p_client)
             // Pass
         }
 
-        if (p_server->b_verbose)
-        {
-            printf(
-                "========================================\n"
-                "Request from sockfd %d:\n", p_client->sockfd
-            );
-            display_request(&request);
-        }
+        printf(
+            "========================================\n"
+            "Request from sockfd %d:\n", p_client->sockfd
+        );
+        display_request(&request);
 
         char const * p_response_payload = "";
         response.status = 0x00;
@@ -215,14 +207,11 @@ client_run (client_t * p_client)
         response.size = htonl(host_response_size);
         memcpy(response.p_payload, p_response_payload, host_response_size);
 
-        if (p_server->b_verbose)
-        {
-            printf(
-                "========================================\n"
-                "Response to sockfd %d:\n", p_client->sockfd
-            );
-            display_response(&response);
-        }
+        printf(
+            "========================================\n"
+            "Response to sockfd %d:\n", p_client->sockfd
+        );
+        display_response(&response);
 
         status = send_response(sockfd, &response);
         if (STATUS_SUCCESS != status)
@@ -232,16 +221,13 @@ client_run (client_t * p_client)
 
         if (OPCODE_QUIT == request.opcode)
         {
-            if (p_server->b_verbose)
-            {
-                // Close connection
-                printf(
-                    "Graceful disconnect from client %s:%hu (sockfd %d)\n",
-                    p_client->p_rhost,
-                    p_client->rport,
-                    sockfd
-                );
-            }
+            // Close connection
+            printf(
+                "Graceful disconnect from client %s:%hu (sockfd %d)\n",
+                p_client->p_rhost,
+                p_client->rport,
+                sockfd
+            );
             status = STATUS_SUCCESS;
             goto cleanup;
         }

@@ -16,31 +16,25 @@ main (int argc, char * argv[])
     status_t status = STATUS_SUCCESS;
 
     int opt;
-    uint16_t lport = DEFAULT_LPORT;
-    bool b_verbose = false;
+    uint16_t lport      = DEFAULT_LPORT;
     server_t * p_server = NULL;
 
     server_t hints =
     {
         .lport = lport,
         .sockfd = -1,
-        .b_verbose = b_verbose,
         .p_tm = NULL,
         .p_registry = NULL,
         .p_client_run = NULL,
     };
 
-    while (-1 != (opt = getopt(argc, argv, "vp:")))
+    while (-1 != (opt = getopt(argc, argv, "p:")))
     {
         // Enforce command line integer sizes
         uint64_t u64;
 
         switch (opt)
         {
-            case 'v':
-                b_verbose = true;
-                break;
-
             case 'p':
                 u64 = strtoul(optarg, NULL, 10);
                 if (u64 > UINT16_MAX)
@@ -53,7 +47,7 @@ main (int argc, char * argv[])
                 break;
 
             default:
-                fprintf(stderr, "Usage: %s [-v] [-p port]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-p port]\n", argv[0]);
                 status = STATUS_FAILURE;
                 goto cleanup;
         }
@@ -67,7 +61,6 @@ main (int argc, char * argv[])
     }
 
     hints.lport = lport;
-    hints.b_verbose = b_verbose;
     echo_load_app(&hints);
 
     p_server = server_create(&hints);

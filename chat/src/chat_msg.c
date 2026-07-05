@@ -188,14 +188,11 @@ opcode_msg_send (
     {
         p_response->retcode = RETCODE_FAILURE;
 
-        if (p_server->b_verbose)
-        {
-            printf(
-                "%.*s is not in a room\n",
-                p_session->username_size,
-                p_session->p_username
-            );
-        }
+        printf(
+            "%.*s is not in a room\n",
+            p_session->username_size,
+            p_session->p_username
+        );
 
         goto cleanup;
     }
@@ -205,18 +202,15 @@ opcode_msg_send (
 
     msg_send_room(p_room, MSG_FLAG_MSG, p_msg, msg_size);
 
-    if (p_server->b_verbose)
-    {
-        printf(
-            "%.*s sent msg \"%.*s\" to room: \"%.*s\"\n",
-            p_session->username_size,
-            p_session->p_username,
-            msg_size,
-            p_msg,
-            p_room->name_size,
-            p_room->p_name
-        );
-    }
+    printf(
+        "%.*s sent msg \"%.*s\" to room: \"%.*s\"\n",
+        p_session->username_size,
+        p_session->p_username,
+        msg_size,
+        p_msg,
+        p_room->name_size,
+        p_room->p_name
+    );
 
 cleanup:
     if (b_locked)

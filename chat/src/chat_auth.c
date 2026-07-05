@@ -71,16 +71,13 @@ opcode_login (
         goto cleanup;
     }
 
-    if (p_server->b_verbose)
-    {
-        printf(
-            "Attempting login with username=\"%.*s\", password=\"%.*s\"\n",
-            p_session->username_size,
-            p_session->p_username,
-            p_session->password_size,
-            p_session->p_password
-        );
-    }
+    printf(
+        "Attempting login with username=\"%.*s\", password=\"%.*s\"\n",
+        p_session->username_size,
+        p_session->p_username,
+        p_session->password_size,
+        p_session->p_password
+    );
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
@@ -154,14 +151,11 @@ opcode_logout (
         goto cleanup;
     }
 
-    if (p_server->b_verbose)
-    {
-        printf(
-            "Successful logout from user: %.*s\n",
-            p_session->username_size,
-            p_session->p_username
-        );
-    }
+    printf(
+        "Successful logout from user: %.*s\n",
+        p_session->username_size,
+        p_session->p_username
+    );
 
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;

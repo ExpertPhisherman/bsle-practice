@@ -41,7 +41,7 @@ client_run_wrapper (void * p_arg)
 
     if (STATUS_SUCCESS != status)
     {
-        if ((STATUS_CLIENT_DISCONNECT == status) && (p_server->b_verbose))
+        if (STATUS_CLIENT_DISCONNECT == status)
         {
             printf(
                 "Graceful disconnect from client %s:%hu (sockfd %d)\n",
@@ -157,15 +157,12 @@ client_create (server_t * p_server)
         INET_ADDRSTRLEN
     );
 
-    if (p_server->b_verbose)
-    {
-        printf(
-            "Accepted connection from client %s:%hu (sockfd %d)\n",
-            p_rhost,
-            rport,
-            sockfd
-        );
-    }
+    printf(
+        "Accepted connection from client %s:%hu (sockfd %d)\n",
+        p_rhost,
+        rport,
+        sockfd
+    );
 
     status = registry_add(p_server->p_registry, p_client);
     if (STATUS_SUCCESS != status)

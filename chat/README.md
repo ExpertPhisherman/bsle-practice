@@ -42,10 +42,9 @@ A multithreaded TCP chat server written in C (C11) with an interactive Python cl
 **Running the server:**
 
 ```text
-bin/main [-v] [-p port]
+bin/main [-p port]
 ```
 
-- `-v` - verbose mode: prints hex dumps of every synchronous request/response packet
 - `-p port` - listen port (default: 3333)
 
 **Running the client:**

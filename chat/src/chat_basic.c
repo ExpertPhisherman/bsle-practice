@@ -49,20 +49,13 @@ validate_session (
         goto cleanup;
     }
 
-    server_t * p_server = p_session->p_server;
-
     if (
         (0u == p_session->session_id) ||
         (p_request->session_id != p_session->session_id)
     )
     {
         p_response->retcode = RETCODE_SESSION_ERROR;
-
-        if (p_server->b_verbose)
-        {
-            fprintf(stderr, "Invalid session\n");
-        }
-
+        fprintf(stderr, "Invalid session\n");
         status = STATUS_INVALID_SESSION;
     }
 
@@ -85,20 +78,16 @@ opcode_default (
         goto cleanup;
     }
 
-    int        sockfd   = p_session->sockfd;
-    server_t * p_server = p_session->p_server;
+    int sockfd = p_session->sockfd;
 
     p_response->opcode  = OPCODE_DEFAULT;
     p_response->retcode = RETCODE_SUCCESS;
 
-    if (p_server->b_verbose)
-    {
-        printf(
-            "Unknown opcode 0x%02hhx on sockfd %d\n",
-            p_request->opcode,
-            sockfd
-        );
-    }
+    printf(
+        "Unknown opcode 0x%02hhx on sockfd %d\n",
+        p_request->opcode,
+        sockfd
+    );
 
 cleanup:
     return status;
@@ -222,7 +211,6 @@ opcode_quit (
     }
 
     int        sockfd       = p_session->sockfd;
-    server_t * p_server     = p_session->p_server;
     uint8_t  * p_req_packet = p_request->p_packet;
 
     quit_hdr_t * p_hdr = (quit_hdr_t *)(p_req_packet + p_request->size);
@@ -231,10 +219,7 @@ opcode_quit (
 
     p_request->size += sizeof(*p_hdr);
 
-    if (p_server->b_verbose)
-    {
-        printf("Quitting client session on sockfd %d\n", p_session->sockfd);
-    }
+    printf("Quitting client session on sockfd %d\n", p_session->sockfd);
 
 cleanup:
     return status;

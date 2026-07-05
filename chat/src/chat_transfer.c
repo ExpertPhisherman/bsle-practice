@@ -337,18 +337,15 @@ cleanup:
 
     if (STATUS_SUCCESS == status)
     {
-        if (p_sender->p_server->b_verbose)
-        {
-            printf(
-                "%.*s sent file \"%.*s\" to user: %.*s\n",
-                p_sender->username_size,
-                p_sender->p_username,
-                filename_size,
-                p_filename,
-                p_target->username_size,
-                p_target->p_username
-            );
-        }
+        printf(
+            "%.*s sent file \"%.*s\" to user: %.*s\n",
+            p_sender->username_size,
+            p_sender->p_username,
+            filename_size,
+            p_filename,
+            p_target->username_size,
+            p_target->p_username
+        );
     }
 
     free(p_relay);

@@ -185,15 +185,12 @@ server_create (server_t * p_hints)
         INET_ADDRSTRLEN
     );
 
-    if (p_server->b_verbose)
-    {
-        printf(
-            "Listening on server %s:%hu (sockfd %d)\n",
-            p_lhost,
-            p_server->lport,
-            sockfd
-        );
-    }
+    printf(
+        "Listening on server %s:%hu (sockfd %d)\n",
+        p_lhost,
+        p_server->lport,
+        sockfd
+    );
 
 cleanup:
     if (STATUS_SUCCESS != status)
@@ -328,15 +325,12 @@ server_run (server_t * p_server)
         }
     }
 
-    if (p_server->b_verbose)
-    {
-        printf(
-            "\nGraceful shutdown on server %s:%hu (sockfd %d)\n",
-            p_server->p_lhost,
-            p_server->lport,
-            p_server->sockfd
-        );
-    }
+    printf(
+        "\nGraceful shutdown on server %s:%hu (sockfd %d)\n",
+        p_server->p_lhost,
+        p_server->lport,
+        p_server->sockfd
+    );
 
 cleanup:
     free(p_events);

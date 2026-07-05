@@ -125,7 +125,6 @@ user_login (session_t * p_session, appdata_t * p_appdata)
         goto cleanup;
     }
 
-    server_t * p_server      = p_session->p_server;
     ht_t     * p_cred_store  = p_appdata->p_cred_store;
     uint16_t   username_size = p_session->username_size;
     uint16_t   password_size = p_session->password_size;
@@ -147,26 +146,20 @@ user_login (session_t * p_session, appdata_t * p_appdata)
         {
             // NOTE: Incorrect password
 
-            if (p_server->b_verbose)
-            {
-                printf(
-                    "Incorrect password for user: %.*s\n",
-                    username_size,
-                    p_username
-                );
-            }
+            printf(
+                "Incorrect password for user: %.*s\n",
+                username_size,
+                p_username
+            );
 
             goto cleanup;
         }
 
-        if (p_server->b_verbose)
-        {
-            printf(
-                "Successful login to user: %.*s\n",
-                username_size,
-                p_username
-            );
-        }
+        printf(
+            "Successful login to user: %.*s\n",
+            username_size,
+            p_username
+        );
     }
     else
     {
@@ -181,28 +174,22 @@ user_login (session_t * p_session, appdata_t * p_appdata)
             password_size
         );
 
-        if (p_server->b_verbose)
-        {
-            printf(
-                "Created new user: %.*s\n",
-                username_size,
-                p_username
-            );
-        }
+        printf(
+            "Created new user: %.*s\n",
+            username_size,
+            p_username
+        );
     }
 
     // Forbid duplicate user logins in
     p_item = ht_get(p_appdata->p_session_store, p_username, username_size);
     if (NULL != p_item)
     {
-        if (p_server->b_verbose)
-        {
-            printf(
-                "User %.*s already has an active session\n",
-                username_size,
-                p_username
-            );
-        }
+        printf(
+            "User %.*s already has an active session\n",
+            username_size,
+            p_username
+        );
         goto cleanup;
     }
 

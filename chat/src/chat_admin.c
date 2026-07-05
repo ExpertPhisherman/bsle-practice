@@ -32,10 +32,7 @@ is_admin (session_t * p_session, appdata_t * p_appdata)
     uint16_t   username_size = p_session->username_size;
     uint8_t  * p_username    = p_session->p_username;
 
-    if (
-        (NULL != p_session->p_server) &&
-        (p_session->p_server->b_verbose)
-    )
+    if (NULL != p_session->p_server)
     {
         printf("Checking if %.*s is an admin...\n", username_size, p_username);
     }
@@ -111,11 +108,7 @@ opcode_promote (
 
     if (NULL != ht_get(p_appdata->p_admins, p_username, username_size))
     {
-        if (p_server->b_verbose)
-        {
-            printf("User %.*s is already admin\n", username_size, p_username);
-        }
-
+        printf("User %.*s is already admin\n", username_size, p_username);
         p_response->retcode = RETCODE_FAILURE;
         goto cleanup;
     }
@@ -137,10 +130,7 @@ opcode_promote (
         );
     }
 
-    if (p_server->b_verbose)
-    {
-        printf("Promoted %.*s to admin\n", username_size, p_username);
-    }
+    printf("Promoted %.*s to admin\n", username_size, p_username);
 
 cleanup:
     if (b_locked)
@@ -238,10 +228,7 @@ opcode_disconnect (
     pthread_mutex_unlock(&(p_appdata->lock));
     b_locked = false;
 
-    if (p_server->b_verbose)
-    {
-        printf("Disconnecting %.*s...\n", username_size, p_username);
-    }
+    printf("Disconnecting %.*s...\n", username_size, p_username);
 
     // Handle the case where an admin disconnects themself
     if (p_target != p_session)
@@ -357,10 +344,7 @@ opcode_delete (
         p_curr = p_next;
     }
 
-    if (p_server->b_verbose)
-    {
-        printf("Deleting room: %.*s\n", room_name_size, p_room_name);
-    }
+    printf("Deleting room: %.*s\n", room_name_size, p_room_name);
 
     sll_remove(p_room_store, p_room_name, room_name_size);
 
