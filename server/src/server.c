@@ -21,15 +21,6 @@ _Atomic bool gb_running = true;
  */
 static void handle_sigint(int signo);
 
-/*!
- * @brief Destroy clients idle in epoll at shutdown time
- *
- * @param[in] p_server Pointer to server
- *
- * @return Status of operation
- */
-static status_t destroy_all_clients(server_t * p_server);
-
 server_t *
 server_create (server_t * p_hints)
 {
@@ -84,12 +75,22 @@ server_create (server_t * p_hints)
         goto cleanup;
     }
 
+    if (NULL != p_server->p_server_init)
+    {
+        status = (p_server->p_server_init)(p_server);
+        if (STATUS_SUCCESS != status)
+        {
+            fprintf(stderr, "p_server_init failed\n");
+            goto cleanup;
+        }
+    }
+
     // Reset resource fields that must be created fresh regardless of hints
+    p_server->p_lhost    = NULL;
     p_server->sockfd     = -1;
     p_server->epollfd    = -1;
     p_server->p_tm       = NULL;
     p_server->p_registry = NULL;
-    p_server->p_lhost    = NULL;
 
     p_server->p_registry = registry_create();
     if (NULL == p_server->p_registry)
@@ -364,10 +365,13 @@ server_destroy (server_t * p_server)
     tpool_destroy(p_server->p_tm);
     p_server->p_tm = NULL;
 
-    destroy_all_clients(p_server);
-
     registry_destroy(p_server->p_registry);
     p_server->p_registry = NULL;
+
+    if (NULL != p_server->p_server_free)
+    {
+        (p_server->p_server_free)(p_server);
+    }
 
     if ((-1 != p_server->epollfd) && (-1 == close(p_server->epollfd)))
     {
@@ -399,34 +403,6 @@ handle_sigint (int signo)
     UNUSED(signo);
     gb_running = false;
     return;
-}
-
-static status_t
-destroy_all_clients (server_t * p_server)
-{
-    status_t status = STATUS_SUCCESS;
-
-    if ((NULL == p_server) || (NULL == p_server->p_registry))
-    {
-        status = STATUS_NULL_ARG;
-        goto cleanup;
-    }
-
-    registry_t * p_registry = p_server->p_registry;
-
-    for (size_t idx = 0u; idx < MAX_CLIENTS; idx++)
-    {
-        client_t * p_client = (p_registry->pp_clients)[idx];
-        if (NULL == p_client)
-        {
-            continue;
-        }
-
-        client_destroy(p_client);
-    }
-
-cleanup:
-    return status;
 }
 
 /*** end of file ***/

@@ -33,22 +33,22 @@
 #define DEFAULT_LPORT 3333
 
 /*!
- * @brief Create chat server
+ * @brief Initialize chat server
  *
- * @param[in] p_hints Pointer to server hints
- *
- * @return Pointer to chat server
- */
-server_t * chat_server_create(server_t * p_hints);
-
-/*!
- * @brief Destroy chat server
- *
- * @param[in] p_server Pointer to chat server
+ * @param[in] p_server Pointer to server
  *
  * @return Status of operation
  */
-status_t chat_server_destroy(server_t * p_server);
+status_t chat_server_init(server_t * p_server);
+
+/*!
+ * @brief Free chat server
+ *
+ * @param[in] p_server Pointer to server
+ *
+ * @return Status of operation
+ */
+status_t chat_server_free(server_t * p_server);
 
 #endif /* CHAT_H */
 

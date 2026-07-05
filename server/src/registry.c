@@ -182,6 +182,13 @@ registry_destroy (registry_t * p_registry)
         goto cleanup;
     }
 
+    for (size_t idx = 0u; idx < MAX_CLIENTS; idx++)
+    {
+        client_t * p_client = (p_registry->pp_clients)[idx];
+        client_destroy(p_client);
+        p_client = NULL;
+    }
+
     // NOTE: All clients must already have been destroyed
     free(p_registry->pp_clients);
     p_registry->pp_clients = NULL;

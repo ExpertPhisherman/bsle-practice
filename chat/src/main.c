@@ -61,21 +61,19 @@ main (int argc, char * argv[])
 
     server_t hints =
     {
-        .b_verbose = b_verbose,
-        .lport     = lport,
+        .b_verbose     = b_verbose,
+        .lport         = lport,
+        .p_server_init = chat_server_init,
+        .p_server_free = chat_server_free,
     };
 
-    p_server = chat_server_create(&hints);
-    if (NULL == p_server)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
+    p_server = server_create(&hints);
 
     server_run(p_server);
 
 cleanup:
-    chat_server_destroy(p_server);
+    server_destroy(p_server);
+    p_server = NULL;
 
     if ((STATUS_SUCCESS != status) && (0 != errno))
     {

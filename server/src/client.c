@@ -31,8 +31,9 @@ client_run_wrapper (void * p_arg)
 
     if (NULL == p_server->p_client_run)
     {
-        fprintf(stderr, "App not loaded\n");
+        fprintf(stderr, "No client functionality loaded\n");
         client_destroy(p_client);
+        p_client = NULL;
         goto cleanup;
     }
 
@@ -172,7 +173,7 @@ client_create (server_t * p_server)
         goto cleanup;
     }
 
-    // Allow the application layer to allocate per-client state
+    // Allow the application layer to initialize per-client state
     if (NULL != p_server->p_client_init)
     {
         status = (p_server->p_client_init)(p_client);

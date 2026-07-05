@@ -135,35 +135,21 @@ static status_t dispatch_opcode(
     response_t * p_response
 );
 
-server_t *
-chat_server_create (server_t * p_hints)
+status_t
+chat_server_init (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
-    server_t * p_server = NULL;
-
-    if (NULL == p_hints)
+    if (NULL == p_server)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_hints->p_lhost       = NULL;
-    p_hints->sockfd        = -1;
-    p_hints->epollfd       = -1;
-    p_hints->p_tm          = NULL;
-    p_hints->p_registry    = NULL;
-    p_hints->p_client_run  = chat_client_run;
-    p_hints->p_client_init = chat_client_init;
-    p_hints->p_client_free = chat_client_free;
-    p_hints->p_appdata     = NULL;
-
-    p_server = server_create(p_hints);
-    if (NULL == p_server)
-    {
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
+    p_server->p_client_run  = chat_client_run;
+    p_server->p_client_init = chat_client_init;
+    p_server->p_client_free = chat_client_free;
+    p_server->p_appdata     = NULL;
 
     p_server->p_appdata = appdata_create();
     if (NULL == p_server->p_appdata)
@@ -175,14 +161,14 @@ chat_server_create (server_t * p_hints)
 cleanup:
     if (STATUS_SUCCESS != status)
     {
-        chat_server_destroy(p_server);
+        chat_server_free(p_server);
         p_server = NULL;
     }
-    return p_server;
+    return status;
 }
 
 status_t
-chat_server_destroy (server_t * p_server)
+chat_server_free (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
@@ -192,13 +178,14 @@ chat_server_destroy (server_t * p_server)
         goto cleanup;
     }
 
-    appdata_t * p_appdata = p_server->p_appdata;
+    p_server->p_server_init = NULL;
+    p_server->p_server_free = NULL;
+    p_server->p_client_run  = NULL;
+    p_server->p_client_init = NULL;
+    p_server->p_client_free = NULL;
 
-    server_destroy(p_server);
-    p_server = NULL;
-
-    appdata_destroy(p_appdata);
-    p_appdata = NULL;
+    appdata_destroy(p_server->p_appdata);
+    p_server->p_appdata = NULL;
 
 cleanup:
     return status;

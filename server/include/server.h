@@ -40,6 +40,7 @@ typedef struct server   server_t;
 typedef struct client   client_t;
 typedef struct registry registry_t;
 
+typedef status_t (*server_func_t)(server_t * p_server);
 typedef status_t (*client_func_t)(client_t * p_client);
 
 typedef struct server
@@ -51,6 +52,8 @@ typedef struct server
     int             epollfd;       // Epoll file descriptor
     tpool_t       * p_tm;          // Pointer to thread pool
     registry_t    * p_registry;    // Pointer to client registry
+    server_func_t   p_server_init; // Pointer to server init callback
+    server_func_t   p_server_free; // Pointer to server free callback
     client_func_t   p_client_run;  // Pointer to single iteration handler
     client_func_t   p_client_init; // Pointer to per-client init callback
     client_func_t   p_client_free; // Pointer to per-client free callback
