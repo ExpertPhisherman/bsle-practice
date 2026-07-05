@@ -85,7 +85,6 @@ server_create (server_t * p_hints)
         }
     }
 
-    // Reset resource fields that must be created fresh regardless of hints
     p_server->p_lhost    = NULL;
     p_server->sockfd     = -1;
     p_server->epollfd    = -1;
