@@ -9,26 +9,9 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <stdbool.h>
-#include <stdatomic.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <errno.h>
-#include <limits.h>
-#include <pthread.h>
-#include <signal.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #include "common.h"
-#include "tpool.h"
 
 #define WORKER_THREADS      8
 #define EPOLL_MAX_EVENTS    64
@@ -39,6 +22,7 @@
 typedef struct server   server_t;
 typedef struct client   client_t;
 typedef struct registry registry_t;
+typedef struct tpool    tpool_t;
 
 typedef status_t (*server_func_t)(server_t * p_server);
 typedef status_t (*client_func_t)(client_t * p_client);

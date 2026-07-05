@@ -6,6 +6,9 @@
  *
  */
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
 #include "echo.h"
 #include "server.h"
 #include "client.h"

@@ -6,11 +6,29 @@
  *
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <pthread.h>
+
+#include "common.h"
 #include "chat.h"
+#include "sockutil.h"
 #include "server.h"
 #include "client.h"
+#include "ht.h"
+#include "sll.h"
+#include "chat_internal.h"
+#include "chat_basic.h"
+#include "chat_auth.h"
+#include "chat_msg.h"
+#include "chat_room.h"
+#include "chat_transfer.h"
+#include "chat_admin.h"
 
-uint16_t const g_default_lport          = 3333u;
 uint32_t const g_max_packet_size        = 4096u;
 uint32_t const g_chunk_size             = 512u;
 uint16_t const g_file_chunk_size        = 512u;

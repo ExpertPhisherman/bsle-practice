@@ -9,14 +9,7 @@
 #ifndef SOCKUTIL_H
 #define SOCKUTIL_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdatomic.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <signal.h>
+#include <stddef.h>
 
 #include "common.h"
 

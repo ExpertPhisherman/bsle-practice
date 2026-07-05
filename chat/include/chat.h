@@ -9,28 +9,12 @@
 #ifndef CHAT_H
 #define CHAT_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <pthread.h>
-
 #include "common.h"
 #include "server.h"
-#include "chat_internal.h"
-#include "chat_basic.h"
-#include "chat_auth.h"
-#include "chat_msg.h"
-#include "chat_room.h"
-#include "chat_transfer.h"
-#include "chat_admin.h"
-#include "sockutil.h"
-#include "ht.h"
-#include "sll.h"
 
 #define DEFAULT_LPORT 3333
+
+typedef struct server server_t;
 
 /*!
  * @brief Initialize chat server

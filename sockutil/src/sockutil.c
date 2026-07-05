@@ -6,6 +6,15 @@
  *
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdatomic.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <errno.h>
+
+#include "common.h"
 #include "sockutil.h"
 
 extern _Atomic bool gb_running;

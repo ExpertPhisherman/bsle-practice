@@ -6,8 +6,15 @@
  *
  */
 
-#include "main.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include "common.h"
+#include "server.h"
 #include "chat.h"
+#include "main.h"
 
 int
 main (int argc, char * argv[])
