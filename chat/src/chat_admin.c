@@ -311,7 +311,15 @@ opcode_delete (
         goto cleanup;
     }
 
-    node_t * p_node = sll_get(p_room_store, p_room_name, room_name_size);
+    room_t probe =
+    {
+        .p_name    = p_room_name,
+        .name_size = room_name_size,
+    };
+
+    room_t * p_probe = &probe;
+
+    node_t * p_node = sll_get(p_room_store, &p_probe, sizeof(p_probe));
     if (NULL == p_node)
     {
         fprintf(
@@ -346,7 +354,7 @@ opcode_delete (
 
     printf("Deleting room: %.*s\n", room_name_size, p_room_name);
 
-    sll_remove(p_room_store, p_room_name, room_name_size);
+    sll_remove(p_room_store, &p_probe, sizeof(p_probe));
 
 cleanup:
     if (b_locked)

@@ -29,27 +29,28 @@
 
 typedef enum status
 {
-    STATUS_SUCCESS           = EXIT_SUCCESS,
-    STATUS_FAILURE           = EXIT_FAILURE,
-    STATUS_NULL_ARG          = 2,
-    STATUS_ALLOC_FAILURE     = 3,
-    STATUS_SIGNAL_FAILURE    = 4,
-    STATUS_THREAD_FAILURE    = 5,
-    STATUS_MUTEX_FAILURE     = 6,
-    STATUS_SOCKET_FAILURE    = 7,
-    STATUS_SEND_FAILURE      = 8,
-    STATUS_RECV_FAILURE      = 9,
-    STATUS_CLIENT_DISCONNECT = 10,
-    STATUS_SERVER_DISCONNECT = 11,
-    STATUS_OVERFLOW          = 12,
-    STATUS_UNDERFLOW         = 13,
-    STATUS_EMPTY             = 14,
-    STATUS_FULL              = 15,
-    STATUS_EXISTS            = 16,
-    STATUS_NOT_EXISTS        = 17,
-    STATUS_OUT_OF_BOUNDS     = 18,
-    STATUS_SIZE_MISMATCH     = 19,
-    STATUS_INVALID_SESSION   = 20,
+    STATUS_SUCCESS            = EXIT_SUCCESS,
+    STATUS_FAILURE            = EXIT_FAILURE,
+    STATUS_NULL_ARG           = 2,
+    STATUS_ALLOC_FAILURE      = 3,
+    STATUS_SIGNAL_FAILURE     = 4,
+    STATUS_THREAD_FAILURE     = 5,
+    STATUS_MUTEX_FAILURE      = 6,
+    STATUS_SOCKET_FAILURE     = 7,
+    STATUS_SEND_FAILURE       = 8,
+    STATUS_RECV_FAILURE       = 9,
+    STATUS_CLIENT_DISCONNECT  = 10,
+    STATUS_SERVER_DISCONNECT  = 11,
+    STATUS_OVERFLOW           = 12,
+    STATUS_UNDERFLOW          = 13,
+    STATUS_EMPTY              = 14,
+    STATUS_FULL               = 15,
+    STATUS_EXISTS             = 16,
+    STATUS_NOT_EXISTS         = 17,
+    STATUS_OUT_OF_BOUNDS      = 18,
+    STATUS_SIZE_MISMATCH      = 19,
+    STATUS_INVALID_SESSION    = 20,
+    STATUS_INSUFFICIENT_PERMS = 21,
 } status_t;
 
 typedef int (*compare_func_t)(
@@ -63,6 +64,46 @@ typedef void     (*destroy_func_t)(void * p_data);
 typedef int      (*ischartype_func_t)(int chr);
 
 /*!
+ * @brief Maximum of unsigned integers
+ *
+ * @param[in] num1 First number
+ * @param[in] num2 Second number
+ *
+ * @return Maximum
+ */
+size_t umax(size_t num1, size_t num2);
+
+/*!
+ * @brief Minimum of unsigned integers
+ *
+ * @param[in] num1 First number
+ * @param[in] num2 Second number
+ *
+ * @return Minimum
+ */
+size_t umin(size_t num1, size_t num2);
+
+/*!
+ * @brief Maximum of signed integers
+ *
+ * @param[in] num1 First number
+ * @param[in] num2 Second number
+ *
+ * @return Maximum
+ */
+ssize_t max(ssize_t num1, ssize_t num2);
+
+/*!
+ * @brief Minimum of signed integers
+ *
+ * @param[in] num1 First number
+ * @param[in] num2 Second number
+ *
+ * @return Minimum
+ */
+ssize_t min(ssize_t num1, ssize_t num2);
+
+/*!
  * @brief Check if all characters in string are of character type
  *
  * @param[in] p_str  Pointer to string
@@ -71,7 +112,7 @@ typedef int      (*ischartype_func_t)(int chr);
  *
  * @return Status of operation
  */
-int ischartype_str(
+bool ischartype_str(
     char const        * p_str,
     size_t              size,
     ischartype_func_t   p_func

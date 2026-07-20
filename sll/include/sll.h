@@ -9,11 +9,7 @@
 #ifndef SLL_H
 #define SLL_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stddef.h>
 
 #include "common.h"
 
@@ -28,9 +24,9 @@ typedef struct sll
 {
     node_t         * p_head;         // Pointer to head node
     size_t           len;            // Current length
-    display_func_t   p_display_node; // Pointer to display function
-    compare_func_t   p_compare_node; // Pointer to compare function
-    destroy_func_t   p_destroy_data; // Pointer to destroy data function
+    display_func_t   p_display_data; // Pointer to display function
+    compare_func_t   p_compare_data; // Pointer to compare function
+    destroy_func_t   p_destroy_data; // Pointer to destroy function
 } sll_t;
 
 /*!

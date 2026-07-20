@@ -9,26 +9,24 @@
 #ifndef HT_H
 #define HT_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "common.h"
-#include "sll.h"
 
 typedef uint64_t (*hash_func_t)(void const * p_key, size_t key_size);
 
+typedef struct ht  ht_t;
+typedef struct sll sll_t;
+
 typedef struct item
 {
-    hash_func_t   p_hash_func; // Pointer to hash function
-    uint64_t      hash;        // Hash digest of key
-    void        * p_key;       // Pointer to key
-    size_t        key_size;    // Size of key in bytes
-    void        * p_value;     // Pointer to value
-    size_t        value_size;  // Size of value in bytes
+    ht_t     * p_ht;       // Pointer to hash table
+    uint64_t   hash;       // Hash digest of key
+    void     * p_key;      // Pointer to key
+    size_t     key_size;   // Size of key in bytes
+    void     * p_value;    // Pointer to value
+    size_t     value_size; // Size of value in bytes
 } item_t;
 
 typedef struct ht
@@ -37,8 +35,6 @@ typedef struct ht
     size_t            capacity;        // Current number of buckets
     size_t            len;             // Current occupied buckets
     hash_func_t       p_hash_func;     // Pointer to hash function
-    display_func_t    p_display_item;  // Pointer to display item function
-    compare_func_t    p_compare_item;  // Pointer to compare item function
     destroy_func_t    p_destroy_key;   // Pointer to destroy key function
     destroy_func_t    p_destroy_value; // Pointer to destroy value function
 } ht_t;

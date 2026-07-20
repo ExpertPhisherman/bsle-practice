@@ -6,6 +6,11 @@
  *
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "common.h"
 #include "sll.h"
 
 /*!
@@ -17,6 +22,23 @@
  * @return Status of operation
  */
 static status_t node_destroy(sll_t * p_sll, node_t * p_node);
+
+/*!
+ * @brief Compare node data
+ *
+ * @param[in] p_sll   Pointer to SLL
+ * @param[in] p_data1 Pointer to first data
+ * @param[in] p_data2 Pointer to second data
+ * @param[in] size    Size of data in bytes
+ *
+ * @return Difference between first and second data
+ */
+static int node_compare(
+    sll_t      * p_sll,
+    void const * p_data1,
+    void const * p_data2,
+    size_t       size
+);
 
 sll_t *
 sll_create (void)
@@ -32,8 +54,8 @@ sll_create (void)
 
     p_sll->p_head         = NULL;
     p_sll->len            = 0u;
-    p_sll->p_display_node = NULL;
-    p_sll->p_compare_node = memcmp;
+    p_sll->p_display_data = NULL;
+    p_sll->p_compare_data = NULL;
     p_sll->p_destroy_data = NULL;
 
 cleanup:
@@ -67,8 +89,8 @@ sll_destroy (sll_t * p_sll)
 
     p_sll->p_head         = NULL;
     p_sll->len            = 0u;
-    p_sll->p_display_node = NULL;
-    p_sll->p_compare_node = NULL;
+    p_sll->p_display_data = NULL;
+    p_sll->p_compare_data = NULL;
     p_sll->p_destroy_data = NULL;
 
 cleanup:
@@ -82,7 +104,7 @@ sll_display (sll_t * p_sll, char const * p_sep)
 {
     status_t status = STATUS_SUCCESS;
 
-    if ((NULL == p_sll) || (NULL == p_sll->p_display_node))
+    if (NULL == p_sll)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
@@ -97,7 +119,14 @@ sll_display (sll_t * p_sll, char const * p_sep)
     node_t * p_curr = p_sll->p_head;
     while (NULL != p_curr)
     {
-        (p_sll->p_display_node)(p_curr->p_data);
+        if (NULL != p_sll->p_display_data)
+        {
+            (p_sll->p_display_data)(*(void **)(p_curr->p_data));
+        }
+        else
+        {
+            display_printable(p_curr->p_data, p_curr->size, ", ", "\n");
+        }
 
         if (NULL != p_curr->p_next)
         {
@@ -125,7 +154,7 @@ sll_get (sll_t * p_sll, void const * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if (0 == (p_sll->p_compare_node)(p_curr->p_data, p_data, size))
+        if (0 == node_compare(p_sll, p_curr->p_data, p_data, size))
         {
             p_node = p_curr;
             goto cleanup;
@@ -243,7 +272,7 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if (0 == (p_sll->p_compare_node)(p_curr->p_data, p_data, size))
+        if (0 == node_compare(p_sll, p_curr->p_data, p_data, size))
         {
             // Link skips node where data was found
             if (NULL == p_prev)
@@ -296,6 +325,55 @@ node_destroy (sll_t * p_sll, node_t * p_node)
 
 cleanup:
     return status;
+}
+
+static int
+node_compare (
+    sll_t      * p_sll,
+    void const * p_data1,
+    void const * p_data2,
+    size_t       size
+)
+{
+    int result = 0;
+
+    if ((NULL == p_data1) && (NULL == p_data2))
+    {
+        goto cleanup;
+    }
+
+    if (NULL == p_data1)
+    {
+        result = -1;
+        goto cleanup;
+    }
+
+    if (NULL == p_data2)
+    {
+        result = 1;
+        goto cleanup;
+    }
+
+    if (NULL == p_sll)
+    {
+        result = -1;
+        goto cleanup;
+    }
+
+    if (NULL != p_sll->p_compare_data)
+    {
+        result = (p_sll->p_compare_data)(
+            *(void **)p_data1,
+            *(void **)p_data2,
+            size
+        );
+        goto cleanup;
+    }
+
+    result = memcmp(p_data1, p_data2, size);
+
+cleanup:
+    return result;
 }
 
 /*** end of file ***/

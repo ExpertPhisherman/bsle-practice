@@ -6,9 +6,38 @@
  *
  */
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
 #include "common.h"
 
-int
+size_t
+umax (size_t num1, size_t num2)
+{
+    return (num1 > num2) ? num1 : num2;
+}
+
+size_t
+umin (size_t num1, size_t num2)
+{
+    return (num1 < num2) ? num1 : num2;
+}
+
+ssize_t
+max (ssize_t num1, ssize_t num2)
+{
+    return (num1 > num2) ? num1 : num2;
+}
+
+ssize_t
+min (ssize_t num1, ssize_t num2)
+{
+    return (num1 < num2) ? num1 : num2;
+}
+
+bool
 ischartype_str (
     char const        * p_str,
     size_t              size,

@@ -74,7 +74,15 @@ opcode_join (
     pthread_mutex_lock(&(p_appdata->lock));
     b_locked = true;
 
-    node_t * p_node = sll_get(p_room_store, p_room_name, room_name_size);
+    room_t probe =
+    {
+        .p_name    = p_room_name,
+        .name_size = room_name_size,
+    };
+
+    room_t * p_probe = &probe;
+
+    node_t * p_node = sll_get(p_room_store, &p_probe, sizeof(p_probe));
     room_t * p_room = NULL;
     if (NULL == p_node)
     {
@@ -105,7 +113,7 @@ opcode_join (
             p_room_name
         );
 
-        p_node = sll_get(p_room_store, p_room_name, room_name_size);
+        p_node = sll_get(p_room_store, &p_probe, sizeof(p_probe));
         if (NULL == p_node)
         {
             fprintf(stderr, "sll_get failed in opcode_join\n");

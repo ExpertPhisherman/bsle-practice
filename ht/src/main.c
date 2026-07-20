@@ -16,7 +16,6 @@ main (int argc, char * argv[])
     status_t status = STATUS_SUCCESS;
 
     ht_t       * p_ht     = ht_create(g_capacity);
-    item_t     * p_item   = NULL;
     char const * p_key    = NULL;
     size_t       len      = 0u;
     size_t       idx      = 0u;
@@ -44,14 +43,6 @@ main (int argc, char * argv[])
     ht_set(p_ht, "obama", 5u, "pyramid", 7u);
     ht_set(p_ht, "dragbolt", 8u, "pluh", 4u);
     ht_del(p_ht, "femality", 8u);
-
-    p_item = ht_get(p_ht, "obama", 5u);
-    (p_ht->p_display_item)(p_item);
-    printf("\n");
-
-    p_item = ht_get(p_ht, "dragbolt", 8u);
-    (p_ht->p_display_item)(p_item);
-    printf("\n");
 
     ht_display(p_ht, ", ");
 

@@ -461,7 +461,7 @@ appdata_seed_rooms (sll_t * p_room_store)
     status_t status = STATUS_SUCCESS;
 
     p_room_store->p_destroy_data = room_destroy;
-    p_room_store->p_compare_node = compare_room;
+    p_room_store->p_compare_data = compare_room;
 
     room_t * p_room = room_create("general", 7u);
     if (NULL == p_room)
@@ -678,34 +678,52 @@ compare_room (
 )
 {
     int result = 0;
+    UNUSED(size);
 
-    room_t  * p_room      = *(room_t  **)p_data1;
-    uint8_t * p_room_name =  (uint8_t  *)p_data2;
+    room_t * p_room1 = (room_t *)p_data1;
+    room_t * p_room2 = (room_t *)p_data2;
 
-    if (((NULL == p_room) || (NULL == p_room->p_name)) && (NULL == p_room_name))
+    if ((NULL == p_room1) && (NULL == p_room2))
     {
         goto cleanup;
     }
 
-    if ((NULL == p_room) || (NULL == p_room->p_name))
+    if (NULL == p_room1)
     {
         result = -1;
         goto cleanup;
     }
 
-    if (NULL == p_room_name)
+    if (NULL == p_room2)
     {
         result = 1;
         goto cleanup;
     }
 
-    if (p_room->name_size != size)
+    if ((NULL == p_room1->p_name) && (NULL == p_room2->p_name))
     {
-        result = (p_room->name_size > size) ? 1 : -1;
         goto cleanup;
     }
 
-    result = memcmp(p_room->p_name, p_room_name, size);
+    if (NULL == p_room1->p_name)
+    {
+        result = -1;
+        goto cleanup;
+    }
+
+    if (NULL == p_room2->p_name)
+    {
+        result = 1;
+        goto cleanup;
+    }
+
+    if (p_room1->name_size != p_room2->name_size)
+    {
+        result = (p_room1->name_size > p_room2->name_size) ? 1 : -1;
+        goto cleanup;
+    }
+
+    result = memcmp(p_room1->p_name, p_room2->p_name, p_room1->name_size);
 
 cleanup:
     return result;
