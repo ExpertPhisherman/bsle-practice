@@ -414,21 +414,20 @@ data_compare (
             *(void **)p_data2,
             min_size
         );
+        goto cleanup;
     }
-    else
-    {
-        result = memcmp(p_data1, p_data2, min_size);
 
-        if (0 == result)
+    result = memcmp(p_data1, p_data2, min_size);
+
+    if (0 == result)
+    {
+        if (size1 < size2)
         {
-            if (size1 < size2)
-            {
-                result = -1;
-            }
-            else if (size1 > size2)
-            {
-                result = 1;
-            }
+            result = -1;
+        }
+        else if (size1 > size2)
+        {
+            result = 1;
         }
     }
 
