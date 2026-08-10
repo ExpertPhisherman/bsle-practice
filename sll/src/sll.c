@@ -29,15 +29,17 @@ static status_t node_destroy(sll_t * p_sll, node_t * p_node);
  * @param[in] p_sll   Pointer to SLL
  * @param[in] p_data1 Pointer to first data
  * @param[in] p_data2 Pointer to second data
- * @param[in] size    Size of data in bytes
+ * @param[in] size1   Size of first data in bytes
+ * @param[in] size2   Size of second data in bytes
  *
  * @return Difference between first and second data
  */
-static int node_compare(
+static int data_compare(
     sll_t      * p_sll,
     void const * p_data1,
     void const * p_data2,
-    size_t       size
+    size_t       size1,
+    size_t       size2
 );
 
 sll_t *
@@ -154,7 +156,13 @@ sll_get (sll_t * p_sll, void const * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if (0 == node_compare(p_sll, p_curr->p_data, p_data, size))
+        if (0 == data_compare(
+            p_sll,
+            p_curr->p_data,
+            p_data,
+            p_curr->size,
+            size
+        ))
         {
             p_node = p_curr;
             goto cleanup;
@@ -272,7 +280,13 @@ sll_remove (sll_t * p_sll, void const * p_data, size_t size)
     while (NULL != p_curr)
     {
         // Compare node data to passed in data
-        if (0 == node_compare(p_sll, p_curr->p_data, p_data, size))
+        if (0 == data_compare(
+            p_sll,
+            p_curr->p_data,
+            p_data,
+            p_curr->size,
+            size
+        ))
         {
             // Link skips node where data was found
             if (NULL == p_prev)
@@ -359,14 +373,20 @@ cleanup:
 }
 
 static int
-node_compare (
+data_compare (
     sll_t      * p_sll,
     void const * p_data1,
     void const * p_data2,
-    size_t       size
+    size_t       size1,
+    size_t       size2
 )
 {
     int result = 0;
+
+    if (NULL == p_sll)
+    {
+        goto cleanup;
+    }
 
     if ((NULL == p_data1) && (NULL == p_data2))
     {
@@ -385,23 +405,32 @@ node_compare (
         goto cleanup;
     }
 
-    if (NULL == p_sll)
-    {
-        result = -1;
-        goto cleanup;
-    }
+    size_t min_size = umin(size1, size2);
 
     if (NULL != p_sll->p_compare_data)
     {
         result = (p_sll->p_compare_data)(
             *(void **)p_data1,
             *(void **)p_data2,
-            size
+            min_size
         );
-        goto cleanup;
     }
+    else
+    {
+        result = memcmp(p_data1, p_data2, min_size);
 
-    result = memcmp(p_data1, p_data2, size);
+        if (0 == result)
+        {
+            if (size1 < size2)
+            {
+                result = -1;
+            }
+            else if (size1 > size2)
+            {
+                result = 1;
+            }
+        }
+    }
 
 cleanup:
     return result;
