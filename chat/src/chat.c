@@ -52,7 +52,7 @@ uint16_t const g_password_size_max      = 128u;
 static status_t chat_client_run(client_t * p_client);
 
 /*!
- * @brief Initialize per-client state into p_clientdata
+ * @brief Initialize per-client state into p_state
  *
  * @param[in] p_client Pointer to client
  *
@@ -61,7 +61,7 @@ static status_t chat_client_run(client_t * p_client);
 static status_t chat_client_init(client_t * p_client);
 
 /*!
- * @brief Free per-client state from p_clientdata
+ * @brief Free per-client state from p_state
  *
  * @param[in] p_client Pointer to client
  *
@@ -220,7 +220,7 @@ chat_client_run (client_t * p_client)
         goto cleanup;
     }
 
-    state_t * p_state = p_client->p_clientdata;
+    state_t * p_state = p_client->p_state;
     if (NULL == p_state)
     {
         status = STATUS_NULL_ARG;
@@ -312,7 +312,7 @@ chat_client_init (client_t * p_client)
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
-    p_client->p_clientdata = p_state;
+    p_client->p_state = p_state;
 
     session_t  * p_session  = &(p_state->session);
     request_t  * p_request  = &(p_state->request);
@@ -397,7 +397,7 @@ chat_client_free (client_t * p_client)
 
     if (
         (NULL == p_client) ||
-        (NULL == p_client->p_clientdata) ||
+        (NULL == p_client->p_state) ||
         (NULL == p_client->p_server) ||
         (NULL == p_client->p_server->p_appdata)
     )
@@ -408,7 +408,7 @@ chat_client_free (client_t * p_client)
 
     server_t * p_server = p_client->p_server;
 
-    state_t * p_state = p_client->p_clientdata;
+    state_t * p_state = p_client->p_state;
 
     session_t  * p_session  = &(p_state->session);
     request_t  * p_request  = &(p_state->request);
@@ -439,7 +439,7 @@ chat_client_free (client_t * p_client)
     free(p_state);
     p_state = NULL;
 
-    p_client->p_clientdata = NULL;
+    p_client->p_state = NULL;
 
 cleanup:
     if (b_locked)

@@ -72,6 +72,16 @@ static int item_compare(
  */
 static void item_destroy(void * p_data);
 
+/*!
+ * @brief Apply caller item function to item in node
+ *
+ * @param[in] p_node Pointer to node containing item pointer
+ * @param[in] p_ctx  Pointer to hash table context
+ *
+ * @return Status of operation
+ */
+static status_t item_foreach(node_t * p_node, void * p_ctx);
+
 ht_t *
 ht_create (size_t capacity)
 {
@@ -88,6 +98,7 @@ ht_create (size_t capacity)
     p_ht = calloc(1u, sizeof(*p_ht));
     if (NULL == p_ht)
     {
+        fprintf(stderr, "calloc failed in ht_create\n");
         status = STATUS_ALLOC_FAILURE;
         goto cleanup;
     }
@@ -143,8 +154,8 @@ ht_destroy (ht_t * p_ht)
         goto cleanup;
     }
 
-    p_ht->len             = 0u;
-    p_ht->p_hash_func     = NULL;
+    p_ht->len         = 0u;
+    p_ht->p_hash_func = NULL;
 
     if (NULL == p_ht->pp_buckets)
     {
@@ -404,6 +415,42 @@ cleanup:
     return status;
 }
 
+status_t
+ht_foreach (ht_t * p_ht, ht_func_t p_func, void * p_ctx)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_ht) || (NULL == p_func) || (NULL == p_ht->pp_buckets))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    ht_ctx_t ctx =
+    {
+        .p_func = p_func,
+        .p_ctx  = p_ctx,
+    };
+
+    for (size_t idx = 0u; idx < p_ht->capacity; idx++)
+    {
+        sll_t * p_sll = (p_ht->pp_buckets)[idx];
+        if (NULL == p_sll)
+        {
+            continue;
+        }
+
+        status = sll_foreach(p_sll, item_foreach, &ctx);
+        if (STATUS_SUCCESS != status)
+        {
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    return status;
+}
+
 static uint64_t
 djb2_hash (void const * p_key, size_t key_size)
 {
@@ -557,6 +604,31 @@ cleanup:
     free(p_item);
     p_item = NULL;
     return;
+}
+
+static status_t
+item_foreach (node_t * p_node, void * p_ctx)
+{
+    status_t status = STATUS_SUCCESS;
+
+    ht_ctx_t * p_ht_ctx = p_ctx;
+
+    if (
+        (NULL == p_node) ||
+        (NULL == p_node->p_data) ||
+        (NULL == p_ht_ctx) ||
+        (NULL == p_ht_ctx->p_func))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    item_t * p_item = *(void **)(p_node->p_data);
+
+    status = (p_ht_ctx->p_func)(p_item, p_ht_ctx->p_ctx);
+
+cleanup:
+    return status;
 }
 
 /*** end of file ***/

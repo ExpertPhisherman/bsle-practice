@@ -17,12 +17,7 @@
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include <limits.h>
-#include <pthread.h>
 #include <signal.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #include "common.h"
 #include "tpool.h"
@@ -77,6 +72,12 @@ server_create (server_t * p_hints)
 
     *p_server = *p_hints;
 
+    p_server->p_lhost    = NULL;
+    p_server->sockfd     = -1;
+    p_server->epollfd    = -1;
+    p_server->p_tm       = NULL;
+    p_server->p_registry = NULL;
+
     // Catch privileged port as non-root user
     if (
         (PRIVILEGED_PORT_MIN <= p_server->lport) &&
@@ -104,12 +105,6 @@ server_create (server_t * p_hints)
             goto cleanup;
         }
     }
-
-    p_server->p_lhost    = NULL;
-    p_server->sockfd     = -1;
-    p_server->epollfd    = -1;
-    p_server->p_tm       = NULL;
-    p_server->p_registry = NULL;
 
     p_server->p_registry = registry_create();
     if (NULL == p_server->p_registry)
@@ -226,21 +221,13 @@ server_run (server_t * p_server)
 {
     status_t status = STATUS_SUCCESS;
 
-    struct epoll_event * p_events = NULL;
-
     if (NULL == p_server)
     {
         status = STATUS_NULL_ARG;
         goto cleanup;
     }
 
-    p_events = calloc(EPOLL_MAX_EVENTS, sizeof(*p_events));
-    if (NULL == p_events)
-    {
-        fprintf(stderr, "calloc failed in server_run\n");
-        status = STATUS_ALLOC_FAILURE;
-        goto cleanup;
-    }
+    struct epoll_event p_events[EPOLL_MAX_EVENTS] = {0};
 
     while (gb_running)
     {
@@ -301,9 +288,7 @@ server_run (server_t * p_server)
             // NOTE: Client socket is readable
             client_t * p_client = event.data.ptr;
 
-            uint32_t const err_events = EPOLLHUP | EPOLLERR | EPOLLRDHUP;
-
-            if (0u != (event.events & err_events))
+            if (0u != (event.events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)))
             {
                 fprintf(
                     stderr,
@@ -321,27 +306,8 @@ server_run (server_t * p_server)
             if (!tpool_add_work(p_server->p_tm, client_run_wrapper, p_client))
             {
                 fprintf(stderr, "tpool_add_work failed\n");
-
-                // Re-arm so client is not permanently silenced
-                struct epoll_event client_ev = {0};
-
-                client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
-                client_ev.data.ptr = p_client;
-
-                if (-1 == epoll_ctl(
-                    p_server->epollfd,
-                    EPOLL_CTL_MOD,
-                    p_client->sockfd,
-                    &client_ev
-                ))
-                {
-                    perror("epoll_ctl MOD re-arm after failed tpool_add_work");
-                    client_destroy(p_client);
-                }
+                client_rearm(p_client);
             }
-
-            // NOTE: Ownership of p_client transferred to worker thread
-            p_client = NULL;
         }
     }
 
@@ -353,9 +319,6 @@ server_run (server_t * p_server)
     );
 
 cleanup:
-    free(p_events);
-    p_events = NULL;
-
     return status;
 }
 
@@ -401,8 +364,15 @@ server_destroy (server_t * p_server)
     p_server->sockfd = -1;
 
     free(p_server->p_lhost);
-    p_server->p_lhost   = NULL;
-    p_server->p_appdata = NULL;
+    p_server->p_lhost = NULL;
+
+    p_server->lport         = 0u;
+    p_server->p_server_init = NULL;
+    p_server->p_server_free = NULL;
+    p_server->p_client_run  = NULL;
+    p_server->p_client_init = NULL;
+    p_server->p_client_free = NULL;
+    p_server->p_appdata     = NULL;
 
 cleanup:
     free(p_server);

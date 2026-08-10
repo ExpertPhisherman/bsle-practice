@@ -8,10 +8,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <stdint.h>
 #include <stdatomic.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <errno.h>
 
 #include "common.h"

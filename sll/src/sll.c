@@ -303,6 +303,37 @@ cleanup:
     return status;
 }
 
+status_t
+sll_foreach (sll_t * p_sll, sll_func_t p_func, void * p_ctx)
+{
+    status_t status = STATUS_SUCCESS;
+
+    if ((NULL == p_sll) || (NULL == p_func))
+    {
+        status = STATUS_NULL_ARG;
+        goto cleanup;
+    }
+
+    node_t * p_curr = p_sll->p_head;
+    node_t * p_next = NULL;
+
+    while (NULL != p_curr)
+    {
+        p_next = p_curr->p_next;
+
+        status = p_func(p_curr, p_ctx);
+        if (STATUS_SUCCESS != status)
+        {
+            goto cleanup;
+        }
+
+        p_curr = p_next;
+    }
+
+cleanup:
+    return status;
+}
+
 static status_t
 node_destroy (sll_t * p_sll, node_t * p_node)
 {

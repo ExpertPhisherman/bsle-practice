@@ -13,6 +13,11 @@
 
 #include "common.h"
 
+typedef struct sll  sll_t;
+typedef struct node node_t;
+
+typedef status_t (*sll_func_t)(node_t * p_node, void * p_ctx);
+
 typedef struct node
 {
     void        * p_data; // Pointer to data
@@ -105,6 +110,17 @@ status_t sll_append(sll_t * p_sll, void const * p_data, size_t size);
  * @return Status of operation
  */
 status_t sll_remove(sll_t * p_sll, void const * p_data, size_t size);
+
+/*!
+ * @brief Apply function to each node in SLL
+ *
+ * @param[in] p_sll  Pointer to SLL
+ * @param[in] p_func Pointer to function applied to each node
+ * @param[in] p_ctx  Pointer to caller context
+ *
+ * @return Status of operation
+ */
+status_t sll_foreach(sll_t * p_sll, sll_func_t p_func, void * p_ctx);
 
 #endif /* SLL_H */
 

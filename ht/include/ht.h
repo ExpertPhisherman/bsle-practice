@@ -14,10 +14,18 @@
 
 #include "common.h"
 
-typedef uint64_t (*hash_func_t)(void const * p_key, size_t key_size);
+typedef struct ht   ht_t;
+typedef struct sll  sll_t;
+typedef struct item item_t;
 
-typedef struct ht  ht_t;
-typedef struct sll sll_t;
+typedef uint64_t (*hash_func_t)(void const * p_key, size_t key_size);
+typedef status_t (*ht_func_t)(item_t * p_item, void * p_ctx);
+
+typedef struct ht_ctx
+{
+    ht_func_t   p_func; // Pointer to caller item function
+    void      * p_ctx;  // Pointer to caller context
+} ht_ctx_t;
 
 typedef struct item
 {
@@ -107,6 +115,17 @@ status_t ht_set(
  * @return Status of operation
  */
 status_t ht_del(ht_t * p_ht, void const * p_key, size_t key_size);
+
+/*!
+ * @brief Apply function to each item in hash table
+ *
+ * @param[in] p_ht   Pointer to hash table
+ * @param[in] p_func Pointer to function applied to each item
+ * @param[in] p_ctx  Pointer to caller context
+ *
+ * @return Status of operation
+ */
+status_t ht_foreach(ht_t * p_ht, ht_func_t p_func, void * p_ctx);
 
 #endif /* HT_H */
 

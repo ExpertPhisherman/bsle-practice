@@ -9,6 +9,8 @@
 #ifndef REGISTRY_H
 #define REGISTRY_H
 
+#include <pthread.h>
+
 #include "common.h"
 
 typedef struct client client_t;

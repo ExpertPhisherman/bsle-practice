@@ -8,6 +8,9 @@
  *
  */
 
+#include <stdlib.h>
+#include <pthread.h>
+
 #include "tpool.h"
 
 /*!
@@ -107,7 +110,9 @@ tpool_create (size_t num)
 
     for (size_t idx = 0u; idx < num; idx++)
     {
-        if (0 == pthread_create(&((p_tm->p_threads)[idx]), NULL, tpool_worker, p_tm))
+        pthread_t * p_thread = &((p_tm->p_threads)[idx]);
+
+        if (0 == pthread_create(p_thread, NULL, tpool_worker, p_tm))
         {
             continue;
         }
@@ -215,13 +220,13 @@ tpool_add_work (tpool_t * p_tm, thread_func_t p_func, void * p_arg)
     if (NULL == p_tm->p_work_first)
     {
         p_tm->p_work_first = p_work;
-        p_tm->p_work_last  = p_work;
     }
     else
     {
         p_tm->p_work_last->p_next = p_work;
-        p_tm->p_work_last         = p_work;
     }
+
+    p_tm->p_work_last = p_work;
 
     pthread_cond_signal(&(p_tm->work_cond));
     pthread_mutex_unlock(&(p_tm->work_mutex));
@@ -265,7 +270,7 @@ tpool_work_create (thread_func_t p_func, void * p_arg)
         goto cleanup;
     }
 
-    p_work = malloc(sizeof(*p_work));
+    p_work = calloc(1u, sizeof(*p_work));
     if (NULL == p_work)
     {
         goto cleanup;
@@ -324,7 +329,7 @@ tpool_worker (void * p_arg)
         goto cleanup;
     }
 
-    while (1)
+    for (;;)
     {
         pthread_mutex_lock(&(p_tm->work_mutex));
 

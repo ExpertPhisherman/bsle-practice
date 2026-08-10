@@ -10,14 +10,12 @@
 #define COMMON_H
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
-#include <ctype.h>
 
 #ifdef DEBUG
 #   define DEBUG_PRINT(...) (fprintf(stderr, ##__VA_ARGS__))
@@ -29,8 +27,8 @@
 
 typedef enum status
 {
-    STATUS_SUCCESS            = EXIT_SUCCESS,
-    STATUS_FAILURE            = EXIT_FAILURE,
+    STATUS_SUCCESS            = 0,
+    STATUS_FAILURE            = 1,
     STATUS_NULL_ARG           = 2,
     STATUS_ALLOC_FAILURE      = 3,
     STATUS_SIGNAL_FAILURE     = 4,
@@ -61,7 +59,7 @@ typedef int (*compare_func_t)(
 
 typedef status_t (*display_func_t)(void const * p_data);
 typedef void     (*destroy_func_t)(void * p_data);
-typedef int      (*ischartype_func_t)(int chr);
+typedef int      (*ischrtype_func_t)(int chr);
 
 /*!
  * @brief Maximum of unsigned integers
@@ -113,9 +111,9 @@ ssize_t min(ssize_t num1, ssize_t num2);
  * @return Status of operation
  */
 bool ischartype_str(
-    char const        * p_str,
-    size_t              size,
-    ischartype_func_t   p_func
+    char const       * p_str,
+    size_t             size,
+    ischrtype_func_t   p_func
 );
 
 /*!
@@ -154,10 +152,6 @@ status_t display_printable(
 
 /*!
  * @brief Display unicode characters
- *
- * @par
- * If character is decodable, print decoded character
- * Else, print "."
  *
  * @param[in] p_buf Pointer to buffer
  * @param[in] size  Size of buffer in bytes
@@ -210,7 +204,7 @@ status_t fprint(
     size_t              size,
     char const        * p_sep,
     char const        * p_end,
-    ischartype_func_t   p_ischartype,
+    ischrtype_func_t    p_ischrtype,
     char const        * p_fmt_true,
     char const        * p_fmt_false,
     bool                b_flush

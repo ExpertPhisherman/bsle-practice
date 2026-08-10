@@ -13,6 +13,7 @@
 
 #include "common.h"
 
+#define DRAIN_CHUNK_SIZE    512
 #define WORKER_THREADS      8
 #define EPOLL_MAX_EVENTS    64
 #define MAX_CLIENTS         128

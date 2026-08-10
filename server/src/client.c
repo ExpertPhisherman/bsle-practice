@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/epoll.h>
@@ -33,11 +34,6 @@ extern _Atomic bool gb_running;
 void
 client_run_wrapper (void * p_arg)
 {
-    if (NULL == p_arg)
-    {
-        goto cleanup;
-    }
-
     client_t * p_client = p_arg;
 
     if ((NULL == p_client) || (NULL == p_client->p_server))
@@ -73,22 +69,7 @@ client_run_wrapper (void * p_arg)
         goto cleanup;
     }
 
-    // Re-arm so the next request triggers a new dispatch
-    struct epoll_event client_ev = {0};
-
-    client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
-    client_ev.data.ptr = p_client;
-
-    if (-1 == epoll_ctl(
-        p_server->epollfd,
-        EPOLL_CTL_MOD,
-        p_client->sockfd,
-        &client_ev
-    ))
-    {
-        perror("epoll_ctl MOD re-arm");
-        client_destroy(p_client);
-    }
+    client_rearm(p_client);
 
 cleanup:
     return;
@@ -116,12 +97,12 @@ client_create (server_t * p_server)
     }
 
     // Initialise to safe sentinel values
-    p_client->rport            = 0u;
-    p_client->p_rhost          = NULL;
-    p_client->sockfd           = -1;
-    p_client->registry_idx     = -1;
-    p_client->p_clientdata     = NULL;
-    p_client->p_server         = p_server;
+    p_client->rport        = 0u;
+    p_client->p_rhost      = NULL;
+    p_client->sockfd       = -1;
+    p_client->registry_idx = -1;
+    p_client->p_state      = NULL;
+    p_client->p_server     = p_server;
 
     if (0 != pthread_mutex_init(&(p_client->lock), NULL))
     {
@@ -156,7 +137,7 @@ client_create (server_t * p_server)
     }
     p_client->sockfd = sockfd;
 
-    uint16_t rport = ntohs(client_addr.sin_port);
+    uint16_t rport  = ntohs(client_addr.sin_port);
     p_client->rport = rport;
 
     char * p_rhost = calloc(INET_ADDRSTRLEN, sizeof(*p_rhost));
@@ -224,7 +205,7 @@ client_destroy (client_t * p_client)
     if (NULL != p_server->p_client_free)
     {
         (p_server->p_client_free)(p_client);
-        p_client->p_clientdata = NULL;
+        p_client->p_state = NULL;
     }
 
     registry_remove(p_server->p_registry, p_client);
@@ -270,6 +251,37 @@ cleanup:
     free(p_client);
     p_client = NULL;
     return status;
+}
+
+void
+client_rearm (client_t * p_client)
+{
+    if ((NULL == p_client) || (NULL == p_client->p_server))
+    {
+        goto cleanup;
+    }
+
+    server_t * p_server = p_client->p_server;
+
+    struct epoll_event client_ev = {0};
+
+    client_ev.events   = EPOLLIN | EPOLLONESHOT | EPOLLRDHUP;
+    client_ev.data.ptr = p_client;
+
+    if (-1 == epoll_ctl(
+        p_server->epollfd,
+        EPOLL_CTL_MOD,
+        p_client->sockfd,
+        &client_ev
+    ))
+    {
+        perror("epoll_ctl MOD re-arm");
+        client_destroy(p_client);
+        goto cleanup;
+    }
+
+cleanup:
+    return;
 }
 
 /*** end of file ***/

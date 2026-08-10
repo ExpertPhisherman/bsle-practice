@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #include "common.h"
 
@@ -39,9 +40,9 @@ min (ssize_t num1, ssize_t num2)
 
 bool
 ischartype_str (
-    char const        * p_str,
-    size_t              size,
-    ischartype_func_t   p_func
+    char const       * p_str,
+    size_t             size,
+    ischrtype_func_t   p_func
 )
 {
     bool b_valid = true;
@@ -135,7 +136,7 @@ fprint (
     size_t              size,
     char const        * p_sep,
     char const        * p_end,
-    ischartype_func_t   p_ischartype,
+    ischrtype_func_t    p_ischrtype,
     char const        * p_fmt_true,
     char const        * p_fmt_false,
     bool                b_flush
@@ -149,12 +150,12 @@ fprint (
         goto cleanup;
     }
 
-    p_stream     = (NULL == p_stream)     ? stdout      : p_stream;
-    p_sep        = (NULL == p_sep)        ? " "         : p_sep;
-    p_end        = (NULL == p_end)        ? "\n"        : p_end;
-    p_ischartype = (NULL == p_ischartype) ? isprint     : p_ischartype;
-    p_fmt_true   = (NULL == p_fmt_true)   ? "%c"        : p_fmt_true;
-    p_fmt_false  = (NULL == p_fmt_false)  ? "\\x%02hhx" : p_fmt_false;
+    p_stream    = (NULL == p_stream)    ? stdout      : p_stream;
+    p_sep       = (NULL == p_sep)       ? " "         : p_sep;
+    p_end       = (NULL == p_end)       ? "\n"        : p_end;
+    p_ischrtype = (NULL == p_ischrtype) ? isprint     : p_ischrtype;
+    p_fmt_true  = (NULL == p_fmt_true)  ? "%c"        : p_fmt_true;
+    p_fmt_false = (NULL == p_fmt_false) ? "\\x%02hhx" : p_fmt_false;
 
     for (size_t idx = 0u; idx < size; idx++)
     {
@@ -166,7 +167,7 @@ fprint (
             fprintf(p_stream, "%s", p_sep);
         }
 
-        char const * p_fmt = (0 != p_ischartype(chr)) ? p_fmt_true : p_fmt_false;
+        char const * p_fmt = (0 != p_ischrtype(chr)) ? p_fmt_true : p_fmt_false;
 
         // NOTE: fprintf expects string literal, ignore compiler warning
 #       pragma GCC diagnostic push

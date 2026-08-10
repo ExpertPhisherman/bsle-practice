@@ -11,13 +11,9 @@
 #ifndef TPOOL_H
 #define TPOOL_H
 
+#include <stddef.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <pthread.h>
-
-#include "common.h"
 
 #define WORKER_THREADS_MIN 2
 
