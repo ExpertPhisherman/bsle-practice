@@ -7,6 +7,7 @@
  */
 
  #include <stddef.h>
+ #include <string.h>
 
 #include "main.h"
 #include "common.h"
@@ -45,7 +46,7 @@ main (int argc, char * pp_argv[])
     }
 
     bst_set(p_bst, "obama", 5u);
-    bst_set(p_bst, "obama", 5u);
+    bst_set(p_bst, "obama1", 6u);
     bst_set(p_bst, "dragbolt", 8u);
     bst_del(p_bst, "femality", 8u);
 

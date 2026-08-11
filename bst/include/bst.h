@@ -34,6 +34,13 @@ typedef struct bst
     destroy_func_t   p_destroy_data; // Pointer to destroy function
 } bst_t;
 
+typedef struct display_ctx
+{
+    bst_t      * p_bst;   // Pointer to BST
+    char const * p_sep;   // Pointer to separator between each node
+    bool         b_first; // Whether the next node is the first printed
+} display_ctx_t;
+
 /*!
  * @brief Create BST
  *
