@@ -127,7 +127,7 @@ sll_display (sll_t * p_sll, char const * p_sep)
         }
         else
         {
-            display_printable(p_curr->p_data, p_curr->size, ", ", "\n");
+            display_printable(p_curr->p_data, p_curr->size, "", "");
         }
 
         if (NULL != p_curr->p_next)
